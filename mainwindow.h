@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 
-
 #include <QMainWindow>
 
 #include <fstream>
@@ -11,7 +10,6 @@
 
 // all important math functions and libraries are contained in "magneticmathfunctions.h"
 
-//#include "callbacks.h"   // Does this need to be called?
 
 
 #include "ui_mainwindow.h"
@@ -22,7 +20,37 @@
 #include <ctime>
 #include <QElapsedTimer>
 
-#include <expat_external>
+#include <iostream>
+
+
+#include <iostream>
+
+#include <franka/exception.h>
+#include <franka/robot.h>
+
+#include "examples_common.h"
+#include <Core>
+
+#include <array>
+#include <cmath>
+#include <functional>
+#include <iostream>
+
+#include <Dense>
+
+#include <franka/duration.h>
+#include <franka/exception.h>
+#include <franka/model.h>
+#include <franka/robot.h>
+
+#include "examples_common.h"
+
+
+//#define _USE_MATH_DEFINES
+//#include <cmath>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
