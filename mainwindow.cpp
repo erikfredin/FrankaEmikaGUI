@@ -41,7 +41,11 @@ void MainWindow::updateCaption(void)
 
     // for testing connection
     ui->label_robot_px->setText(tr("%1").arg(Robot_pos[0]));
-    ui->label_robot_py->setText(tr("%1").arg(Robot_pos[0]));
+    ui->label_robot_py->setText(tr("%1").arg(Robot_pos[1]));
+    ui->label_robot_pz->setText(tr("%1").arg(Robot_pos[2]));
+    ui->label_robot_ea1->setText(tr("%1").arg(Robot_orient[0]));
+    ui->label_robot_ea2->setText(tr("%1").arg(Robot_orient[1]));
+    ui->label_robot_ea3->setText(tr("%1").arg(Robot_orient[2]));
 
 }
 

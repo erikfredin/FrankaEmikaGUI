@@ -71,8 +71,13 @@ public:
 //    Eigen::Vector3d position_d;
 //    Eigen::Quaterniond  orientation_d;
 
-    QVector<double> Robot_pos;
-    QVector<double> Robot_orient;
+    Eigen::Vector3d robottip_eulerAngles;
+    Eigen::Vector3d robottip_position;
+
+    double Robot_pos[3];
+    double Robot_orient[3];
+
+
 
 private:
     Ui::MainWindow *ui;
