@@ -24,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // PUSH BUTTONS
     connect(ui->pushButton_ConnectionCheck,SIGNAL(clicked()),SLOT(connectioncheck()));
+
 }
 
 
@@ -33,29 +34,41 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+
+void MainWindow::updateCaption(void)
+{
+    // Update labels on the GUI to reflect parameters saved in code
+
+    // for testing connection
+    ui->label_robot_px->setText(tr("%1").arg(Robot_pos[0]));
+    ui->label_robot_py->setText(tr("%1").arg(Robot_pos[0]));
+
+}
+
+
 void MainWindow::connectioncheck()
 {
   qDebug()<<"checking connection.....press enter to continue...";
 //  std::cin.ignore();
-  std::string fci_ip = "172.16.0.2";
+//  std::string fci_ip = "172.16.0.2";
   franka::Robot robot(fci_ip);
 
 // read robot status
-  try {
+//  try {
 //    franka::Robot robot(fci_ip);
 
-    size_t count = 0;
-    robot.read([&count](const franka::RobotState& robot_state) {
-      // Printing to std::cout adds a delay. This is acceptable for a read loop such as this, but
-      // should not be done in a control loop.
-      std::cout << robot_state << std::endl;
-      return count++ < 100;
-    });
+//    size_t count = 0;
+//    robot.read([&count](const franka::RobotState& robot_state) {
+//      // Printing to std::cout adds a delay. This is acceptable for a read loop such as this, but
+//      // should not be done in a control loop.
+//      std::cout << robot_state << std::endl;
+//      return count++ < 100;
+//    });
 
-    std::cout << "Done." << std::endl;
-  } catch (franka::Exception const& e) {
-    std::cout << e.what() << std::endl;
-  }
+//    std::cout << "Done." << std::endl;
+//  } catch (franka::Exception const& e) {
+//    std::cout << e.what() << std::endl;
+//  }
 
 
 //Cartesian pose control

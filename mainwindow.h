@@ -66,6 +66,13 @@ public:
     /// PLOTTING AND CALLBACKS TIMERS
     const int captionRefreshPeriod = 10; // 20 ms correlates to 50 Hz
     const int callbackRefreshPeriod = 10; // 20 ms correlates to 50 Hz
+    // set Franka robot controller ip address here
+    std::string fci_ip = "172.16.0.2";
+//    Eigen::Vector3d position_d;
+//    Eigen::Quaterniond  orientation_d;
+
+    QVector<double> Robot_pos;
+    QVector<double> Robot_orient;
 
 private:
     Ui::MainWindow *ui;
@@ -79,5 +86,6 @@ public slots:
 
 private slots:
     void callbacks(void);
+    void updateCaption(void);
 };
 #endif // MAINWINDOW_H
