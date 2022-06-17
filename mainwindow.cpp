@@ -2,8 +2,6 @@
 #include "ui_mainwindow.h"
 
 
-
-
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
@@ -24,6 +22,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // PUSH BUTTONS
     connect(ui->pushButton_ConnectionCheck,SIGNAL(clicked()),SLOT(connectioncheck()));
+
+
+    connect(ui->lineEdit_EE_x,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
+    connect(ui->lineEdit_EE_y,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
+    connect(ui->lineEdit_EE_z,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
 
 }
 
@@ -50,12 +53,32 @@ void MainWindow::updateCaption(void)
 }
 
 
+void MainWindow::updateRobotEE(void)
+{
+    // Check which spinbox had its value changed and record the value to the array of parameters
+    RobotEE_offset[0] = ui->lineEdit_EE_x->text().toDouble();
+    RobotEE_offset[1] = ui->lineEdit_EE_y->text().toDouble();
+    RobotEE_offset[2] = ui->lineEdit_EE_z->text().toDouble();
+    double RobotEE_offset_meter[3];
+    RobotEE_offset_meter[0] = RobotEE_offset[0]*0.001;
+    RobotEE_offset_meter[1] = RobotEE_offset[1]*0.001;
+    RobotEE_offset_meter[2] = RobotEE_offset[2]*0.001;
+    std::array<double, 16> EEtoFlange = {1.0,0.0,0.0,0.0, 0.0,1.0,0.0,0.0, 0.0,0.0,1.0,0.0, RobotEE_offset_meter[0], RobotEE_offset_meter[1],RobotEE_offset_meter[2],1.0};
+//    franka::Robot::setEE(EEtoFlange);
+    franka::Robot robot(fci_ip);
+    robot.setEE(EEtoFlange);
+    std::cout<< "EE_offset: " << RobotEE_offset_meter[0] <<" "<< RobotEE_offset_meter[1]<<" "<< RobotEE_offset_meter[2] << std::endl;
+}
+
+
+
 void MainWindow::connectioncheck()
 {
   qDebug()<<"checking connection.....press enter to continue...";
 //  std::cin.ignore();
 //  std::string fci_ip = "172.16.0.2";
   franka::Robot robot(fci_ip);
+
 
 // read robot status
 //  try {
@@ -75,50 +98,50 @@ void MainWindow::connectioncheck()
 //  }
 
 
-//Cartesian pose control
-  try {
-    setDefaultBehavior(robot);
-    // First move the robot to a suitable joint configuration
-    std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
-    MotionGenerator motion_generator(0.5, q_goal);
-    std::cout << "WARNING: This example will move the robot! "
-              << "Please make sure to have the user stop button at hand!" << std::endl
-              << "Press Enter to continue..." << std::endl;
-//    std::cin.ignore();
-    robot.control(motion_generator);
-    std::cout << "Finished moving to initial joint configuration." << std::endl;
-    // Set additional parameters always before the control loop, NEVER in the control loop!
-    // Set collision behavior.
-    robot.setCollisionBehavior(
-        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
-        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
-    std::array<double, 16> initial_pose;
-    double time = 0.0;
-    robot.control([&time, &initial_pose](const franka::RobotState& robot_state,
-                                         franka::Duration period) -> franka::CartesianPose {
-      time += period.toSec();
-      if (time == 0.0) {
-        initial_pose = robot_state.O_T_EE_c;
-      }
-      constexpr double kRadius = 0.3;
-      double angle = M_PI / 4 * (1 - std::cos(M_PI / 5.0 * time));
-      double delta_x = kRadius * std::sin(angle);
-      double delta_z = kRadius * (std::cos(angle) - 1);
-      std::array<double, 16> new_pose = initial_pose;
-      new_pose[12] += delta_x;
-      new_pose[14] += delta_z;
-      if (time >= 20.0) {
-        std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
-        return franka::MotionFinished(new_pose);
-      }
-      return new_pose;
-    });
-  } catch (const franka::Exception& e) {
-    std::cout << e.what() << std::endl;
-//    return -1;
-  }
+////Cartesian pose control
+//  try {
+//    setDefaultBehavior(robot);
+//    // First move the robot to a suitable joint configuration
+//    std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
+//    MotionGenerator motion_generator(0.5, q_goal);
+//    std::cout << "WARNING: This example will move the robot! "
+//              << "Please make sure to have the user stop button at hand!" << std::endl
+//              << "Press Enter to continue..." << std::endl;
+////    std::cin.ignore();
+//    robot.control(motion_generator);
+//    std::cout << "Finished moving to initial joint configuration." << std::endl;
+//    // Set additional parameters always before the control loop, NEVER in the control loop!
+//    // Set collision behavior.
+//    robot.setCollisionBehavior(
+//        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+//        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+//        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
+//        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
+//    std::array<double, 16> initial_pose;
+//    double time = 0.0;
+//    robot.control([&time, &initial_pose](const franka::RobotState& robot_state,
+//                                         franka::Duration period) -> franka::CartesianPose {
+//      time += period.toSec();
+//      if (time == 0.0) {
+//        initial_pose = robot_state.O_T_EE_c;
+//      }
+//      constexpr double kRadius = 0.3;
+//      double angle = M_PI / 4 * (1 - std::cos(M_PI / 5.0 * time));
+//      double delta_x = kRadius * std::sin(angle);
+//      double delta_z = kRadius * (std::cos(angle) - 1);
+//      std::array<double, 16> new_pose = initial_pose;
+//      new_pose[12] += delta_x;
+//      new_pose[14] += delta_z;
+//      if (time >= 20.0) {
+//        std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
+//        return franka::MotionFinished(new_pose);
+//      }
+//      return new_pose;
+//    });
+//  } catch (const franka::Exception& e) {
+//    std::cout << e.what() << std::endl;
+////    return -1;
+//  }
 
 // Cartesian velocity control
   try {
@@ -154,7 +177,7 @@ void MainWindow::connectioncheck()
         lower_torque_thresholds_nominal, upper_torque_thresholds_nominal,
         lower_force_thresholds_acceleration, upper_force_thresholds_acceleration,
         lower_force_thresholds_nominal, upper_force_thresholds_nominal);
-    double time_max = 4.0;
+    double time_max = 10.0;
     double v_max = 0.1;
     double angle = M_PI / 4.0;
     double time = 0.0;
@@ -165,8 +188,14 @@ void MainWindow::connectioncheck()
       double v = cycle * v_max / 2.0 * (1.0 - std::cos(2.0 * M_PI / time_max * time));
       double v_x = std::cos(angle) * v;
       double v_z = -std::sin(angle) * v;
-      franka::CartesianVelocities output = {{v_x, 0.0, v_z, 0.0, 0.0, 0.0}};
-      if (time >= 2 * time_max) {
+      double w_x = -1.0/12.0+1.0/60.0*time;
+      double w_y = -1.0/12.0+1.0/60.0*time;
+//      franka::CartesianVelocities output = {{v_x, 0.0, v_z, 0.0, 0.0, 0.0}};
+      franka::CartesianVelocities output = {{0.0, 0.0, 0.0, w_x, w_y, 0.0}};
+      std::cout << "Cartesian Vel output: " << w_x << "; " << w_y << std::endl;
+      std::cout << "time: " << time << std::endl;
+
+      if (time >= 2.0 * time_max) {
         std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
         return franka::MotionFinished(output);
       }
@@ -178,90 +207,90 @@ void MainWindow::connectioncheck()
   }
 
 
- //joint position control
-  try {
-//    franka::Robot robot(argv[1]);
-    setDefaultBehavior(robot);
-    // First move the robot to a suitable joint configuration
-    std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
-    MotionGenerator motion_generator(0.5, q_goal);
-    std::cout << "WARNING: This example will move the robot! "
-              << "Please make sure to have the user stop button at hand!" << std::endl
-              << "Press Enter to continue..." << std::endl;
-//    std::cin.ignore();
-    robot.control(motion_generator);
-    std::cout << "Finished moving to initial joint configuration." << std::endl;
-    // Set additional parameters always before the control loop, NEVER in the control loop!
-    // Set collision behavior.
-    robot.setCollisionBehavior(
-        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
-        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
-    std::array<double, 7> initial_position;
-    double time = 0.0;
-    robot.control([&initial_position, &time](const franka::RobotState& robot_state,
-                                             franka::Duration period) -> franka::JointPositions {
-      time += period.toSec();
-      if (time == 0.0) {
-        initial_position = robot_state.q_d;
-      }
-      double delta_angle = M_PI / 8.0 * (1 - std::cos(M_PI / 2.5 * time));
-      franka::JointPositions output = {{initial_position[0], initial_position[1],
-                                        initial_position[2], initial_position[3] + delta_angle,
-                                        initial_position[4] + delta_angle, initial_position[5],
-                                        initial_position[6] + delta_angle}};
-      if (time >= 5.0) {
-        std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
-        return franka::MotionFinished(output);
-      }
-      return output;
-    });
-  } catch (const franka::Exception& e) {
-    std::cout << e.what() << std::endl;
-//    return -1;
-  }
+// //joint position control
+//  try {
+////    franka::Robot robot(argv[1]);
+//    setDefaultBehavior(robot);
+//    // First move the robot to a suitable joint configuration
+//    std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
+//    MotionGenerator motion_generator(0.5, q_goal);
+//    std::cout << "WARNING: This example will move the robot! "
+//              << "Please make sure to have the user stop button at hand!" << std::endl
+//              << "Press Enter to continue..." << std::endl;
+////    std::cin.ignore();
+//    robot.control(motion_generator);
+//    std::cout << "Finished moving to initial joint configuration." << std::endl;
+//    // Set additional parameters always before the control loop, NEVER in the control loop!
+//    // Set collision behavior.
+//    robot.setCollisionBehavior(
+//        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+//        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+//        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
+//        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
+//    std::array<double, 7> initial_position;
+//    double time = 0.0;
+//    robot.control([&initial_position, &time](const franka::RobotState& robot_state,
+//                                             franka::Duration period) -> franka::JointPositions {
+//      time += period.toSec();
+//      if (time == 0.0) {
+//        initial_position = robot_state.q_d;
+//      }
+//      double delta_angle = M_PI / 8.0 * (1 - std::cos(M_PI / 2.5 * time));
+//      franka::JointPositions output = {{initial_position[0], initial_position[1],
+//                                        initial_position[2], initial_position[3] + delta_angle,
+//                                        initial_position[4] + delta_angle, initial_position[5],
+//                                        initial_position[6] + delta_angle}};
+//      if (time >= 5.0) {
+//        std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
+//        return franka::MotionFinished(output);
+//      }
+//      return output;
+//    });
+//  } catch (const franka::Exception& e) {
+//    std::cout << e.what() << std::endl;
+////    return -1;
+//  }
 
 
-// joint velocity control
-  try {
-//    franka::Robot robot(argv[1]);
-    setDefaultBehavior(robot);
-    // First move the robot to a suitable joint configuration
-    std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
-    MotionGenerator motion_generator(0.5, q_goal);
-    std::cout << "WARNING: This example will move the robot! "
-              << "Please make sure to have the user stop button at hand!" << std::endl
-              << "Press Enter to continue..." << std::endl;
-//    std::cin.ignore();
-    robot.control(motion_generator);
-    std::cout << "Finished moving to initial joint configuration." << std::endl;
-    // Set additional parameters always before the control loop, NEVER in the control loop!
-    // Set collision behavior.
-    robot.setCollisionBehavior(
-        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
-        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
-    double time_max = 1.0;
-    double omega_max = 1.0;
-    double time = 0.0;
-    robot.control(
-        [=, &time](const franka::RobotState&, franka::Duration period) -> franka::JointVelocities {
-          time += period.toSec();
-          double cycle = std::floor(std::pow(-1.0, (time - std::fmod(time, time_max)) / time_max));
-          double omega = cycle * omega_max / 2.0 * (1.0 - std::cos(2.0 * M_PI / time_max * time));
-          franka::JointVelocities velocities = {{0.0, 0.0, 0.0, omega, omega, omega, omega}};
-          if (time >= 2 * time_max) {
-            std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
-            return franka::MotionFinished(velocities);
-          }
-          return velocities;
-        });
-  } catch (const franka::Exception& e) {
-    std::cout << e.what() << std::endl;
-//    return -1;
-  }
+//// joint velocity control
+//  try {
+////    franka::Robot robot(argv[1]);
+//    setDefaultBehavior(robot);
+//    // First move the robot to a suitable joint configuration
+//    std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
+//    MotionGenerator motion_generator(0.5, q_goal);
+//    std::cout << "WARNING: This example will move the robot! "
+//              << "Please make sure to have the user stop button at hand!" << std::endl
+//              << "Press Enter to continue..." << std::endl;
+////    std::cin.ignore();
+//    robot.control(motion_generator);
+//    std::cout << "Finished moving to initial joint configuration." << std::endl;
+//    // Set additional parameters always before the control loop, NEVER in the control loop!
+//    // Set collision behavior.
+//    robot.setCollisionBehavior(
+//        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+//        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+//        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
+//        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
+//    double time_max = 1.0;
+//    double omega_max = 1.0;
+//    double time = 0.0;
+//    robot.control(
+//        [=, &time](const franka::RobotState&, franka::Duration period) -> franka::JointVelocities {
+//          time += period.toSec();
+//          double cycle = std::floor(std::pow(-1.0, (time - std::fmod(time, time_max)) / time_max));
+//          double omega = cycle * omega_max / 2.0 * (1.0 - std::cos(2.0 * M_PI / time_max * time));
+//          franka::JointVelocities velocities = {{0.0, 0.0, 0.0, omega, omega, omega, omega}};
+//          if (time >= 2 * time_max) {
+//            std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
+//            return franka::MotionFinished(velocities);
+//          }
+//          return velocities;
+//        });
+//  } catch (const franka::Exception& e) {
+//    std::cout << e.what() << std::endl;
+////    return -1;
+//  }
 
 //Impendence control
 

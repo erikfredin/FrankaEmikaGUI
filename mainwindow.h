@@ -21,9 +21,7 @@
 #include <QElapsedTimer>
 
 #include <iostream>
-
-
-#include <iostream>
+#include <string>
 
 #include <franka/exception.h>
 #include <franka/robot.h>
@@ -56,6 +54,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -68,6 +67,8 @@ public:
     const int callbackRefreshPeriod = 10; // 20 ms correlates to 50 Hz
     // set Franka robot controller ip address here
     std::string fci_ip = "172.16.0.2";
+
+
 //    Eigen::Vector3d position_d;
 //    Eigen::Quaterniond  orientation_d;
 
@@ -76,6 +77,8 @@ public:
 
     double Robot_pos[3];
     double Robot_orient[3];
+
+    double RobotEE_offset[3];
 
 
 
@@ -92,5 +95,6 @@ public slots:
 private slots:
     void callbacks(void);
     void updateCaption(void);
+    void updateRobotEE(void);
 };
 #endif // MAINWINDOW_H
