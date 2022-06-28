@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>718</width>
+    <height>602</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton_ConnectionCheck">
+   <widget class="QPushButton" name="pushButton_experimental_control">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>170</y>
-      <width>141</width>
+      <y>330</y>
+      <width>101</width>
       <height>51</height>
      </rect>
     </property>
@@ -30,8 +30,8 @@
    <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>100</y>
+      <x>10</x>
+      <y>70</y>
       <width>531</width>
       <height>31</height>
      </rect>
@@ -84,8 +84,8 @@
    <widget class="QWidget" name="horizontalLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>80</y>
+      <x>10</x>
+      <y>50</y>
       <width>531</width>
       <height>21</height>
      </rect>
@@ -138,21 +138,21 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>60</y>
-      <width>131</width>
+      <x>10</x>
+      <y>30</y>
+      <width>181</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>Robot EE pose reading</string>
+     <string>Robot EE pose reading (meter, rad)</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_EE_x">
     <property name="geometry">
      <rect>
-      <x>80</x>
-      <y>310</y>
+      <x>20</x>
+      <y>270</y>
       <width>71</width>
       <height>20</height>
      </rect>
@@ -164,8 +164,8 @@
    <widget class="QLineEdit" name="lineEdit_EE_y">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>310</y>
+      <x>100</x>
+      <y>270</y>
       <width>71</width>
       <height>20</height>
      </rect>
@@ -177,8 +177,8 @@
    <widget class="QLineEdit" name="lineEdit_EE_z">
     <property name="geometry">
      <rect>
-      <x>240</x>
-      <y>310</y>
+      <x>180</x>
+      <y>270</y>
       <width>71</width>
       <height>20</height>
      </rect>
@@ -190,14 +190,276 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>80</x>
-      <y>280</y>
-      <width>101</width>
+      <x>20</x>
+      <y>240</y>
+      <width>121</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>Robot EE update</string>
+     <string>Robot EE Offset (mm)</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_EEoffsetupdate">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>270</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Update</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_freedrag">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>330</y>
+      <width>101</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Free drag</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>120</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Robot joint reading (rad)</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>140</y>
+      <width>531</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="label_robot_px_3">
+       <property name="text">
+        <string>q1</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_robot_py_3">
+       <property name="text">
+        <string>q2</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_robot_pz_3">
+       <property name="text">
+        <string>q3</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_robot_ea1_3">
+       <property name="text">
+        <string>q4</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_robot_ea2_3">
+       <property name="text">
+        <string>q5</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_robot_ea3_3">
+       <property name="text">
+        <string>q6</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_robot_ea3_5">
+       <property name="text">
+        <string>q7</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_4">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>160</y>
+      <width>531</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QLabel" name="label_q1">
+       <property name="text">
+        <string>0.00</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_q2">
+       <property name="text">
+        <string>0.00</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_q3">
+       <property name="text">
+        <string>0.00</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_q4">
+       <property name="text">
+        <string>0.00</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_q5">
+       <property name="text">
+        <string>0.00</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_q6">
+       <property name="text">
+        <string>0.00</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_q7">
+       <property name="text">
+        <string>0.00</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="pushButton_translationaldrag">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>330</y>
+      <width>101</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Translational drag</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>440</y>
+      <width>61</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>File name</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_filename">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>440</y>
+      <width>241</width>
+      <height>21</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_logon">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>480</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Log on</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_logoff">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>480</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Log off</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_setfilename">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>480</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Set file name</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_logpause">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>520</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Pause</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_logcontinue">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>520</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Continue</string>
     </property>
    </widget>
   </widget>
@@ -206,10 +468,25 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>718</width>
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFranka_GuI">
+    <property name="title">
+     <string>Franka - GuI</string>
+    </property>
+    <addaction name="separator"/>
+   </widget>
+   <widget class="QMenu" name="menuCoil_system">
+    <property name="title">
+     <string>Coil system</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="separator"/>
+   </widget>
+   <addaction name="menuFranka_GuI"/>
+   <addaction name="menuCoil_system"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

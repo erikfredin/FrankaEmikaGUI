@@ -22,12 +22,17 @@ SOURCES += \
     callbacks.cpp \
     main.cpp \
     mainwindow.cpp \
-    examples_common.cpp
+    examples_common.cpp \
+    daq.cpp \
+    s826.cpp
 
 HEADERS += \
     callbacks.h \
     mainwindow.h \
-    examples_common.h
+    examples_common.h \
+    826api.h \
+    daq.h \
+    s826.h
 
 FORMS += \
     mainwindow.ui
@@ -39,7 +44,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 
-## These are important for finding the libraries of the s826 board that are in the /lib/ part of the project.
+## These are important for finding the libraries of the Franka robot that are in the /libfranka/ part of the project.
 win32:CONFIG(release, debug|release): LIBS += -LC:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/libfranka/lib/ -lfranka
 else:win32:CONFIG(debug, debug|release): LIBS += -LC:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/libfranka/lib/ -lfranka
 DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\poco\cmake-build\lib\Debug"
@@ -48,14 +53,21 @@ DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
 
 
 
-
-
-# We were using LIB instead of LIBS so it didn't work at first.
-#LIBS += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\libfranka\lib\franka.lib"
-#DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\poco\cmake-build\lib\Debug"
-#DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
-
-
 #INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\libfranka\lib"
 INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\libfranka\include"
 INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
+
+
+## These are important for finding the libraries of the s826 board that are in the /lib/ part of the project.
+# We were using LIB instead of LIBS so it didn't work at first.
+LIBS += $$PWD/../lib/S826/sdk_826_win_3.3.9/s826_3.3.9/api/x64/s826.lib
+INCLUDEPATH += $$PWD/../lib/S826/sdk_826_win_3.3.9/s826_3.3.9/api/x64
+
+
+# NI DAQ Libraries
+# For 32bit compiling
+#LIBS += "C:/Program Files (x86)/National Instruments/NI-DAQ/DAQmx ANSI C Dev/lib/msvc/NIDAQmx.lib"
+#INCLUDEPATH += "C:/Program Files (x86)/National Instruments/NI-DAQ/DAQmx ANSI C Dev/include"
+# For 64 bit compiling
+INCLUDEPATH +=  "C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\include"
+LIBS += "C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\lib64\msvc/NIDAQmx.lib"
