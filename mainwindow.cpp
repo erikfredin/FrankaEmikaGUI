@@ -25,12 +25,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_freedrag,SIGNAL(clicked()),SLOT(freedrag()));
     connect(ui->pushButton_translationaldrag,SIGNAL(clicked()),SLOT(translationaldrag()));
     connect(ui->pushButton_EEoffsetupdate,SIGNAL(clicked()),SLOT(updateRobotEE()));
+    connect(ui->pushButton_robotconnect,SIGNAL(clicked()),SLOT(Robotconnect()));
 
-    connect(ui->pushButton_setfilename,SIGNAL(clicked()),SLOT(SetFileName(ui->lineEdit_EE_x->text())));
+
+//    connect(ui->pushButton_setfilename,SIGNAL(clicked()),SLOT(SetFileName(ui->lineEdit_EE_x->text())));
+
+    connect(ui->pushButton_setfilename,SIGNAL(clicked()),SLOT(Setfilename()));
     connect(ui->pushButton_logon,SIGNAL(clicked()),SLOT(SetLogEnabled()));
     connect(ui->pushButton_logoff,SIGNAL(clicked()),SLOT(CloseFiles()));
     connect(ui->pushButton_logpause,SIGNAL(clicked()),SLOT(DisableLog()));
     connect(ui->pushButton_logcontinue,SIGNAL(clicked()),SLOT(EnableLog()));
+
 
 
 //    connect(ui->lineEdit_EE_x,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
@@ -88,6 +93,30 @@ void MainWindow::updateRobotEE(void)
     std::cout<< "EE_offset is updated to: " << RobotEE_offset_meter[0] <<" "<< RobotEE_offset_meter[1]<<" "<< RobotEE_offset_meter[2] << std::endl;
 }
 
+
+void MainWindow::Robotconnect(void)
+{
+    std::string pingtest = "ping -c1 -s1 " + fci_ip + "> /dev/null 2>&1";
+//    int x = system("ping -c1 -s1 8.8.8.8  > /dev/null 2>&1");
+    int x = system(pingtest.c_str());
+    if (x==0){
+        std::cout<<"Robot connection succecced"<<std::endl;
+        isRobotConnected = true;
+
+    }else{
+        std::cout<<"Robot connection failed"<<std::endl;
+        isRobotConnected = false;
+    }
+    //    try {
+
+////        franka::Robot robot(fci_ip);
+//        isRobotConnected = true;
+
+//    }  catch (int) {
+//        std::cerr<<"Franka is not connected, check IP settings"<<std::endl;
+//        return -1;
+//    }
+}
 
 void MainWindow::translationaldrag()
 {
@@ -629,38 +658,23 @@ void  MainWindow::SetLogEnabled(){
 
 void  MainWindow::EnableLog(){
     LogEnabled = true;
-    std::cout<<"...........Recording paused......"<<std::endl;
+    std::cout<<"...........Recording continueing ......"<<std::endl;
 }
 
 void  MainWindow::DisableLog(){
     LogEnabled=false;
-    std::cout<<"...........Recording continueing......"<<std::endl;
+    std::cout<<"...........Recording paused......"<<std::endl;
 }
 
 
-void MainWindow::Startup(void)
-{
-    //this zeros the state index...it might miss a few initial values but
-    //generally that is ok.
-    //LastStateIndex.set=0;
-//    Robot.GetStateIndex(LastStateIndex);
-    //Robot.GetRobotState(this->RobotState);
-
-    //get the values for the wavelength here.
-    // open all files and set some initial data.
-    //    if(!OpenFiles(FileNameBase)){
-    //        CMN_LOG_CLASS_INIT_ERROR << "Startup: can't open files" << std::endl;
-    //        //exit(-1);
-    //    }
-
-}
 
 void MainWindow::Record(void)
 {
     //default
     if (!LogFileAllData.is_open()) {
         std::cerr<<" Log file is not open, creating a default file"<<std::endl;
-        if (!OpenFiles("Default"))
+        std::string Defaultbase = "Default";
+        if (!OpenFiles(Defaultbase))
             std::cerr<<" Log file failed to open"<<std::endl;
     }
 
@@ -686,7 +700,9 @@ void MainWindow::Record(void)
                LogFileAllData<<mrdCoilCurrent[i]<<Delim;
 
            for (i = 0;i < numProberead; i++)
-               LogFileAllData<<Daqraw[i];
+               LogFileAllData<<Daqraw[i]<<Delim;
+
+           LogFileAllData<<"test";
 
             LogFileAllData<<std::endl;
             NumWritten++;
@@ -703,7 +719,7 @@ void MainWindow::Record(void)
 
 }
 
-bool MainWindow::OpenFiles(const std::string &fileNameBase){
+bool MainWindow::OpenFiles(std::string &fileNameBase){
     //Robot.GetRobotControlModeQR(LastStateIndex,          ControlMode);
     std::cout << "Opening new LogFile in Control Mode: " <<std::endl;
 //    CloseFiles();
@@ -711,7 +727,6 @@ bool MainWindow::OpenFiles(const std::string &fileNameBase){
     LogFileAllData.clear();
 
     //LogFileReadme.clear();
-    FilePath = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Data";
 
     std::string dateTime;
 //    osaGetDateTimeString(dateTime);
@@ -724,14 +739,10 @@ bool MainWindow::OpenFiles(const std::string &fileNameBase){
     time (&rawtime);
     timeinfo = localtime(&rawtime);
 
-//        strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo); // Filename cannot contain ":" symbol
     strftime(buffer,sizeof(buffer),"%Y-%m-%d_%H-%M-%S",timeinfo);
     std::string temp(buffer);
 //    dateTime = QString::fromStdString(temp);
     dateTime = temp;
-//    filename = DATA_SAVE_PATH + filename + ".txt"; // This file will not be changed until a new recording is started
-
-
     std::string fileName;
 
     FullFileName = std::string(dateTime+std::string("-")+fileNameBase+std::string("-RobotLog"));
@@ -759,20 +770,24 @@ bool MainWindow::OpenFiles(const std::string &fileNameBase){
 
             int i;
             for (i = 0; i < numProberead; i++)
-                LogFileAllData<<"ProbeReading_mT_"<<i<<Delim;
+                LogFileAllData<<"ProbeReading_mT_"<<i+1<<Delim;
 
             for (i = 0; i < numProbePos; i++)
-                LogFileAllData<<"ProbePos_mm_"<<i<<Delim;
+                LogFileAllData<<"ProbePos_mm_"<<i+1<<Delim;
 
 
             for (i = 0;i < numAct; i++)
-                LogFileAllData<<"cmdCoilCurrent_A_"<<i<<Delim;
+                LogFileAllData<<"cmdCoilCurrent_A_"<<i+1<<Delim;
 
             for (i = 0;i < numAct; i++)
-                LogFileAllData<<"mrdCoilCurrent_A_"<<i<<Delim;
+                LogFileAllData<<"mrdCoilCurrent_A_"<<i+1<<Delim;
 
             for (i = 0;i < numProberead; i++)
-                LogFileAllData<<"Daqraw_v"<<i<<Delim;
+                LogFileAllData<<"Daqraw_v"<<i+1<<Delim;
+
+            LogFileAllData<<"Test";
+
+            LogFileAllData<<std::endl;
 
         std::cout << "Log files opened at " << fileName <<std::endl;
     }
@@ -784,17 +799,133 @@ void MainWindow::SetControlMode(const int & controlMode)
     ControlMode = controlMode;
 }
 
-void MainWindow::SetFileName(const std::string & fileNameBase)
+//void MainWindow::SetFileNamenew(std::string & fileNameBase)
+//{
+//    FileNameBase = fileNameBase;
+//    LogEnabled = false;
+//    CloseFiles();
+//    OpenFiles(FileNameBase);
+//}
+
+
+void MainWindow::Setfilename(void)
 {
-    FileNameBase = fileNameBase;
+    FileNameBase = ui->lineEdit_filename->text().toStdString();
+    std::cout<<"filename set as: "<<FileNameBase<<std::endl;
     LogEnabled = false;
     CloseFiles();
     OpenFiles(FileNameBase);
 }
 
-
 void MainWindow::CloseFiles(void){
     LogFileAllData.close();
     LogEnabled = false;
     NumWritten=0;
+    std::cout<<"Log file closed and was saved as: "<<FullFileName<<std::endl;
 }
+
+
+
+void MainWindow::updateCurrents_CalibrationOnly(double I_command[8])
+{
+    // This is the only function that should tell the S826 to send currents to the coils
+    // Reads from Variables:
+    //      B_Global_Desired : The desire field at the time
+    //      isGradientControlled : Boolean to determine if inverse or pseudoInverse is necessary
+    // Sets the Variables:
+    //      currentSetpoints : The target current in the coils
+
+    // NOTE: This code finds the inverse of the control matrices every single time it is called.
+    //      This isn't necessary if the tool is stationary in the workspace, since the control
+    //      matrix, as well as its inverse, will be unchanged.
+
+    // Calling updateCurrents will:
+    // 1. Check for overheating
+    // 2. Determine the currents needed to generate the desired field
+    // 3. Calculate the theoretical magnetic field produced by said currents
+    // 4. Send analog output command to change the coil currents if the system is not overheating
+
+    if (!overheatingFlag)
+    {
+        // Send current setpoints as normal
+        // Need to convert to voltages first
+
+        // TODO convert amps to volts
+        for (int i = 0; i < numAct; i++)
+        {
+            outputAnalogVoltages[i] = I_command[i] * currentControlAdj[i]; // Voltage = (Amps) * (Volts/Amp)
+            // TODO limit voltages sent to S826
+        }
+    }
+    else
+    {
+        // Only send 0s to the currents to turn them off because the system is overheating!
+//        clearCurrentsSlot();
+        // calling clear currents make an inf loop
+        for (int i = 0; i < numAct; i++)
+        {
+            outputAnalogVoltages[i] = 0.0; // Voltage = (Amps) * (Volts/Amp)
+        }
+    }
+    // TODO send current setpoints to amplifiers
+    // Now that the correct currents have been found, write to the s826 board outputs if
+    // the board is connected.
+    if (s826.boardConnected)
+    {
+        s826.analogWriteAll(s826.rangeCodesDAC, outputAnalogVoltages);
+        qInfo() << "Wrote values to the S826 in updateCurrents_CalibrationOnly submode";
+    }
+}
+
+void MainWindow::updateCurrents(void)
+{
+    // This is the only function that should tell the S826 to send currents to the coils
+    // Reads from Variables:
+    //      B_Global_Desired : The desire field at the time
+    //      isGradientControlled : Boolean to determine if inverse or pseudoInverse is necessary
+    // Sets the Variables:
+    //      currentSetpoints : The target current in the coils
+
+    // NOTE: This code finds the inverse of the control matrices every single time it is called.
+    //      This isn't necessary if the tool is stationary in the workspace, since the control
+    //      matrix, as well as its inverse, will be unchanged.
+
+    // Calling updateCurrents will:
+    // 1. Check for overheating
+    // 2. Determine the currents needed to generate the desired field
+    // 3. Calculate the theoretical magnetic field produced by said currents
+    // 4. Send analog output command to change the coil currents if the system is not overheating
+
+    if (!overheatingFlag)
+    {
+
+        for (int i = 0; i < numAct; i++)
+        {
+            outputAnalogVoltages[i] = 0.0; // Voltage = (Amps) * (Volts/Amp)
+        }
+    }
+    else
+    {
+        // Only send 0s to the currents to turn them off because the system is overheating!
+//        clearCurrentsSlot();
+        // calling clear currents make an inf loop
+        for (int i = 0; i < numAct; i++)
+        {
+            outputAnalogVoltages[i] = 0.0; // Voltage = (Amps) * (Volts/Amp)
+        }
+
+
+    }
+
+    // TODO send current setpoints to amplifiers
+    // Now that the correct currents have been found, write to the s826 board outputs if
+    // the board is connected.
+    if (s826.boardConnected)
+    {
+        s826.analogWriteAll(s826.rangeCodesDAC, outputAnalogVoltages);
+        qInfo() << "Wrote values to the S826.";
+    }
+
+
+}
+

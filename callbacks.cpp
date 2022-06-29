@@ -15,7 +15,7 @@ void MainWindow::callbacks(void)
     //We connect Franka every turns of callback , could be improved...
 
 
-    if (RobotIsOn){
+    if (isRobotConnected){
         franka::Robot robot(fci_ip);
         //read franka robot pose
         franka::RobotState initial_state = robot.readOnce();
@@ -52,6 +52,77 @@ void MainWindow::callbacks(void)
         }
 
     }
+
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~ GENERAL CALLBACKS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+    // These are commands that are executed every iteration no matter the settings
+    // to ensure that the system is running properly. As such, they should not be
+    // modified unless you know what you are doing.
+    // moved from Adam's code
+
+    // Read Thermocouples and Current Monitors
+    if (s826.boardConnected)
+    {
+        // Read all 16 input channels and store in pass-by-reference array:
+        int err = s826.analogReadAll(inputAnalogVoltages);
+//        qInfo() << err;
+    }
+
+    for (int t = 0; t < 8; t++)
+    {
+        // Record new temperatures and currents from conversions
+        // Input Analog Voltages are as follows:
+        // AIN0 - AIN7  CURRENT SENSE FROM EM0-EM7, respectively
+        // AIN8 - AIN15 THERMOCOUPLE SENSE FROM EM0 - EM7, respectively
+        measuredCurrents[t] = inputAnalogVoltages[t]*currentSenseAdj[t]; // [A] read from amplifiers
+        measuredTemperatures[t] = inputAnalogVoltages[t+8]*temperatureSenseAdj[t]; // [deg C] read from thermocouples
+        // Check that the temperature in any core is not above the max value
+        if (measuredTemperatures[t] > maxAllowableTemp)
+        {
+ //!!!!!!!!!!! NEVER change or comment below code!!!!!!!!!!!!!!!!!!!!!!!
+ //!!!!!!!!!!! This is only the only place to moniter overheating of the system!!!
+            overheatingFlag = true;
+            // set all currents to 0 and reset all desired field strengths
+            qWarning() << "System is Overheating!!!" ;
+            updateCurrents();
+            qInfo() << "Currents Cleared.";
+            // at the end of callbacks, re-evaluate the temperatures.
+        }
+    }
+
+    // READ FROM DAQ
+    if (DAQ.isEnabled())
+    {
+        // Read analog inputs from the DAQ by reading values and passing by ref.
+        DAQ.dataAcquisition8(DAQ.analogInputVoltages);
+        DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+//        DAQ.dataAcquisition();
+        //Get Forces and torques from values
+        double tempVoltages[6];
+        double originalDAQVol[6];
+        for (int v = 0; v<6; v++)
+        {
+            tempVoltages[v] = DAQ.analogInputVoltages[v]-ATINanoVoltageOffsets[v];
+            originalDAQVol[v] = DAQ.analogInputVoltages[v];
+        }
+
+        double A[6][6] = {0.0};
+        double J[6] = {0.0};
+//        MatrixMultVect6(A, tempVoltages, J);
+        MatrixMultVect6(ATINanoCalibrationMatrix, tempVoltages, ATINanoForceTorque);
+        //this is for ATI force/torque output
+        for (int v = 0; v<6; v++)
+        {
+            DAQ.analogInputVoltages[v] = ATINanoForceTorque[v];
+        }
+        //this is for gaussmeter output
+//        for (int v = 0; v<3; v++)
+//        {
+//            DAQ.analogInputVoltages[v] = originalDAQVol[v]*gaussmeterCalibratedConstants[v];
+//        }
+    }
+
 
 //    std::cout<<"robot EE posisiton is: " << position_d <<std::endl;
 //    std::cout<<"robot EE orientation is: " << eulerangle <<std::endl;

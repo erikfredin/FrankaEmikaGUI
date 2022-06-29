@@ -24,7 +24,10 @@ SOURCES += \
     mainwindow.cpp \
     examples_common.cpp \
     daq.cpp \
-    s826.cpp
+    s826.cpp \
+    gamepadmonitor.cpp \
+    qcustomplot.cpp \\
+    magneticmathfuntions.cpp
 
 HEADERS += \
     callbacks.h \
@@ -32,7 +35,10 @@ HEADERS += \
     examples_common.h \
     826api.h \
     daq.h \
-    s826.h
+    s826.h \
+    gamepadmonitor.h \
+    qcustomplot.h \
+    magneticmathfuntions.h
 
 FORMS += \
     mainwindow.ui
@@ -71,3 +77,15 @@ INCLUDEPATH += $$PWD/../lib/S826/sdk_826_win_3.3.9/s826_3.3.9/api/x64
 # For 64 bit compiling
 INCLUDEPATH +=  "C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\include"
 LIBS += "C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\lib64\msvc/NIDAQmx.lib"
+
+
+# Information for the OpenCV Libraries from System Directories
+win32:CONFIG(release, debug|release): LIBS += -LC:/OpenCV-4.5.1/opencv/build/x64/vc15/lib/ -lopencv_world451
+else:win32:CONFIG(debug, debug|release): LIBS += -LC:/OpenCV-4.5.1/opencv/build/x64/vc15/lib/ -lopencv_world451d
+
+INCLUDEPATH += C:/OpenCV-4.5.1/opencv/build/include
+DEPENDPATH += C:/OpenCV-4.5.1/opencv/build/include
+
+LIBS += -L"C:/OpenCV-4.5.1/opencv/build/x64/vc15/bin/" \
+    -lopencv_world451 \
+    -lopencv_world451d
