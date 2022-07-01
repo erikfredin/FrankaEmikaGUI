@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui gamepad
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -26,8 +26,7 @@ SOURCES += \
     daq.cpp \
     s826.cpp \
     gamepadmonitor.cpp \
-    qcustomplot.cpp \\
-    magneticmathfuntions.cpp
+    magneticmathfunctions.cpp
 
 HEADERS += \
     callbacks.h \
@@ -37,8 +36,7 @@ HEADERS += \
     daq.h \
     s826.h \
     gamepadmonitor.h \
-    qcustomplot.h \
-    magneticmathfuntions.h
+    magneticmathfunctions.h
 
 FORMS += \
     mainwindow.ui

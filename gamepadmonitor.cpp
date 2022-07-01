@@ -40,6 +40,9 @@
 
 #include "gamepadmonitor.h"
 
+///------------Copied from Adam's project EM_System_App
+///---------------2022-07-01----------------------------
+
 GamepadMonitor::GamepadMonitor(QObject *parent) : QObject(parent) , m_gamepad(0)
 {
 

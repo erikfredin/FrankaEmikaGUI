@@ -80,8 +80,6 @@ void MainWindow::callbacks(void)
         // Check that the temperature in any core is not above the max value
         if (measuredTemperatures[t] > maxAllowableTemp)
         {
- //!!!!!!!!!!! NEVER change or comment below code!!!!!!!!!!!!!!!!!!!!!!!
- //!!!!!!!!!!! This is only the only place to moniter overheating of the system!!!
             overheatingFlag = true;
             // set all currents to 0 and reset all desired field strengths
             qWarning() << "System is Overheating!!!" ;
@@ -107,15 +105,15 @@ void MainWindow::callbacks(void)
             originalDAQVol[v] = DAQ.analogInputVoltages[v];
         }
 
-        double A[6][6] = {0.0};
-        double J[6] = {0.0};
-//        MatrixMultVect6(A, tempVoltages, J);
-        MatrixMultVect6(ATINanoCalibrationMatrix, tempVoltages, ATINanoForceTorque);
-        //this is for ATI force/torque output
-        for (int v = 0; v<6; v++)
-        {
-            DAQ.analogInputVoltages[v] = ATINanoForceTorque[v];
-        }
+//        double A[6][6] = {0.0};
+//        double J[6] = {0.0};
+////        MatrixMultVect6(A, tempVoltages, J);
+//        MatrixMultVect6(ATINanoCalibrationMatrix, tempVoltages, ATINanoForceTorque);
+//        //this is for ATI force/torque output
+//        for (int v = 0; v<6; v++)
+//        {
+//            DAQ.analogInputVoltages[v] = ATINanoForceTorque[v];
+//        }
         //this is for gaussmeter output
 //        for (int v = 0; v<3; v++)
 //        {
@@ -136,6 +134,29 @@ void MainWindow::callbacks(void)
     if(LogEnabled){
          MainWindow::Record();
     }
+
+    if (connectedGamepad.enabled) // Update Direct Local B-field
+        {
+            //// 1. DIRECT LOCAL B-FIELD CONTROL:
+            //
+            // Here the joystick directly controls the desired Bx, By, and Bz field components
+            // in the tool frame. This assumes that the desired fields are relative to the
+            // tool which, when at rest, points in the z-direction. The code takes the
+            // desired local frame magnetic field values and computes the necessary field in
+            // the global frame to be sent to the actuators.
+            //
+            // The assigned joystick axes are as follows:
+            // Left Y-axis:     Bx field
+            // Right X-axis:    By field
+            // L2 and R2:       Bz field
+
+    //        qDebug() << "Working";
+
+            // Set desired B local field
+            std::cout<<"joystick values: " <<connectedGamepad.joystickValues <<std::endl; // Increase nonlinearly to add sensitivity and control
+    }
+
+
 
 
 }

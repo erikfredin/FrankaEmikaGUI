@@ -1,6 +1,9 @@
 #ifndef GAMEPADMONITOR_H
 #define GAMEPADMONITOR_H
 
+///------------Copied from Adam's project EM_System_App
+///---------------2022-07-01----------------------------
+
 //#include "mainwindow.h"
 
 #include "magneticmathfunctions.h"

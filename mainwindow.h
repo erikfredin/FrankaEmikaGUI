@@ -55,7 +55,7 @@
 
 #include "gamepadmonitor.h"
 #include <QtGamepad/QGamepad>
-#include "qcustomplot.h"
+//#include "qcustomplot.h"
 
 
 // These are defined in the S826api header internally. Left here for reference
