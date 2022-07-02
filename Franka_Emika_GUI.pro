@@ -20,6 +20,7 @@ CONFIG += c++11
 
 SOURCES += \
     callbacks.cpp \
+    frankathread.cpp \
     main.cpp \
     mainwindow.cpp \
     examples_common.cpp \
@@ -30,10 +31,12 @@ SOURCES += \
 
 HEADERS += \
     callbacks.h \
+    frankathread.h \
     mainwindow.h \
     examples_common.h \
     826api.h \
     daq.h \
+    robotstatus.h \
     s826.h \
     gamepadmonitor.h \
     magneticmathfunctions.h

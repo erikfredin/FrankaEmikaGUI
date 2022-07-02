@@ -1,3 +1,4 @@
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -35,11 +36,9 @@
 #include <iostream>
 
 #include <Dense>
-
 #include <franka/duration.h>
-#include <franka/exception.h>
 #include <franka/model.h>
-#include <franka/robot.h>
+
 
 #include "examples_common.h"
 
@@ -56,6 +55,10 @@
 #include "gamepadmonitor.h"
 #include <QtGamepad/QGamepad>
 //#include "qcustomplot.h"
+#include "frankathread.h"
+#include "robotstatus.h"
+
+#include <thread>
 
 
 // These are defined in the S826api header internally. Left here for reference
@@ -126,7 +129,7 @@ public:
     // set Franka robot controller ip address here
     std::string fci_ip = "172.16.0.2";
 
-    bool isRobotConnected = false;
+//    bool isRobotConnected = false;
 //    Eigen::Vector3d position_d;
 //    Eigen::Quaterniond  orientation_d;
 
@@ -267,7 +270,13 @@ public:
 
     bool            LogEnabled = false;
 
+//    FrankaThread    *frankathread;
+    FrankaThread    *frankathread = new FrankaThread;
+//    QThread *thread = new QThread;
 
+    bool            isRobotreading = false;
+
+    void            robotfreedraginthread(void);
 
 protected:
 
@@ -317,7 +326,13 @@ public slots:
     void        EnableLog();
     void        DisableLog();
     void        Setfilename(void);
-    void         Robotconnect(void);
+    void        Robotconnect(void);
+
+    void        frankathreadcontrol(void);
+//    void        frankathreadquit(void);
+    void        robotstreaming(void);
+    void        pilotthreadon(void);
+    void        pilotthreadoff(void);
 
 
 private slots:

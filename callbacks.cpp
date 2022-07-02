@@ -1,10 +1,6 @@
 #include "callbacks.h"
 
-//void callback(void)
-//{
-//    qDebug() << "Callback executed.";
 
-//}
 
 void MainWindow::callbacks(void)
 {
@@ -15,7 +11,7 @@ void MainWindow::callbacks(void)
     //We connect Franka every turns of callback , could be improved...
 
 
-    if (isRobotConnected){
+    if (isRobotreading){
         franka::Robot robot(fci_ip);
         //read franka robot pose
         franka::RobotState initial_state = robot.readOnce();
