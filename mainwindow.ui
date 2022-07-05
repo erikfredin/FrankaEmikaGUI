@@ -551,6 +551,19 @@
      <string>Register data collect</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="pushButton_calibrationcollect">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>500</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Calibration data collet</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

@@ -266,7 +266,7 @@ public:
 
     double          msdFieldvalue[numProberead];
     double          ProbePos[numProbePos];
-    double          cmdCoilCurrent[numAct];
+
     double          msdCoilCurrent[numAct];
     double          Daqraw[numProberead];
 
@@ -287,14 +287,34 @@ public:
     const static int        registerdataNum = 9;
     double     robotdata[4][registerdataNum]; //size=4*9
     //cooornates of nut center 1,2,3,4,5,6,7,8,0
-    double     tabledata[4][registerdataNum] = {  {-202.94,      -131.52,   -202.94,    0,          0,      202.94,     131.52,     202.94,     0},
-                                    {-202.94,       0,          202.94,    -131.52,    131.52, -202.94,    0,          202.94,     0},
-                                    {0,             4.5,       12.7,       6.8,        8.3,    15.4,       18.9,       10.6,       85.075},
-                                    {1,             1,         1,          1,          1,      1,          1,          1,          1}};
+    double     tabledata[4][registerdataNum] = {  {-202.94*0.001,   -131.52*0.001,   -202.94*0.001,     0.0,            0.0,              202.94*0.001,     131.52*0.001,     202.94*0.001,     0.0},
+                                                  {-202.94*0.001,    0.0,            202.94*0.001,      -131.52*0.001,  131.52*0.001,     -202.94*0.001,     0.0,             202.94*0.001,     0.0},
+                                                  {0.0,             6.5*0.001,       14.7*0.001,        8.8*0.001,       10.3*0.001,        17.4*0.001,       20.9*0.001,      12.6*0.001,     85.075*0.001},
+                                                  {1.0,             1.0,                1.0,            1.0,            1.0,                1.0,              1.0,             1.0,           1.0}};
+
     Eigen::Matrix4d     transT2R;
+
     int                 registerdataCount = 0;
     void    registration(double tabledata[4][registerdataNum], double robotdata[4][registerdataNum] ); //output Tt2r, Probot = Tt2r*Ptable
 //    void    collectrobotdata(void);
+
+    // define field calibration cubic space
+    //! cubic range is 200-200-100
+//    double       leftlowercorner[3] = {-100.0, -100.0, 20.0}; //table origin is at the table center (0,0,0)
+//    double       righttopcorner[3] = {100.0, 100.0, 120.0};
+    //! cubic range is 100-100-50
+    double       leftlowercorner[3] = {-50.0, -50.0, 50.0}; //table origin is at the table center (0,0,0)
+    double       righttopcorner[3] = {50.0, 50.0, 100.0};
+    double       incstep = 10.0;
+    bool         CalibrationDataCollet = false;
+    double       cmdCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    int          currentloop = 10;
+    int          currentcount = 0;
+    int          robotmoveloop = 20;
+    int          robotmovecount = 0;
+    bool         robotloopisdone = true;
+    bool         robotinitialized = false;
+
 
 
 protected:
@@ -361,5 +381,6 @@ private slots:
     void       updateCurrents_CalibrationOnly(double I_command[8]);
     void       updateCurrents(void);
     void       registerdatacollect(void);
+    void       calibratesetflag(void);
 };
 #endif // MAINWINDOW_H

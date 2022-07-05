@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_pilotthreadon,SIGNAL(clicked()),SLOT(pilotthreadon()));
     connect(ui->pushButton_pilotthreadoff,SIGNAL(clicked()),SLOT(pilotthreadoff()));
     connect(ui->pushButton_registercollect,SIGNAL(clicked()),SLOT(registerdatacollect()));
+    connect(ui->pushButton_calibrationcollect,SIGNAL(clicked()),SLOT(calibratesetflag()));
 
 
 
@@ -54,7 +55,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 //    connect(ui->lineEdit_EE_y,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
 //    connect(ui->lineEdit_EE_z,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
 
+    //we assign transformation matrix here
+    transT2R<<  -33.8486, 434.531, 5191.75, -252.754,
+                 426.209, 19.3244, 3612.1, -427.56,
+                 -57.2238, 53.3836, 571.997, 20.8684,
+                 -0.229218, 0.416058, -11.5944, 1.84834;
 
+    std::cout<< "transformation from table to Franka is " << std::endl <<transT2R <<  std::endl;
 }
 
 
@@ -619,60 +626,61 @@ void  MainWindow::DisableLog(){
 void MainWindow::Record(void)
 {
     //default
-    if (!LogFileAllData.is_open()) {
+    if (!LogFileAllData.is_open())
+    {
         std::cerr<<" Log file is not open, creating a default file"<<std::endl;
         std::string Defaultbase = "Default";
         if (!OpenFiles(Defaultbase))
             std::cerr<<" Log file failed to open"<<std::endl;
     }
 
-            LogFileAllData<<std::setprecision(4)<<currentTime.elapsed()/1000.0
-                         <<Delim<<std::setprecision(0)<<NumWritten<<Delim;
+        LogFileAllData<<std::setprecision(4)<<currentTime.elapsed()/1000.0
+                     <<Delim<<std::setprecision(0)<<NumWritten<<Delim;
 
 
-            LogFileAllData<<std::setprecision(7);
+        LogFileAllData<<std::setprecision(7);
 
-            //covert probe reading to filed at coil system frame
-            // Bx = ProbeBy
-            // By = -ProbeBx
-            // Bz = ProbeBz
-            msdFieldvalue[0] = DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1];
-            msdFieldvalue[1] = -DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0];
-            msdFieldvalue[2] = DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2];
+        //covert probe reading to filed at coil system frame
+        // Bx = ProbeBy
+        // By = -ProbeBx
+        // Bz = ProbeBz
+        msdFieldvalue[0] = DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1];
+        msdFieldvalue[1] = -DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0];
+        msdFieldvalue[2] = DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2];
 
-           int i;
+       int i;
 
-           for (i = 0; i < numProberead; i++)
-               LogFileAllData<<msdFieldvalue[i]<<Delim;
+       for (i = 0; i < numProberead; i++)
+           LogFileAllData<<msdFieldvalue[i]<<Delim;
 
-           for (i = 0; i < numProbePos; i++)
+       for (i = 0; i < numProbePos; i++)
 //               LogFileAllData<<ProbePos[i]<<Delim;
-               LogFileAllData<<Robot_tip_posisition[i]<<Delim;
+           LogFileAllData<<Robot_tip_posisition[i]<<Delim;
 
 
 
-           for (i = 0;i < numAct; i++)
-               LogFileAllData<<cmdCoilCurrent[i]<<Delim;
+       for (i = 0;i < numAct; i++)
+           LogFileAllData<<cmdCoilCurrent[i]<<Delim;
 
-           for (i = 0;i < numAct; i++)
-               LogFileAllData<<msdCoilCurrent[i]<<Delim;
+       for (i = 0;i < numAct; i++)
+           LogFileAllData<<measuredCurrents[i]<<Delim;
 
-           for (i = 0;i < numProberead; i++)
-               LogFileAllData<<Daqraw[i]<<Delim;
+       for (i = 0;i < numProberead; i++)
+           LogFileAllData<<DAQ.analogRawInputVoltages[i]<<Delim;
 
-           LogFileAllData<<"test";
+       LogFileAllData<<0;
 
-            LogFileAllData<<std::endl;
-            NumWritten++;
+        LogFileAllData<<std::endl;
+        NumWritten++;
 
-            //LogRawData.setf(ios::fixed); //Print floating point numbers using fixed point notation.
-            ////ios::showpoint  Print a decimal point for all floating point numbers, even when
-            ////it's not needed (e.g. the number is exactly an integer).
-            ////The precision of numbers can be changed as follows. You can also set the width,
-            ////i.e. the minimum number of spaces used to print the next.
-            ////These featuers are used, for example, to make output items line up in columns
-            ////when printed. Both of these features require that you include the iomanip header file.
-            //LogRawData.precision(0);  // print 0 digits after decimal point
+        //LogRawData.setf(ios::fixed); //Print floating point numbers using fixed point notation.
+        ////ios::showpoint  Print a decimal point for all floating point numbers, even when
+        ////it's not needed (e.g. the number is exactly an integer).
+        ////The precision of numbers can be changed as follows. You can also set the width,
+        ////i.e. the minimum number of spaces used to print the next.
+        ////These featuers are used, for example, to make output items line up in columns
+        ////when printed. Both of these features require that you include the iomanip header file.
+        //LogRawData.precision(0);  // print 0 digits after decimal point
 
 
 }
@@ -999,6 +1007,10 @@ void MainWindow:: registerdatacollect(void)
     }
 }
 
+void MainWindow::calibratesetflag(void)
+{
+    CalibrationDataCollet = true;
+}
 
 
 void MainWindow::registration(double tabledata[4][registerdataNum], double robotdata[4][registerdataNum] ) //output Tt2r, Probot = Tt2r*Ptable
