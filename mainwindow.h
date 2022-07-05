@@ -121,6 +121,8 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -136,7 +138,7 @@ public:
     Eigen::Vector3d robottip_eulerAngles;
     Eigen::Vector3d robottip_position;
 
-    double Robot_pos[3];
+    double Robot_tip_posisition[3];
     double Robot_orient[3];
     double Robot_joint[7];
 
@@ -262,11 +264,13 @@ public:
 
 
 
-    double          ProbeReading[numProberead];
+    double          msdFieldvalue[numProberead];
     double          ProbePos[numProbePos];
     double          cmdCoilCurrent[numAct];
-    double          mrdCoilCurrent[numAct];
+    double          msdCoilCurrent[numAct];
     double          Daqraw[numProberead];
+
+
 
     bool            LogEnabled = false;
 
@@ -277,6 +281,21 @@ public:
     bool            isRobotreading = false;
 
     void            robotfreedraginthread(void);
+
+    // initial variable for registration between robot and coil table
+//    Eigen::MatrixXd     Ac;
+    const static int        registerdataNum = 9;
+    double     robotdata[4][registerdataNum]; //size=4*9
+    //cooornates of nut center 1,2,3,4,5,6,7,8,0
+    double     tabledata[4][registerdataNum] = {  {-202.94,      -131.52,   -202.94,    0,          0,      202.94,     131.52,     202.94,     0},
+                                    {-202.94,       0,          202.94,    -131.52,    131.52, -202.94,    0,          202.94,     0},
+                                    {0,             4.5,       12.7,       6.8,        8.3,    15.4,       18.9,       10.6,       85.075},
+                                    {1,             1,         1,          1,          1,      1,          1,          1,          1}};
+    Eigen::Matrix4d     transT2R;
+    int                 registerdataCount = 0;
+    void    registration(double tabledata[4][registerdataNum], double robotdata[4][registerdataNum] ); //output Tt2r, Probot = Tt2r*Ptable
+//    void    collectrobotdata(void);
+
 
 protected:
 
@@ -336,10 +355,11 @@ public slots:
 
 
 private slots:
-    void callbacks(void);
-    void updateCaption(void);
-    void updateRobotEE(void);
-    void updateCurrents_CalibrationOnly(double I_command[8]);
-    void updateCurrents(void);
+    void       callbacks(void);
+    void       updateCaption(void);
+    void       updateRobotEE(void);
+    void       updateCurrents_CalibrationOnly(double I_command[8]);
+    void       updateCurrents(void);
+    void       registerdatacollect(void);
 };
 #endif // MAINWINDOW_H

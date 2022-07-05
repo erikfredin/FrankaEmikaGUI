@@ -28,6 +28,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_robotconnect,SIGNAL(clicked()),SLOT(Robotconnect()));
     connect(ui->pushButton_pilotthreadon,SIGNAL(clicked()),SLOT(pilotthreadon()));
     connect(ui->pushButton_pilotthreadoff,SIGNAL(clicked()),SLOT(pilotthreadoff()));
+    connect(ui->pushButton_registercollect,SIGNAL(clicked()),SLOT(registerdatacollect()));
+
+
 
 
 
@@ -69,9 +72,9 @@ void MainWindow::updateCaption(void)
     // Update labels on the GUI to reflect parameters saved in code
 
     // for testing connection
-    ui->label_robot_px->setText(tr("%1").arg(Robot_pos[0]));
-    ui->label_robot_py->setText(tr("%1").arg(Robot_pos[1]));
-    ui->label_robot_pz->setText(tr("%1").arg(Robot_pos[2]));
+    ui->label_robot_px->setText(tr("%1").arg(Robot_tip_posisition[0]));
+    ui->label_robot_py->setText(tr("%1").arg(Robot_tip_posisition[1]));
+    ui->label_robot_pz->setText(tr("%1").arg(Robot_tip_posisition[2]));
     ui->label_robot_ea1->setText(tr("%1").arg(Robot_orient[0]));
     ui->label_robot_ea2->setText(tr("%1").arg(Robot_orient[1]));
     ui->label_robot_ea3->setText(tr("%1").arg(Robot_orient[2]));
@@ -629,20 +632,30 @@ void MainWindow::Record(void)
 
             LogFileAllData<<std::setprecision(7);
 
+            //covert probe reading to filed at coil system frame
+            // Bx = ProbeBy
+            // By = -ProbeBx
+            // Bz = ProbeBz
+            msdFieldvalue[0] = DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1];
+            msdFieldvalue[1] = -DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0];
+            msdFieldvalue[2] = DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2];
 
            int i;
+
            for (i = 0; i < numProberead; i++)
-               LogFileAllData<<ProbeReading[i]<<Delim;
+               LogFileAllData<<msdFieldvalue[i]<<Delim;
 
            for (i = 0; i < numProbePos; i++)
-               LogFileAllData<<ProbePos[i]<<Delim;
+//               LogFileAllData<<ProbePos[i]<<Delim;
+               LogFileAllData<<Robot_tip_posisition[i]<<Delim;
+
 
 
            for (i = 0;i < numAct; i++)
                LogFileAllData<<cmdCoilCurrent[i]<<Delim;
 
            for (i = 0;i < numAct; i++)
-               LogFileAllData<<mrdCoilCurrent[i]<<Delim;
+               LogFileAllData<<msdCoilCurrent[i]<<Delim;
 
            for (i = 0;i < numProberead; i++)
                LogFileAllData<<Daqraw[i]<<Delim;
@@ -715,7 +728,7 @@ bool MainWindow::OpenFiles(std::string &fileNameBase){
 
             int i;
             for (i = 0; i < numProberead; i++)
-                LogFileAllData<<"ProbeReading_mT_"<<i+1<<Delim;
+                LogFileAllData<<"msdFieldvalue_mT_"<<i+1<<Delim;
 
             for (i = 0; i < numProbePos; i++)
                 LogFileAllData<<"ProbePos_mm_"<<i+1<<Delim;
@@ -874,3 +887,183 @@ void MainWindow::updateCurrents(void)
 
 }
 
+
+//if(InitRobotRegister==true)
+//      {
+//          //collect datapoint from master, number of total points is defined as NumRobotsRegisterData;
+//          if (NumCollectPointRobotRigster < NumRobotsRegisterData)
+//          {
+//              if (PedalsValue[0] >20 && PedalsValue[1] < 20)
+//              {
+//                  RobtRegisterPedalcount++;
+//                  if(RobtRegisterPedalcount > 300)
+//                  {
+//                      std::cout<<"Collect robots registration data:"<<NumCollectPointRobotRigster+1<<"/"<<NumRobotsRegisterData<<std::endl;
+//                      CollectPointRobotsRegister[0][NumCollectPointRobotRigster] = tipx;
+//                      CollectPointRobotsRegister[1][NumCollectPointRobotRigster] = tipy;
+//                      CollectPointRobotsRegister[2][NumCollectPointRobotRigster] = tipz;
+//                      CollectPointRobotsRegister[3][NumCollectPointRobotRigster] = 1;
+//                      OnelapOverRobotRegister = true;
+//                      Point_RobotRegsiter[0] = tipx; // for logging
+//                      Point_RobotRegsiter[1] = tipy;
+//                      Point_RobotRegsiter[2] = tipz;
+//                   }
+//                  else
+//                      std::cout << "Please press left pedal[ " << RobtRegisterPedalcount+1 <<"/300]"<< std::endl;
+//              }
+//              if (PedalsValue[0] < 20 && OnelapOverRobotRegister == true)
+//              {
+//                  std::cerr<<"Finished "<<NumCollectPointRobotRigster+1<<"/"<<NumRobotsRegisterData<<" dataset collection!!!"<<std::endl;
+//                  RobtRegisterPedalcount = 0; //clear RobotRegisterCount avoid accumulating all time
+//                  NumCollectPointRobotRigster++;
+//                  OnelapOverRobotRegister = false;
+//              }
+//          }
+//          else  //got all the data from master, next step is to receive datapoint from slave, and calculte transformation T
+//          {
+////                 while(true) //wait until get all slave robot data
+////                 {
+//              if(FlagSlavedatareceive == 1)
+//              {
+//                  // data from slave is in vctDoubleVec, should be like [P1x, P1y, P1z, P2x, P2y, P2z, ...,],
+//                  // so need convert to vctFixedSizeMatrix<double, 4, NumRobotsRegisterData>:
+//                  // [P1x, P2x, P3x, ...
+//                  //  P1y, P2y, P3y, ...
+//                  //  P1z, P2z, P3z, ...
+//                  //  1,    1,   1,  ...]
+//                  unsigned long k = 0;
+//                  for (unsigned long col=0; col<NumRobotsRegisterData; col++) {
+//                      for (unsigned long row = 0; row < 3; row++) {
+//                          SlaveRobotPointsMat[row][col] = SlaveRegistPointreceive[k];
+//                          k++;
+//                      }
+//                      SlaveRobotPointsMat[3][col] = 1;
+//                  }
+//                  ControlAlg.ComputeTwoRobotsTransformation(CollectPointRobotsRegister, SlaveRobotPointsMat, TransformM2S);
+//                  std::cerr<<"Finished robots registration:"<<TransformM2S<<std::endl;
+//                  InitRobotRegister = false;
+////                    break;
+//      }
+
+//void robotControlAlgorithm::ComputeTwoRobotsTransformation(const vctFixedSizeMatrix<double, 4, NumRobotsRegisterData> & MasterPoint,
+//                                                  const vctFixedSizeMatrix<double, 4, NumRobotsRegisterData> & SlavePoint,
+//                                                vctFrm4x4 & Tm2s) //Tm2s: transformation from master frame to slave frame
+//              {   //Prolem is get T from T<4,4>*Masterpoint<4,n> = Slavepoint<4,n>,
+//                  //it is xA=B, make transpose for both sides, we get A_transpose*x_transpose = B_transpose
+//                  //denotes as Atxt = Bt
+//                  //then xt = (At.tranpose*At).inverse*At.transpose*Bt
+//                  //finally x = xt.transpose
+//              // not sure should use vctDoulbeMat or vctFixedSizeMatrix.....
+//              //    vctDoubleMat A, B, At, Bt, pinvAt;
+//              //    A.SetSize(4, NumRobotsRegisterData);
+//              //    B.SetSize(4, NumRobotsRegisterData);
+//              //    At.SetSize(NumRobotsRegisterData, 4);
+//              //    Bt.SetSize(NumRobotsRegisterData, 4);
+//              //    pinvAt.SetSize(4, NumRobotsRegisterData);
+//                  vctFixedSizeMatrix<double, 4, NumRobotsRegisterData> A, B;
+//                  vctFixedSizeMatrix<double, NumRobotsRegisterData, 4> At, Bt;
+//                  vct4x4 doubleAt, invdoubleAt;
+//                  vctFixedSizeMatrix<double, 4, NumRobotsRegisterData> pinvAt;
+//                  vct4x4 xt;
+//                  A = MasterPoint;
+//                  B = SlavePoint;
+//                  At = A.Transpose();
+//                  Bt = B.Transpose();
+//                  doubleAt.ProductOf(A, At);
+//                  invdoubleAt = doubleAt;
+//                  // Compute inverse and check result
+//                  nmrInverse(invdoubleAt);
+//                  pinvAt.ProductOf(invdoubleAt,A);
+//                  xt.ProductOf(pinvAt,Bt);
+//                  Tm2s = xt.Transpose();
+
+void MainWindow:: registerdatacollect(void)
+{
+    if(registerdataCount<registerdataNum)
+    {
+        registerdataCount++;
+        for(int i=0; i<3; i++)
+            robotdata[i][registerdataCount] = Robot_tip_posisition[i];
+        robotdata[3][registerdataCount] = 1;
+        std::cout<<"register data collected....["<<registerdataCount<<"/"<<registerdataNum<<"]...Robot tip: "<<Robot_tip_posisition[0]<<" "<<Robot_tip_posisition[1]<<" "<<Robot_tip_posisition[2]<<std::endl;
+        if(registerdataCount==registerdataNum)
+        {
+            qInfo()<<"register data collect finished...calculating registration matrix...";
+            registration(robotdata, tabledata);
+        }
+
+    }
+    else
+    {
+        qInfo()<<"register is done...";
+    }
+}
+
+
+
+void MainWindow::registration(double tabledata[4][registerdataNum], double robotdata[4][registerdataNum] ) //output Tt2r, Probot = Tt2r*Ptable
+{
+//Prolem is get T from T<4,4>*Masterpoint<4,n> = Slavepoint<4,n>,
+          //it is xA=B, make transpose for both sides, we get A_transpose*x_transpose = B_transpose
+          //denotes as Atxt = Bt
+          //then xt = (At.tranpose*At).inverse*At.transpose*Bt
+          //finally x = xt.transpose
+      // not sure should use vctDoulbeMat or vctFixedSizeMatrix.....
+      //    vctDoubleMat A, B, At, Bt, pinvAt;
+      //    A.SetSize(4, NumRobotsRegisterData);
+      //    B.SetSize(4, NumRobotsRegisterData);
+      //    At.SetSize(NumRobotsRegisterData, 4);
+      //    Bt.SetSize(NumRobotsRegisterData, 4);
+      //    pinvAt.SetSize(4, NumRobotsRegisterData);
+          Eigen::MatrixXd A(4, registerdataNum);
+          Eigen::MatrixXd B(4, registerdataNum);
+          Eigen::MatrixXd At(registerdataNum, 4);
+          Eigen::MatrixXd Bt(registerdataNum, 4);
+          Eigen::Matrix4d doubleAt;
+          Eigen::Matrix4d invdoubleAt;
+          Eigen::MatrixXd pinvAt(4, registerdataNum);
+          Eigen::Matrix4d xt;
+            //manually convert double array to eigen matrix
+          for(int i = 0; i<4; i++)
+              for(int j=0; j<registerdataNum; j++)
+                {
+                  A(i,j) = tabledata[i][j];
+                  B(i,j) = robotdata[i][j];
+              }
+          At = A.transpose();
+          Bt = B.transpose();
+          doubleAt = A*At;
+          invdoubleAt = doubleAt.inverse();
+          // Compute inverse and check result
+
+          pinvAt = invdoubleAt*A;
+          xt = pinvAt*Bt;
+          transT2R = xt.transpose();
+//          std::string sep = "\n----------------------------------------\n";
+        std::cout<<"Register matrix is: "<<std::endl;
+        for (int k=0; k<4; k++) {
+            for (int l=0; l<4; l++) {
+                std::cout<< transT2R(k,l) <<", ";
+            }
+            std::cout<<"\n"<<std::endl;
+
+        }
+
+
+//          vctFixedSizeMatrix<double, 4, registerdataNum> A, B;
+//          vctFixedSizeMatrix<double, registerdataNum, 4> At, Bt;
+//          vct4x4 doubleAt, invdoubleAt;
+//          vctFixedSizeMatrix<double, 4, registerdataNum> pinvAt;
+//          vct4x4 xt;
+//          A = MasterPoint;
+//          B = SlavePoint;
+//          At = A.Transpose();
+//          Bt = B.Transpose();
+//          doubleAt.ProductOf(A, At);
+//          invdoubleAt = doubleAt;
+//          // Compute inverse and check result
+//          nmrInverse(invdoubleAt);
+//          pinvAt.ProductOf(invdoubleAt,A);
+//          xt.ProductOf(pinvAt,Bt);
+//          Tm2s = xt.Transpose();
+}

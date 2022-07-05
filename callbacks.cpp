@@ -35,9 +35,9 @@ void MainWindow::callbacks(void)
 
 
         //default unit is meter and rad, so we keep that
-        Robot_pos[0] = position_d[0];
-        Robot_pos[1] = position_d[1];
-        Robot_pos[2] = position_d[2];
+        Robot_tip_posisition[0] = position_d[0];
+        Robot_tip_posisition[1] = position_d[1];
+        Robot_tip_posisition[2] = position_d[2];
 
         Robot_orient[0] = eulerangle[0];
         Robot_orient[1] = eulerangle[1];
