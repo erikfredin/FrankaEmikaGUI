@@ -29,11 +29,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_pilotthreadon,SIGNAL(clicked()),SLOT(pilotthreadon()));
     connect(ui->pushButton_pilotthreadoff,SIGNAL(clicked()),SLOT(pilotthreadoff()));
     connect(ui->pushButton_registercollect,SIGNAL(clicked()),SLOT(registerdatacollect()));
+
     connect(ui->pushButton_calibrationcollect,SIGNAL(clicked()),SLOT(calibratesetflag()));
+    connect(ui->pushButton_calibrationcollect_off,SIGNAL(clicked()),SLOT(calibratesetflagoff()));
 
 
-
-
+    connect(ui->pushButton_robotrecovery,SIGNAL(clicked()),SLOT(robotrecovery()));
 
 
 //    connect(ui->pushButton_setfilename,SIGNAL(clicked()),SLOT(SetFileName(ui->lineEdit_EE_x->text())));
@@ -56,10 +57,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 //    connect(ui->lineEdit_EE_z,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
 
     //we assign transformation matrix here
-    transT2R<<  -33.8486, 434.531, 5191.75, -252.754,
-                 426.209, 19.3244, 3612.1, -427.56,
-                 -57.2238, 53.3836, 571.997, 20.8684,
-                 -0.229218, 0.416058, -11.5944, 1.84834;
+    transT2R<<  0.0118,  -1.0013,  0.0049,  0.5496,
+                0.9993,  0.0160,   -0.0067, -0.0422,
+                0.0043,  0.0084,   1.0043,  0.0493,
+                0.0,     0.0,      0.0,     1.0;
 
     std::cout<< "transformation from table to Franka is " << std::endl <<transT2R <<  std::endl;
 }
@@ -68,6 +69,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 MainWindow::~MainWindow()
 {
+//    franka::Robot robot(fci_ip);
+//    robot.stop();
     delete frankathread;
     std::cout<<"delete Franka thread---"<<std::endl;
     delete ui;
@@ -117,6 +120,8 @@ void MainWindow::updateRobotEE(void)
 
 void MainWindow::Robotconnect(void)
 {
+
+//    Eigen::Vector3d a;
     std::string pingtest = "ping -c1 -s1 " + fci_ip + "> /dev/null 2>&1";
 //    int x = system("ping -c1 -s1 8.8.8.8  > /dev/null 2>&1");
     int x = system(pingtest.c_str());
@@ -480,22 +485,31 @@ void MainWindow::experimental_control()
 {
 
 
-  if(isRobotConnected)
-  {
-    franka::Robot robot(fci_ip);
     try {
+//        const double execution_time = 2.0;
+//        Robot franka(fci_ip); // IP-Address or hostname of the robot
+//        franka.absolute_cart_motion(0.5,0,0.3, execution_time);
 
+
+       franka::Robot robot(fci_ip);
+        std::cout<<"connected!"<<std::endl;
         setDefaultBehavior(robot);
+        std::cout<<"set default!"<<std::endl;
+
         // First move the robot to a suitable joint configuration
         std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
         MotionGenerator motion_generator(0.5, q_goal);
         std::cout << "WARNING: This example will move the robot! "
-                  << "Please make sure to have the user stop button at hand!" << std::endl;
+                  << "Please make sure to have the user stop button at hand!" << std::endl
+                  << "Press Enter to continue..." << std::endl;
+//        std::cin.ignore();
         robot.control(motion_generator);
         std::cout << "Finished moving to initial joint configuration." << std::endl;
+
         // Set additional parameters always before the control loop, NEVER in the control loop!
         // Set the joint impedance.
         robot.setJointImpedance({{3000, 3000, 3000, 2500, 2500, 2000, 2000}});
+
         // Set the collision behavior.
         std::array<double, 7> lower_torque_thresholds_nominal{
             {25.0, 25.0, 22.0, 20.0, 19.0, 17.0, 14.}};
@@ -514,18 +528,24 @@ void MainWindow::experimental_control()
             lower_torque_thresholds_nominal, upper_torque_thresholds_nominal,
             lower_force_thresholds_acceleration, upper_force_thresholds_acceleration,
             lower_force_thresholds_nominal, upper_force_thresholds_nominal);
-        double time_max = 4.0;
+
+        double time_max = 3.0;
         double v_max = 0.1;
         double angle = M_PI / 4.0;
         double time = 0.0;
         robot.control([=, &time](const franka::RobotState&,
                                  franka::Duration period) -> franka::CartesianVelocities {
           time += period.toSec();
+
           double cycle = std::floor(pow(-1.0, (time - std::fmod(time, time_max)) / time_max));
           double v = cycle * v_max / 2.0 * (1.0 - std::cos(2.0 * M_PI / time_max * time));
-          double v_x = std::cos(angle) * v;
-          double v_z = -std::sin(angle) * v;
-          franka::CartesianVelocities output = {{v_x, 0.0, v_z, 0.0, 0.0, 0.0}};
+//          double v_x = std::cos(angle) * v;
+//          double v_z = -std::sin(angle) * v;
+          double v_x = 0.01;
+          double v_y = 0.01;
+          double v_z = 0.01;
+
+          franka::CartesianVelocities output = {{v_x, v_y, v_z, 0.0, 0.0, 0.0}};
           if (time >= 2 * time_max) {
             std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
             return franka::MotionFinished(output);
@@ -536,11 +556,6 @@ void MainWindow::experimental_control()
         std::cout << e.what() << std::endl;
 //        return -1;
       }
-    }
-      else {
-          qInfo()<<"robot is not connected, run Robotconnect first......";
-      }
-
 }
 
 void MainWindow::robotstreaming(void)
@@ -560,7 +575,24 @@ void MainWindow::robotstreaming(void)
 }
 
 
+void MainWindow::robotrecovery(void)
+{
+    std::cout << "Running error recovery..." << std::endl;
+    franka::Robot robot(fci_ip);
+    robot.automaticErrorRecovery();
+    std::cout << "Error recovery done...move robot to initial pos" << std::endl;
+//    setDefaultBehavior(robot);
+//    std::cout<<"set default!"<<std::endl;
 
+//    // First move the robot to a suitable joint configuration
+//    std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
+//    MotionGenerator motion_generator(0.5, q_goal);
+//    std::cout << "WARNING: This example will move the robot! "
+//              << "Please make sure to have the user stop button at hand!" << std::endl;
+////        std::cin.ignore();
+//    robot.control(motion_generator);
+//    std::cout << "Finished moving to initial joint configuration." << std::endl;
+}
 
 void MainWindow::frankathreadcontrol(void)
 {
@@ -895,96 +927,6 @@ void MainWindow::updateCurrents(void)
 
 }
 
-
-//if(InitRobotRegister==true)
-//      {
-//          //collect datapoint from master, number of total points is defined as NumRobotsRegisterData;
-//          if (NumCollectPointRobotRigster < NumRobotsRegisterData)
-//          {
-//              if (PedalsValue[0] >20 && PedalsValue[1] < 20)
-//              {
-//                  RobtRegisterPedalcount++;
-//                  if(RobtRegisterPedalcount > 300)
-//                  {
-//                      std::cout<<"Collect robots registration data:"<<NumCollectPointRobotRigster+1<<"/"<<NumRobotsRegisterData<<std::endl;
-//                      CollectPointRobotsRegister[0][NumCollectPointRobotRigster] = tipx;
-//                      CollectPointRobotsRegister[1][NumCollectPointRobotRigster] = tipy;
-//                      CollectPointRobotsRegister[2][NumCollectPointRobotRigster] = tipz;
-//                      CollectPointRobotsRegister[3][NumCollectPointRobotRigster] = 1;
-//                      OnelapOverRobotRegister = true;
-//                      Point_RobotRegsiter[0] = tipx; // for logging
-//                      Point_RobotRegsiter[1] = tipy;
-//                      Point_RobotRegsiter[2] = tipz;
-//                   }
-//                  else
-//                      std::cout << "Please press left pedal[ " << RobtRegisterPedalcount+1 <<"/300]"<< std::endl;
-//              }
-//              if (PedalsValue[0] < 20 && OnelapOverRobotRegister == true)
-//              {
-//                  std::cerr<<"Finished "<<NumCollectPointRobotRigster+1<<"/"<<NumRobotsRegisterData<<" dataset collection!!!"<<std::endl;
-//                  RobtRegisterPedalcount = 0; //clear RobotRegisterCount avoid accumulating all time
-//                  NumCollectPointRobotRigster++;
-//                  OnelapOverRobotRegister = false;
-//              }
-//          }
-//          else  //got all the data from master, next step is to receive datapoint from slave, and calculte transformation T
-//          {
-////                 while(true) //wait until get all slave robot data
-////                 {
-//              if(FlagSlavedatareceive == 1)
-//              {
-//                  // data from slave is in vctDoubleVec, should be like [P1x, P1y, P1z, P2x, P2y, P2z, ...,],
-//                  // so need convert to vctFixedSizeMatrix<double, 4, NumRobotsRegisterData>:
-//                  // [P1x, P2x, P3x, ...
-//                  //  P1y, P2y, P3y, ...
-//                  //  P1z, P2z, P3z, ...
-//                  //  1,    1,   1,  ...]
-//                  unsigned long k = 0;
-//                  for (unsigned long col=0; col<NumRobotsRegisterData; col++) {
-//                      for (unsigned long row = 0; row < 3; row++) {
-//                          SlaveRobotPointsMat[row][col] = SlaveRegistPointreceive[k];
-//                          k++;
-//                      }
-//                      SlaveRobotPointsMat[3][col] = 1;
-//                  }
-//                  ControlAlg.ComputeTwoRobotsTransformation(CollectPointRobotsRegister, SlaveRobotPointsMat, TransformM2S);
-//                  std::cerr<<"Finished robots registration:"<<TransformM2S<<std::endl;
-//                  InitRobotRegister = false;
-////                    break;
-//      }
-
-//void robotControlAlgorithm::ComputeTwoRobotsTransformation(const vctFixedSizeMatrix<double, 4, NumRobotsRegisterData> & MasterPoint,
-//                                                  const vctFixedSizeMatrix<double, 4, NumRobotsRegisterData> & SlavePoint,
-//                                                vctFrm4x4 & Tm2s) //Tm2s: transformation from master frame to slave frame
-//              {   //Prolem is get T from T<4,4>*Masterpoint<4,n> = Slavepoint<4,n>,
-//                  //it is xA=B, make transpose for both sides, we get A_transpose*x_transpose = B_transpose
-//                  //denotes as Atxt = Bt
-//                  //then xt = (At.tranpose*At).inverse*At.transpose*Bt
-//                  //finally x = xt.transpose
-//              // not sure should use vctDoulbeMat or vctFixedSizeMatrix.....
-//              //    vctDoubleMat A, B, At, Bt, pinvAt;
-//              //    A.SetSize(4, NumRobotsRegisterData);
-//              //    B.SetSize(4, NumRobotsRegisterData);
-//              //    At.SetSize(NumRobotsRegisterData, 4);
-//              //    Bt.SetSize(NumRobotsRegisterData, 4);
-//              //    pinvAt.SetSize(4, NumRobotsRegisterData);
-//                  vctFixedSizeMatrix<double, 4, NumRobotsRegisterData> A, B;
-//                  vctFixedSizeMatrix<double, NumRobotsRegisterData, 4> At, Bt;
-//                  vct4x4 doubleAt, invdoubleAt;
-//                  vctFixedSizeMatrix<double, 4, NumRobotsRegisterData> pinvAt;
-//                  vct4x4 xt;
-//                  A = MasterPoint;
-//                  B = SlavePoint;
-//                  At = A.Transpose();
-//                  Bt = B.Transpose();
-//                  doubleAt.ProductOf(A, At);
-//                  invdoubleAt = doubleAt;
-//                  // Compute inverse and check result
-//                  nmrInverse(invdoubleAt);
-//                  pinvAt.ProductOf(invdoubleAt,A);
-//                  xt.ProductOf(pinvAt,Bt);
-//                  Tm2s = xt.Transpose();
-
 void MainWindow:: registerdatacollect(void)
 {
     if(registerdataCount<registerdataNum)
@@ -1011,6 +953,13 @@ void MainWindow::calibratesetflag(void)
 {
     CalibrationDataCollet = true;
 }
+
+void MainWindow::calibratesetflagoff(void)
+{
+    CalibrationDataCollet = false;
+}
+
+
 
 
 void MainWindow::registration(double tabledata[4][registerdataNum], double robotdata[4][registerdataNum] ) //output Tt2r, Probot = Tt2r*Ptable

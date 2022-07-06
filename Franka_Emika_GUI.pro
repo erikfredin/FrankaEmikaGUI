@@ -29,6 +29,7 @@ SOURCES += \
     gamepadmonitor.cpp \
     magneticmathfunctions.cpp
 
+
 HEADERS += \
     callbacks.h \
     frankathread.h \
@@ -58,12 +59,17 @@ DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\poco\cmake-build\li
 DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\poco\cmake-build\bin\Debug"
 DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
 
+#DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\liborl-master"
+
+#DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\boost_1_79_0\boost_1_79_0\stage\lib"
 
 
 #INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\libfranka\lib"
 INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\libfranka\include"
 INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
 
+#INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\liborl-master\include"
+#INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\boost_1_79_0\boost_1_79_0"
 
 ## These are important for finding the libraries of the s826 board that are in the /lib/ part of the project.
 # We were using LIB instead of LIBS so it didn't work at first.

@@ -152,7 +152,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>270</y>
+      <y>250</y>
       <width>71</width>
       <height>20</height>
      </rect>
@@ -165,7 +165,7 @@
     <property name="geometry">
      <rect>
       <x>100</x>
-      <y>270</y>
+      <y>250</y>
       <width>71</width>
       <height>20</height>
      </rect>
@@ -178,7 +178,7 @@
     <property name="geometry">
      <rect>
       <x>180</x>
-      <y>270</y>
+      <y>250</y>
       <width>71</width>
       <height>20</height>
      </rect>
@@ -191,7 +191,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>240</y>
+      <y>220</y>
       <width>121</width>
       <height>20</height>
      </rect>
@@ -204,7 +204,7 @@
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>270</y>
+      <y>250</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -466,9 +466,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>310</y>
-      <width>121</width>
-      <height>31</height>
+      <y>300</y>
+      <width>91</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
@@ -478,8 +478,8 @@
    <widget class="QCheckBox" name="checkBox_pilot">
     <property name="geometry">
      <rect>
-      <x>350</x>
-      <y>360</y>
+      <x>240</x>
+      <y>300</y>
       <width>101</width>
       <height>41</height>
      </rect>
@@ -490,7 +490,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Pilot</string>
+     <string>Pilot thread</string>
     </property>
     <property name="checked">
      <bool>false</bool>
@@ -515,8 +515,8 @@
    <widget class="QPushButton" name="pushButton_pilotthreadon">
     <property name="geometry">
      <rect>
-      <x>430</x>
-      <y>330</y>
+      <x>440</x>
+      <y>510</y>
       <width>111</width>
       <height>41</height>
      </rect>
@@ -528,8 +528,8 @@
    <widget class="QPushButton" name="pushButton_pilotthreadoff">
     <property name="geometry">
      <rect>
-      <x>430</x>
-      <y>380</y>
+      <x>570</x>
+      <y>510</y>
       <width>111</width>
       <height>41</height>
      </rect>
@@ -542,7 +542,7 @@
     <property name="geometry">
      <rect>
       <x>430</x>
-      <y>450</y>
+      <y>460</y>
       <width>121</width>
       <height>41</height>
      </rect>
@@ -554,14 +554,40 @@
    <widget class="QPushButton" name="pushButton_calibrationcollect">
     <property name="geometry">
      <rect>
-      <x>430</x>
-      <y>500</y>
-      <width>121</width>
+      <x>360</x>
+      <y>300</y>
+      <width>141</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>Calibration data collet</string>
+     <string>Calibration data collet ON</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_robotrecovery">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>300</y>
+      <width>111</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Robot recovery</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_calibrationcollect_off">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>340</y>
+      <width>141</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Calibration data collet OFF</string>
     </property>
    </widget>
   </widget>

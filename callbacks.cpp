@@ -139,10 +139,11 @@ void MainWindow::callbacks(void)
             franka::Robot robot(fci_ip);
             setDefaultBehavior(robot);
             // First move the robot to a suitable joint configuration
-            std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
+//            std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
+            std::array<double, 7> q_goal = {{-0.0696155, 0.30357, -0.00032821, -2.22616, -0.0, 2.51505, 0.715763}};
             MotionGenerator motion_generator(0.5, q_goal);
             robot.control(motion_generator);
-            std::cout << "Finished moving to initial joint configuration." << std::endl;
+            std::cout << "Finished moving to initial joint configuration in callback." << std::endl;
             robotinitialized = true;
         }
         else
@@ -164,10 +165,10 @@ void MainWindow::callbacks(void)
                     }
                     qInfo() << "Currents are: "<<cmdCoilCurrent[0]<<", "<<cmdCoilCurrent[1]<<", "<<cmdCoilCurrent[2]<<", "<<cmdCoilCurrent[3]<<", "<<cmdCoilCurrent[4]<<", "<<cmdCoilCurrent[5]<<", "<<cmdCoilCurrent[6]<<", "<<cmdCoilCurrent[7];
                     updateCurrents_CalibrationOnly(cmdCoilCurrent);
-                    currentcount++;
+
                     robotloopisdone = false;
                 }
-                else //robotloopisdone==false
+                if(!robotloopisdone)
                 {
                     if (robotmovecount < robotmoveloop)
                     {
@@ -175,20 +176,22 @@ void MainWindow::callbacks(void)
                         // and is used to generate a random number, which is placed here for local use
     //                    double       leftlowercorner[3] = {-50.0, -50.0, 50.0}; //table origin is at the table center (0,0,0)
     //                    double       righttopcorner[3] = {50.0, 50.0, 100.0};
-                        std::random_device dev;
-                        std::mt19937 rng(dev());
+                        std::random_device dev1;
+                        std::mt19937 rng1(dev1());
+                        std::random_device dev2;
+                        std::mt19937 rng2(dev2());
+                        std::random_device dev3;
+                        std::mt19937 rng3(dev3());
                         std::uniform_int_distribution<std::mt19937::result_type> pos_x(0,righttopcorner[0]*2); // distribution in range [0, 100]
                         std::uniform_int_distribution<std::mt19937::result_type> pos_y(0,righttopcorner[1]*2); // distribution in range [0, 100]
                         std::uniform_int_distribution<std::mt19937::result_type> pos_z(0,leftlowercorner[2]); // distribution in range [0, 50]
-                        double robotposcmd[3] = {0,0,100};
-//                        robotposcmd[0] = pos_x(rng)-righttopcorner[0]; //rand [-50, 50]
-//                        robotposcmd[1] = pos_y(rng)-righttopcorner[1]; //rand [-50, 50]
-//                        robotposcmd[2] = pos_z(rng)+leftlowercorner[2]; //rand [50, 100]
+                        double robotposcmd[3]; //unit: m
+                        robotposcmd[0] = (pos_x(rng1)-righttopcorner[0])*0.001; //rand [-50, 50]
+                        robotposcmd[1] = (pos_y(rng2)-righttopcorner[1])*0.001; //rand [-50, 50]
+                        robotposcmd[2] = (pos_z(rng3)+leftlowercorner[2])*0.001; //rand [50, 100]
     //                    I_command =  dist6(rng)-maxCurrent;
 
-                        // convert robot pos from mm to meter
-                        for(int k=0; k<3; k++)
-                            robotposcmd[k] = robotposcmd[k]*0.001;
+
                         qInfo() << "command position in table frame is: "<<robotposcmd[0]<<", "<<robotposcmd[1]<<", "<<robotposcmd[2];
 
                         //covert cmd position in table frame to robot frame
@@ -199,34 +202,74 @@ void MainWindow::callbacks(void)
 
                         qInfo() << "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2];
 
-                        ///move robot in absolute position
+                        //move robot in absolute position
                         franka::Robot robot(fci_ip);
-                        setDefaultBehavior(robot);
-                        std::array<double, 16> initial_pose;
-                        double time = 0.0;
-                        robot.control([&time, &initial_pose, &abs_robotpos]( const franka::RobotState& robot_state,
-                                                             franka::Duration period) -> franka::CartesianPose
-                        {
-                          time += period.toSec();
-                          if (time == 0.0) {
-                            initial_pose = robot_state.O_T_EE_c;
-                          }
-                          constexpr double kRadius = 0.3;
-//                          double angle = M_PI / 4 * (1 - std::cos(M_PI / 5.0 * time));
-//                          double delta_x = kRadius * std::sin(angle);
-//                          double delta_z = kRadius * (std::cos(angle) - 1);
-                          std::array<double, 16> new_pose = initial_pose;
-                          new_pose[12] = abs_robotpos[0];
-                          new_pose[13] = abs_robotpos[1];
-                          new_pose[14] = abs_robotpos[2];
-                          qInfo()<<"I am in the control loop...";
-//                          std::cout<<"new pose of robot is: "<<new_pose[12]<<std::endl;
-                          if (time >= 5.0) {
-                            std::cout << std::endl << "Finished motion for single dataset" << std::endl;
-                            return franka::MotionFinished(new_pose);
-                          }
-                          return new_pose;
-                        });
+                        try{
+                            setDefaultBehavior(robot);
+                            // Set additional parameters always before the control loop, NEVER in the control loop!
+
+//                            std::array<double, 16> initial_pose;
+                            double time = 0.0;
+
+                            /// ----------------robot control loop---------------------------------
+                            robot.control([=, &time](const franka::RobotState& robot_state,
+                                                     franka::Duration period) -> franka::CartesianVelocities
+//                            robot.control([&time, &initial_pose, &abs_robotpos]( const franka::RobotState& robot_state,
+//                                                                 franka::Duration period) -> franka::CartesianPose
+                            {
+                              time += period.toSec();
+//                              if (time == 0.0) {
+//                                initial_pose = robot_state.O_T_EE_c; //Last commanded end effector pose of motion generation in base frame.
+//                                //robot_state.O_T_EE; Measured end effector pose in base frame.
+//                                //robot_state.O_T_EE_d; Last desired end effector pose of motion generation in base frame.
+//                              }
+//                              std::array<double, 16> new_pose = initial_pose;
+                              double tolerance = 0.005; //2mm
+                              double error[3];
+                              double direction[3];
+                              std::array<double, 16> current_pose = robot_state.O_T_EE; //not sure whether should use _d
+
+//                              qInfo() << "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2];
+//                              qInfo() << "current robot position is: "<<current_pose[12]<<", "<<current_pose[13]<<", "<<current_pose[14];
+                              for(int k=0; k<3; k++)
+                              {
+                                  double temp_e = abs_robotpos[k]-current_pose[12+k];
+                                  if (temp_e>0)
+                                     direction[k] = 1.0;
+                                  else
+                                      direction[k] = -1.0;
+
+                                  if (abs(temp_e)>=tolerance)
+                                      error[k] = temp_e;
+                                  else
+                                  {
+                                      error[k] = 0.0;
+                                      direction[k] = 0.0;
+                                  }
+                              }
+//                              std::cout<<"pos error is: "<<error[0]<<" "<<error[1]<<" "<<error[2]<<std::endl;
+//                              double detp = 0.00001; //0.1mm
+
+//                              new_pose[12] = current_pose[12]+direction[0]*detp;
+//                              new_pose[13] = current_pose[13]+direction[1]*detp;
+//                              new_pose[14] = current_pose[14]+direction[2]*detp;
+                              double v_x = 0.002;
+                              double v_y = 0.002;
+                              double v_z = 0.002;
+
+                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
+                              if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
+                                std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
+                                output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+                                return franka::MotionFinished(output);
+                              }
+                              return output;
+                            });
+                        }catch (const franka::Exception& e) {
+                        std::cout << e.what() << std::endl;
+                        std::cout << "Running error recovery..." << std::endl;
+                        robot.automaticErrorRecovery();
+                        }
 
                         //read franka robot pose
                         franka::RobotState initial_state = robot.readOnce();
@@ -266,6 +309,10 @@ void MainWindow::callbacks(void)
                         if(LogEnabled){
                              MainWindow::Record();
                         }
+                        else
+                        {
+                            qInfo()<<"log is not enabled!";
+                        }
 
                         robotmovecount++;
                     }
@@ -273,23 +320,24 @@ void MainWindow::callbacks(void)
                     {
                         robotmovecount = 0;
                         robotloopisdone = true;
-                        qInfo()<<"single loop robot moving is done!";
+                        currentcount++;
+                        qInfo()<<"single current loop is done!";
                     }
                 }
             }
             else
             {
-                qInfo()<<"calibration data collection is done! set current to zeros";
+//                qInfo()<<"calibration data collection is done! set current to zeros";
                 double I_zeros[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
                 updateCurrents_CalibrationOnly(I_zeros);
-                // set robot to intial pos
-                franka::Robot robot(fci_ip);
-                setDefaultBehavior(robot);
-                // First move the robot to a suitable joint configuration
-                std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
-                MotionGenerator motion_generator(0.5, q_goal);
-                robot.control(motion_generator);
-                std::cout << "Finished moving to initial joint configuration." << std::endl;
+//                // set robot to intial pos
+//                franka::Robot robot(fci_ip);
+//                setDefaultBehavior(robot);
+//                // First move the robot to a suitable joint configuration
+//                std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
+//                MotionGenerator motion_generator(0.5, q_goal);
+//                robot.control(motion_generator);
+//                std::cout << "Finished moving to initial joint configuration." << std::endl;
             }
 
         }

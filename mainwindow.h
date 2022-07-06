@@ -30,6 +30,7 @@
 #include "examples_common.h"
 #include <Core>
 
+
 #include <array>
 #include <cmath>
 #include <functional>
@@ -57,8 +58,11 @@
 //#include "qcustomplot.h"
 #include "frankathread.h"
 #include "robotstatus.h"
-
+//#include <boost/>
 #include <thread>
+
+//#include <liborl/liborl.h>
+//#include <memory>
 
 
 // These are defined in the S826api header internally. Left here for reference
@@ -116,6 +120,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+//using namespace orl;
 
 class MainWindow : public QMainWindow
 {
@@ -299,18 +304,18 @@ public:
 //    void    collectrobotdata(void);
 
     // define field calibration cubic space
-    //! cubic range is 200-200-100
+    //! cubic range is 200-200-100 mm
 //    double       leftlowercorner[3] = {-100.0, -100.0, 20.0}; //table origin is at the table center (0,0,0)
 //    double       righttopcorner[3] = {100.0, 100.0, 120.0};
-    //! cubic range is 100-100-50
+    //! cubic range is 100-100-50 mm
     double       leftlowercorner[3] = {-50.0, -50.0, 50.0}; //table origin is at the table center (0,0,0)
     double       righttopcorner[3] = {50.0, 50.0, 100.0};
     double       incstep = 10.0;
     bool         CalibrationDataCollet = false;
     double       cmdCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    int          currentloop = 10;
+    int          currentloop = 2;
     int          currentcount = 0;
-    int          robotmoveloop = 20;
+    int          robotmoveloop = 5;
     int          robotmovecount = 0;
     bool         robotloopisdone = true;
     bool         robotinitialized = false;
@@ -372,6 +377,7 @@ public slots:
     void        robotstreaming(void);
     void        pilotthreadon(void);
     void        pilotthreadoff(void);
+    void        robotrecovery(void);
 
 
 private slots:
@@ -381,6 +387,9 @@ private slots:
     void       updateCurrents_CalibrationOnly(double I_command[8]);
     void       updateCurrents(void);
     void       registerdatacollect(void);
+
     void       calibratesetflag(void);
+    void       calibratesetflagoff(void);
+
 };
 #endif // MAINWINDOW_H
