@@ -165,7 +165,8 @@ public:
     const static int     numProbePos = 3;
 
     constexpr static double maxAllowableTemp  = 90.0;  // [C] Maximum temperature that the system is allowed to operate at. Kill currents if temperature exceeds
-    constexpr static double maxCurrent = 24.0; // [A]
+//    constexpr static double maxCurrent = 24.0; // [A], maxvalue based on Adam's code
+    constexpr static double maxCurrent = 23.0; // [A], decrease to 23A to make it safer
     // MAX COMMAND SIGNALS Found through current experimentation with clamp meter -Adam 2021/09/13
 //    constexpr static double maxCurrentCommand[numAct] = { 3.5555, 3.5976, 3.7431, 6.1806, 3.5449, 3.5449, 3.5764, 3.5036 }; // [V] For max 24 A
     constexpr static double maxCurrentCommand[numAct] = { 3.5555/2.0, 3.5976/2.0, 3.7431/2.0, 3.5389/2.0, 3.5449/2.0, 3.5449/2.0, 3.5764/2.0, 3.5036/2.0 }; // [V] For max 12 A (old EM7 6.1806/2.0)
@@ -283,7 +284,7 @@ public:
     FrankaThread    *frankathread = new FrankaThread;
 //    QThread *thread = new QThread;
 
-    bool            isRobotreading = false;
+    bool            isRobotStreaming = false;
 
     void            robotfreedraginthread(void);
 
@@ -305,11 +306,11 @@ public:
 
     // define field calibration cubic space
     //! cubic range is 200-200-100 mm
-//    double       leftlowercorner[3] = {-100.0, -100.0, 20.0}; //table origin is at the table center (0,0,0)
-//    double       righttopcorner[3] = {100.0, 100.0, 120.0};
+//    double       leftlowercorner[3] = {-100.0, -100.0, 50.0}; //table origin is at the table center (0,0,0)
+//    double       righttopcorner[3] = {100.0, 100.0, 150.0};
     //! cubic range is 100-100-50 mm
-    double       leftlowercorner[3] = {-50.0, -50.0, 50.0}; //table origin is at the table center (0,0,0)
-    double       righttopcorner[3] = {50.0, 50.0, 100.0};
+    double       leftlowercorner[3] = {-50.0, -50.0, 75.0}; //table origin is at the table center (0,0,0)
+    double       righttopcorner[3] = {50.0, 50.0, 125.0};
     double       incstep = 10.0;
     bool         CalibrationDataCollet = false;
     double       cmdCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -319,6 +320,11 @@ public:
     int          robotmovecount = 0;
     bool         robotloopisdone = true;
     bool         robotinitialized = false;
+    int          Robotmotionsuccess = 0;
+
+    double       robotposcmd[3]; //unit: m
+
+    std::array<double, 16> current_EEpose;
 
 
 
@@ -378,6 +384,7 @@ public slots:
     void        pilotthreadon(void);
     void        pilotthreadoff(void);
     void        robotrecovery(void);
+    void        enableDAQ(void);
 
 
 private slots:

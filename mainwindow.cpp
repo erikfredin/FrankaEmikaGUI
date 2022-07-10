@@ -20,6 +20,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     currentTime.start();
     lastTime = currentTime.elapsed();
 
+    // Set up the game controller.
+    // This work better here than it does in the objects constructor.
+    // Probably due to a timing issue and load on the computer during launch.
+    connectedGamepad.reconnectController();
+
+    // Set up the S826 board.
+    int errcode = s826.init();
+    qInfo() << "S826.init() returned the value: " << errcode;
+    qInfo() << " ";
+
     // PUSH BUTTONS
     connect(ui->pushButton_experimental_control,SIGNAL(clicked()),SLOT(experimental_control()));
     connect(ui->pushButton_freedrag,SIGNAL(clicked()),SLOT(freedrag()));
@@ -49,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 //
     connect(ui->checkBox_pilot,SIGNAL(clicked()),SLOT(frankathreadcontrol()));
     connect(ui->checkBox_streaming,SIGNAL(clicked()),SLOT(robotstreaming()));
+    connect(ui->checkBox_enableDAQ,SIGNAL(clicked()),SLOT(enableDAQ()));
 
 
 
@@ -562,12 +573,12 @@ void MainWindow::robotstreaming(void)
 {
     if(ui->checkBox_streaming->checkState())
     {
-        isRobotreading = true;
+        isRobotStreaming = true;
         qInfo()<<"robot is streaming";
     }
     else
     {
-        isRobotreading = false;
+        isRobotStreaming = false;
 
         qInfo()<<"robot stops streaming";
     }
@@ -676,8 +687,8 @@ void MainWindow::Record(void)
         // Bx = ProbeBy
         // By = -ProbeBx
         // Bz = ProbeBz
-        msdFieldvalue[0] = DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1];
-        msdFieldvalue[1] = -DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0];
+        msdFieldvalue[0] = DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0];
+        msdFieldvalue[1] = DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1];
         msdFieldvalue[2] = DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2];
 
        int i;
@@ -689,6 +700,8 @@ void MainWindow::Record(void)
 //               LogFileAllData<<ProbePos[i]<<Delim;
            LogFileAllData<<Robot_tip_posisition[i]<<Delim;
 
+       for (i = 0; i < numProbePos; i++)
+           LogFileAllData<<robotposcmd[i]<<Delim;
 
 
        for (i = 0;i < numAct; i++)
@@ -700,7 +713,10 @@ void MainWindow::Record(void)
        for (i = 0;i < numProberead; i++)
            LogFileAllData<<DAQ.analogRawInputVoltages[i]<<Delim;
 
-       LogFileAllData<<0;
+       for (i = 0; i<16; i++)
+           LogFileAllData<<current_EEpose[i]<<Delim;
+
+       LogFileAllData<<Robotmotionsuccess;
 
         LogFileAllData<<std::endl;
         NumWritten++;
@@ -771,19 +787,25 @@ bool MainWindow::OpenFiles(std::string &fileNameBase){
                 LogFileAllData<<"msdFieldvalue_mT_"<<i+1<<Delim;
 
             for (i = 0; i < numProbePos; i++)
-                LogFileAllData<<"ProbePos_mm_"<<i+1<<Delim;
+                LogFileAllData<<"robotMsdPos_mm_"<<i+1<<Delim;
+
+            for (i = 0; i < numProbePos; i++)
+                LogFileAllData<<"tableCmdPos_mm_"<<i+1<<Delim;
 
 
             for (i = 0;i < numAct; i++)
                 LogFileAllData<<"cmdCoilCurrent_A_"<<i+1<<Delim;
 
             for (i = 0;i < numAct; i++)
-                LogFileAllData<<"mrdCoilCurrent_A_"<<i+1<<Delim;
+                LogFileAllData<<"msdCoilCurrent_A_"<<i+1<<Delim;
 
             for (i = 0;i < numProberead; i++)
                 LogFileAllData<<"Daqraw_v"<<i+1<<Delim;
 
-            LogFileAllData<<"Test";
+            for (i = 0; i<16; i++)
+                LogFileAllData<<"EEpose"<<i<<Delim;
+
+            LogFileAllData<<"Robotmotionsuccess";
 
             LogFileAllData<<std::endl;
 
@@ -871,7 +893,7 @@ void MainWindow::updateCurrents_CalibrationOnly(double I_command[8])
     if (s826.boardConnected)
     {
         s826.analogWriteAll(s826.rangeCodesDAC, outputAnalogVoltages);
-        qInfo() << "Wrote values to the S826 in updateCurrents_CalibrationOnly submode";
+//        qInfo() << "Wrote values to the S826 in updateCurrents_CalibrationOnly submode";
     }
 }
 
@@ -1027,4 +1049,22 @@ void MainWindow::registration(double tabledata[4][registerdataNum], double robot
 //          pinvAt.ProductOf(invdoubleAt,A);
 //          xt.ProductOf(pinvAt,Bt);
 //          Tm2s = xt.Transpose();
+}
+
+
+void MainWindow::enableDAQ()
+{
+    DAQ.enableDAQ = ui->checkBox_enableDAQ->checkState();
+    if (DAQ.isEnabled())
+    {
+        DAQ.setupTask();
+    }
+    else
+    {
+        DAQ.finishTask();
+        for ( int i = 0; i < 8; i++ )
+        {
+            DAQ.analogInputVoltages[i] = 0.0;
+        }
+    }
 }

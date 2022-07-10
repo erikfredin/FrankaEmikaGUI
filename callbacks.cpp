@@ -11,7 +11,7 @@ void MainWindow::callbacks(void)
     //We connect Franka every turns of callback , could be improved...
 
 
-    if (isRobotreading){
+    if (isRobotStreaming){
         franka::Robot robot(fci_ip);
         //read franka robot pose
         franka::RobotState initial_state = robot.readOnce();
@@ -63,6 +63,7 @@ void MainWindow::callbacks(void)
         // Read all 16 input channels and store in pass-by-reference array:
         int err = s826.analogReadAll(inputAnalogVoltages);
 //        qInfo() << err;
+//        qInfo()<<"s826 connected";
     }
 
     for (int t = 0; t < 8; t++)
@@ -100,36 +101,10 @@ void MainWindow::callbacks(void)
             tempVoltages[v] = DAQ.analogInputVoltages[v]-ATINanoVoltageOffsets[v];
             originalDAQVol[v] = DAQ.analogInputVoltages[v];
         }
+//        qInfo()<<"DAQ connected!";
 
-//        double A[6][6] = {0.0};
-//        double J[6] = {0.0};
-////        MatrixMultVect6(A, tempVoltages, J);
-//        MatrixMultVect6(ATINanoCalibrationMatrix, tempVoltages, ATINanoForceTorque);
-//        //this is for ATI force/torque output
-//        for (int v = 0; v<6; v++)
-//        {
-//            DAQ.analogInputVoltages[v] = ATINanoForceTorque[v];
-//        }
-        //this is for gaussmeter output
-//        for (int v = 0; v<3; v++)
-//        {
-//            DAQ.analogInputVoltages[v] = originalDAQVol[v]*gaussmeterCalibratedConstants[v];
-//        }
     }
 
-
-//    std::cout<<"robot EE posisiton is: " << position_d <<std::endl;
-//    std::cout<<"robot EE orientation is: " << eulerangle <<std::endl;
-
-//    std::cout<<"robot EEinF posisiton is: " << EEinFpos <<std::endl;
-//    std::cout<<"robot EEinF orientation is: " << EEinFeulerangle <<std::endl;
-
-//    std::cout<<"robot measured tau: "<<initial_tau_measured<<std::endl;
-
-
-//    if(LogEnabled){
-//         MainWindow::Record();
-//    }
 
 
     if(CalibrationDataCollet)
@@ -140,7 +115,7 @@ void MainWindow::callbacks(void)
             setDefaultBehavior(robot);
             // First move the robot to a suitable joint configuration
 //            std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
-            std::array<double, 7> q_goal = {{-0.0696155, 0.30357, -0.00032821, -2.22616, -0.0, 2.51505, 0.715763}};
+            std::array<double, 7> q_goal = {{-0.0690753, -0.0159581, -0.00171238, -1.94264, -0.0153294, 1.91711, 0.724667}};
             MotionGenerator motion_generator(0.5, q_goal);
             robot.control(motion_generator);
             std::cout << "Finished moving to initial joint configuration in callback." << std::endl;
@@ -162,6 +137,7 @@ void MainWindow::callbacks(void)
                     for (int i = 0; i < 8; i++)
                     {
                       cmdCoilCurrent[i] =  dist6(rng)-maxCurrent; //generate random current in the range of [-maxCurrent, maxcurrent]
+//                        cmdCoilCurrent[i] =  0.0;
                     }
                     qInfo() << "Currents are: "<<cmdCoilCurrent[0]<<", "<<cmdCoilCurrent[1]<<", "<<cmdCoilCurrent[2]<<", "<<cmdCoilCurrent[3]<<", "<<cmdCoilCurrent[4]<<", "<<cmdCoilCurrent[5]<<", "<<cmdCoilCurrent[6]<<", "<<cmdCoilCurrent[7];
                     updateCurrents_CalibrationOnly(cmdCoilCurrent);
@@ -185,14 +161,15 @@ void MainWindow::callbacks(void)
                         std::uniform_int_distribution<std::mt19937::result_type> pos_x(0,righttopcorner[0]*2); // distribution in range [0, 100]
                         std::uniform_int_distribution<std::mt19937::result_type> pos_y(0,righttopcorner[1]*2); // distribution in range [0, 100]
                         std::uniform_int_distribution<std::mt19937::result_type> pos_z(0,leftlowercorner[2]); // distribution in range [0, 50]
-                        double robotposcmd[3]; //unit: m
+
                         robotposcmd[0] = (pos_x(rng1)-righttopcorner[0])*0.001; //rand [-50, 50]
                         robotposcmd[1] = (pos_y(rng2)-righttopcorner[1])*0.001; //rand [-50, 50]
                         robotposcmd[2] = (pos_z(rng3)+leftlowercorner[2])*0.001; //rand [50, 100]
-    //                    I_command =  dist6(rng)-maxCurrent;
 
-
-                        qInfo() << "command position in table frame is: "<<robotposcmd[0]<<", "<<robotposcmd[1]<<", "<<robotposcmd[2];
+//                        robotposcmd[0] = 0.0;
+//                        robotposcmd[1] = 0.0,
+//                        robotposcmd[2] = 0.1; //100mm
+                        std::cout << std::endl<< "command position in table frame is: "<<robotposcmd[0]<<", "<<robotposcmd[1]<<", "<<robotposcmd[2]<<std::endl;
 
                         //covert cmd position in table frame to robot frame
                         Eigen::Vector4d pos_cmd(robotposcmd[0], robotposcmd[1], robotposcmd[2], 1);
@@ -200,7 +177,7 @@ void MainWindow::callbacks(void)
 
                         double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
 
-                        qInfo() << "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2];
+                        std::cout<< "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2]<<std::endl;
 
                         //move robot in absolute position
                         franka::Robot robot(fci_ip);
@@ -224,16 +201,21 @@ void MainWindow::callbacks(void)
 //                                //robot_state.O_T_EE_d; Last desired end effector pose of motion generation in base frame.
 //                              }
 //                              std::array<double, 16> new_pose = initial_pose;
-                              double tolerance = 0.005; //2mm
+                              double tolerance = 0.001; //1mm
                               double error[3];
                               double direction[3];
-                              std::array<double, 16> current_pose = robot_state.O_T_EE; //not sure whether should use _d
+                              current_EEpose = robot_state.O_T_EE; //not sure whether should use _d
+
+                              //default unit is meter and rad, so we keep that
+                              Robot_tip_posisition[0] = current_EEpose[12];
+                              Robot_tip_posisition[1] = current_EEpose[13];
+                              Robot_tip_posisition[2] = current_EEpose[14];
 
 //                              qInfo() << "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2];
 //                              qInfo() << "current robot position is: "<<current_pose[12]<<", "<<current_pose[13]<<", "<<current_pose[14];
                               for(int k=0; k<3; k++)
                               {
-                                  double temp_e = abs_robotpos[k]-current_pose[12+k];
+                                  double temp_e = abs_robotpos[k]-current_EEpose[12+k];
                                   if (temp_e>0)
                                      direction[k] = 1.0;
                                   else
@@ -256,11 +238,27 @@ void MainWindow::callbacks(void)
                               double v_x = 0.002;
                               double v_y = 0.002;
                               double v_z = 0.002;
+                              double maxv = 0.013;  //10mm/s
+                              double maxDelt_e = 0.06; //50mm
+                              double A = maxv/(maxDelt_e*maxDelt_e);
+                              double v_cmd[3] = {0.0};
 
-                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
+                              for (int k=0; k<3; k++)
+                              {
+                                  if(abs(error[k])<=maxDelt_e)
+                                       v_cmd[k] = maxv*sin((M_PI/2)*(error[k]/maxDelt_e));
+//                                      v_cmd[k] = A*pow(error[k],2);
+                                  else
+                                      v_cmd[k] = maxv*direction[k];
+                              }
+
+//                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
+                              franka::CartesianVelocities output = {{v_cmd[0], v_cmd[1], v_cmd[2], 0.0, 0.0, 0.0}};
                               if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
-                                std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
+                                std::cout << "single motion Finished: ["<<robotmovecount+1<<"/"<<robotmoveloop <<"]" << std::endl;
+                                std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
                                 output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+                                Robotmotionsuccess = 1;
                                 return franka::MotionFinished(output);
                               }
                               return output;
@@ -268,6 +266,7 @@ void MainWindow::callbacks(void)
                         }catch (const franka::Exception& e) {
                         std::cout << e.what() << std::endl;
                         std::cout << "Running error recovery..." << std::endl;
+                        Robotmotionsuccess = 0;
                         robot.automaticErrorRecovery();
                         }
 
@@ -321,7 +320,7 @@ void MainWindow::callbacks(void)
                         robotmovecount = 0;
                         robotloopisdone = true;
                         currentcount++;
-                        qInfo()<<"single current loop is done!";
+                        qInfo()<<"single current loop is done ["<<currentcount<<"/"<<currentloop <<"]";
                     }
                 }
             }
@@ -347,7 +346,9 @@ void MainWindow::callbacks(void)
 
 
 
-
+// record
+//    if(LogEnabled)
+//         MainWindow::Record();
 
 
     if (connectedGamepad.enabled) // Update Direct Local B-field
