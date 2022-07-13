@@ -65,6 +65,8 @@
 //#include <memory>
 
 
+#include <chrono>
+
 // These are defined in the S826api header internally. Left here for reference
 #define AOUT0_PIN   42
 #define AOUT1_PIN   44
@@ -166,7 +168,7 @@ public:
 
     constexpr static double maxAllowableTemp  = 90.0;  // [C] Maximum temperature that the system is allowed to operate at. Kill currents if temperature exceeds
 //    constexpr static double maxCurrent = 24.0; // [A], maxvalue based on Adam's code
-    constexpr static double maxCurrent = 23.0; // [A], decrease to 23A to make it safer
+    constexpr static double maxCurrent = 23.5; // [A], decrease to 23.5A to make it safer
     // MAX COMMAND SIGNALS Found through current experimentation with clamp meter -Adam 2021/09/13
 //    constexpr static double maxCurrentCommand[numAct] = { 3.5555, 3.5976, 3.7431, 6.1806, 3.5449, 3.5449, 3.5764, 3.5036 }; // [V] For max 24 A
     constexpr static double maxCurrentCommand[numAct] = { 3.5555/2.0, 3.5976/2.0, 3.7431/2.0, 3.5389/2.0, 3.5449/2.0, 3.5449/2.0, 3.5764/2.0, 3.5036/2.0 }; // [V] For max 12 A (old EM7 6.1806/2.0)
@@ -209,7 +211,7 @@ public:
     /// DAQ FOR FEEDBACK
     daq DAQ;
     double gaussmeterCalibratedConstants[3] = {102.67, 103.25, 104.66}; // mT/V
-    double gaussCalibCons_new[3] = {102.6250, 102.9547, 104.3281}; // mT/V
+    double gaussCalibCons_new[3] = {102.8047, 103.17, 104.27}; // mT/V
 
     /// CONTROL BOOLEANS and STATE VALUES
     bool overheatingFlag = false;
@@ -314,15 +316,19 @@ public:
     double       incstep = 10.0;
     bool         CalibrationDataCollet = false;
     double       cmdCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    int          currentloop = 2;
+    int          currentloop = 1;
     int          currentcount = 0;
-    int          robotmoveloop = 5;
+    int          robotmoveloop = 20;
     int          robotmovecount = 0;
     bool         robotloopisdone = true;
     bool         robotinitialized = false;
     int          Robotmotionsuccess = 0;
+//    bool         currenttakebreak = false;
+    double       zeroCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     double       robotposcmd[3]; //unit: m
+    double       currentcooldownloop = 10.0;
+    double       tempCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     std::array<double, 16> current_EEpose;
 
@@ -385,6 +391,7 @@ public slots:
     void        pilotthreadoff(void);
     void        robotrecovery(void);
     void        enableDAQ(void);
+    void        clearcurrent(void);
 
 
 private slots:

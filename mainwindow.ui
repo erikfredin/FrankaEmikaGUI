@@ -512,37 +512,11 @@
      <string>Streaming data</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_pilotthreadon">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>510</y>
-      <width>111</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Pilot thread on</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_pilotthreadoff">
-    <property name="geometry">
-     <rect>
-      <x>570</x>
-      <y>510</y>
-      <width>111</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Pilot thread off</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushButton_registercollect">
     <property name="geometry">
      <rect>
-      <x>430</x>
-      <y>460</y>
+      <x>540</x>
+      <y>300</y>
       <width>121</width>
       <height>41</height>
      </rect>
@@ -601,6 +575,19 @@
     </property>
     <property name="text">
      <string>Enable DAQ</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_clearcurrent">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>80</y>
+      <width>101</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clear Currents</string>
     </property>
    </widget>
   </widget>

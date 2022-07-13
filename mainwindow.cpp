@@ -36,13 +36,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_translationaldrag,SIGNAL(clicked()),SLOT(translationaldrag()));
     connect(ui->pushButton_EEoffsetupdate,SIGNAL(clicked()),SLOT(updateRobotEE()));
     connect(ui->pushButton_robotconnect,SIGNAL(clicked()),SLOT(Robotconnect()));
-    connect(ui->pushButton_pilotthreadon,SIGNAL(clicked()),SLOT(pilotthreadon()));
-    connect(ui->pushButton_pilotthreadoff,SIGNAL(clicked()),SLOT(pilotthreadoff()));
+//    connect(ui->pushButton_pilotthreadon,SIGNAL(clicked()),SLOT(pilotthreadon()));
+//    connect(ui->pushButton_pilotthreadoff,SIGNAL(clicked()),SLOT(pilotthreadoff()));
     connect(ui->pushButton_registercollect,SIGNAL(clicked()),SLOT(registerdatacollect()));
 
     connect(ui->pushButton_calibrationcollect,SIGNAL(clicked()),SLOT(calibratesetflag()));
     connect(ui->pushButton_calibrationcollect_off,SIGNAL(clicked()),SLOT(calibratesetflagoff()));
 
+    connect(ui->pushButton_clearcurrent,SIGNAL(clicked()),SLOT(clearcurrent()));
 
     connect(ui->pushButton_robotrecovery,SIGNAL(clicked()),SLOT(robotrecovery()));
 
@@ -885,6 +886,7 @@ void MainWindow::updateCurrents_CalibrationOnly(double I_command[8])
         for (int i = 0; i < numAct; i++)
         {
             outputAnalogVoltages[i] = 0.0; // Voltage = (Amps) * (Volts/Amp)
+            std::cerr<<"Overheating!....Sending 0A to coil "<<i<<std::endl;
         }
     }
     // TODO send current setpoints to amplifiers
@@ -947,6 +949,24 @@ void MainWindow::updateCurrents(void)
     }
 
 
+}
+
+
+void MainWindow::clearcurrent(void)
+{
+    for (int i = 0; i < numAct; i++)
+        {
+            outputAnalogVoltages[i] = 0.0; // Voltage = (Amps) * (Volts/Amp)
+        }
+
+    // TODO send current setpoints to amplifiers
+    // Now that the correct currents have been found, write to the s826 board outputs if
+    // the board is connected.
+    if (s826.boardConnected)
+    {
+        s826.analogWriteAll(s826.rangeCodesDAC, outputAnalogVoltages);
+        qInfo() << "setting zero to the S826.";
+    }
 }
 
 void MainWindow:: registerdatacollect(void)

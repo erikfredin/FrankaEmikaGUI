@@ -79,12 +79,18 @@ void MainWindow::callbacks(void)
         {
             overheatingFlag = true;
             // set all currents to 0 and reset all desired field strengths
-            qWarning() << "System is Overheating!!!" ;
-            updateCurrents();
-            qInfo() << "Currents Cleared.";
+            std::cerr << "System is Overheating!!!"<<std::endl ;
+            updateCurrents_CalibrationOnly(zeroCurrent);
+            std::cerr << "Currents Cleared"<<std::endl;
+            Robotmotionsuccess = 0;
+            CalibrationDataCollet = false;
+            std::cerr << "robot stopped"<<std::endl;
             // at the end of callbacks, re-evaluate the temperatures.
         }
     }
+//    std::cout<<"mrd current: "<<measuredCurrents[0]<<" "<<measuredCurrents[1]<<" "<<measuredCurrents[2]<<" "<<measuredCurrents[3]<<" "<<measuredCurrents[4]<<" "<<measuredCurrents[5]<<" "<<measuredCurrents[6]<<" "<<measuredCurrents[7]<<std::endl;
+//    std::cout<<"mrd tempera: "<<measuredTemperatures[0]<<" "<<measuredTemperatures[1]<<" "<<measuredTemperatures[2]<<" "<<measuredTemperatures[3]<<" "<<measuredTemperatures[4]<<" "<<measuredTemperatures[5]<<" "<<measuredTemperatures[6]<<" "<<measuredTemperatures[7]<<std::endl;
+
 
     // READ FROM DAQ
     if (DAQ.isEnabled())
@@ -92,6 +98,9 @@ void MainWindow::callbacks(void)
         // Read analog inputs from the DAQ by reading values and passing by ref.
         DAQ.dataAcquisition8(DAQ.analogInputVoltages);
         DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+//        std::cout<<std::endl <<"Daq reading is: "<<DAQ.analogRawInputVoltages[0]<<" "<<DAQ.analogRawInputVoltages[1]<<" "<<DAQ.analogRawInputVoltages[2]<<std::endl;
+//        std::cout<<"Field calculation is: "<<DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0]<<" "<<DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1]<<" "<<DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2]<<std::endl;
+
 //        DAQ.dataAcquisition();
         //Get Forces and torques from values
         double tempVoltages[6];
@@ -127,20 +136,60 @@ void MainWindow::callbacks(void)
             {
                 if(robotloopisdone)
                 {
+                    double diff_current[numAct];
+                    double inc_current[numAct];
                     // those code is copied from https://stackoverflow.com/questions/13445688/how-to-generate-a-random-number-in-c
                     // and is used to generate a random number, which is placed here for local use
                     std::random_device dev;
                     std::mt19937 rng(dev());
                     std::uniform_int_distribution<std::mt19937::result_type> dist6(0,maxCurrent*2); // distribution in range [a, b]
                     //
-
                     for (int i = 0; i < 8; i++)
                     {
-                      cmdCoilCurrent[i] =  dist6(rng)-maxCurrent; //generate random current in the range of [-maxCurrent, maxcurrent]
-//                        cmdCoilCurrent[i] =  0.0;
+                      if(!overheatingFlag)
+                      {
+                          cmdCoilCurrent[i] =  dist6(rng)-maxCurrent; //generate random current in the range of [-maxCurrent, maxcurrent]
+                          diff_current[i] = cmdCoilCurrent[i] - tempCoilCurrent[i];
+                          inc_current[i] = diff_current[i]/currentcooldownloop;
+                      }
+                      else
+                          cmdCoilCurrent[i] =  0.0;
                     }
-                    qInfo() << "Currents are: "<<cmdCoilCurrent[0]<<", "<<cmdCoilCurrent[1]<<", "<<cmdCoilCurrent[2]<<", "<<cmdCoilCurrent[3]<<", "<<cmdCoilCurrent[4]<<", "<<cmdCoilCurrent[5]<<", "<<cmdCoilCurrent[6]<<", "<<cmdCoilCurrent[7];
+                    std::cout << "cmd currents: "<<cmdCoilCurrent[0]<<", "<<cmdCoilCurrent[1]<<", "<<cmdCoilCurrent[2]<<", "<<cmdCoilCurrent[3]<<", "<<cmdCoilCurrent[4]<<", "<<cmdCoilCurrent[5]<<", "<<cmdCoilCurrent[6]<<", "<<cmdCoilCurrent[7] <<std::endl;
+//                    updateCurrents_CalibrationOnly(zeroCurrent);
+//                    std::cout<<"reset currents to all coils..."<<currentTime.elapsed()<<std::endl;
+//                    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
+//                    double send_current[numAct];
+//                    for(int k=0; k<currentcooldownloop; k++)
+//                    {
+//                        for (int j=0; j<numAct; j++)
+//                            send_current[j] = tempCoilCurrent[j]+(k+1)*inc_current[j];
+//                        updateCurrents_CalibrationOnly(send_current);
+//                        std::cout<<"update cur: "<< k<< " " <<send_current[0]<<", "<<send_current[1]<<", "<<send_current[2]<<", "<<send_current[3]<<", "<<send_current[4]<<", "<<send_current[5]<<", "<<send_current[6]<<", "<<send_current[7] <<std::endl;
+//                        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+//                    }
+//                    std::cout<<"Done!"<<std::endl;
                     updateCurrents_CalibrationOnly(cmdCoilCurrent);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+                    std::cout<<"Set current to cmd values!"<<std::endl;
+
+                    // Read Thermocouples and Current Monitors
+                    if (s826.boardConnected)
+                    {
+                        // Read all 16 input channels and store in pass-by-reference array:
+                        int err = s826.analogReadAll(inputAnalogVoltages);
+                //        qInfo() << err;
+                //        qInfo()<<"s826 connected";
+                    }
+                    for (int t = 0; t < 8; t++)
+                    {
+                        measuredCurrents[t] = inputAnalogVoltages[t]*currentSenseAdj[t]; // [A] read from amplifiers
+                    }
+                    std::cout<<"mrd current: "<<measuredCurrents[0]<<" "<<measuredCurrents[1]<<" "<<measuredCurrents[2]<<" "<<measuredCurrents[3]<<" "<<measuredCurrents[4]<<" "<<measuredCurrents[5]<<" "<<measuredCurrents[6]<<" "<<measuredCurrents[7]<<std::endl;
+
+//                    for(int k=0; k<numAct; k++)
+//                        tempCoilCurrent[k] = cmdCoilCurrent[k];
 
                     robotloopisdone = false;
                 }
@@ -160,11 +209,11 @@ void MainWindow::callbacks(void)
                         std::mt19937 rng3(dev3());
                         std::uniform_int_distribution<std::mt19937::result_type> pos_x(0,righttopcorner[0]*2); // distribution in range [0, 100]
                         std::uniform_int_distribution<std::mt19937::result_type> pos_y(0,righttopcorner[1]*2); // distribution in range [0, 100]
-                        std::uniform_int_distribution<std::mt19937::result_type> pos_z(0,leftlowercorner[2]); // distribution in range [0, 50]
+                        std::uniform_int_distribution<std::mt19937::result_type> pos_z(0,(righttopcorner[2]-leftlowercorner[2])); // distribution in range [0, 50]
 
                         robotposcmd[0] = (pos_x(rng1)-righttopcorner[0])*0.001; //rand [-50, 50]
                         robotposcmd[1] = (pos_y(rng2)-righttopcorner[1])*0.001; //rand [-50, 50]
-                        robotposcmd[2] = (pos_z(rng3)+leftlowercorner[2])*0.001; //rand [50, 100]
+                        robotposcmd[2] = (pos_z(rng3)+leftlowercorner[2])*0.001; //rand [75, 125]
 
 //                        robotposcmd[0] = 0.0;
 //                        robotposcmd[1] = 0.0,
@@ -238,8 +287,8 @@ void MainWindow::callbacks(void)
                               double v_x = 0.002;
                               double v_y = 0.002;
                               double v_z = 0.002;
-                              double maxv = 0.013;  //10mm/s
-                              double maxDelt_e = 0.06; //50mm
+                              double maxv = 0.010;  //10mm/s
+                              double maxDelt_e = 0.05; //50mm
                               double A = maxv/(maxDelt_e*maxDelt_e);
                               double v_cmd[3] = {0.0};
 
@@ -274,6 +323,7 @@ void MainWindow::callbacks(void)
                         franka::RobotState initial_state = robot.readOnce();
                         // EE in base frame, 4x4 matrix: initial_state.O_T_EE.data();
                         Eigen::Affine3d initial_transform(Eigen::Matrix4d::Map(initial_state.O_T_EE.data()));
+                        current_EEpose = initial_state.O_T_EE;
                         Eigen::Vector3d position_d(initial_transform.translation());
                     //    position_d = position_d*1000;//from m to mm
                     //    Eigen::Quaterniond orientation_d(initial_transform.linear());
@@ -304,6 +354,12 @@ void MainWindow::callbacks(void)
                             Robot_joint[i] = initial_state.q.data()[i];
                         }
 
+                        if (DAQ.isEnabled())
+                        {
+                            // Read analog inputs from the DAQ by reading values and passing by ref.
+                            DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+                        }
+
                     // record
                         if(LogEnabled){
                              MainWindow::Record();
@@ -320,12 +376,13 @@ void MainWindow::callbacks(void)
                         robotmovecount = 0;
                         robotloopisdone = true;
                         currentcount++;
-                        qInfo()<<"single current loop is done ["<<currentcount<<"/"<<currentloop <<"]";
+                        std::cout<<"single current loop is done ["<<currentcount<<"/"<<currentloop <<"]"<<std::endl;
                     }
                 }
             }
             else
             {
+
 //                qInfo()<<"calibration data collection is done! set current to zeros";
                 double I_zeros[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
                 updateCurrents_CalibrationOnly(I_zeros);
