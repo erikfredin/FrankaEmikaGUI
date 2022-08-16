@@ -12,7 +12,11 @@ TEMPLATE = app
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
-CONFIG += c++11
+#CONFIG += c++11
+CONFIG += c++17
+#-std:c++17
+
+QMAKE_CXXFLAGS += -bigobj
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -67,6 +71,8 @@ DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
 #INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\libfranka\lib"
 INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\libfranka\include"
 INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
+
+INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\includes-fdeep"
 
 #INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\liborl-master\include"
 #INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\boost_1_79_0\boost_1_79_0"

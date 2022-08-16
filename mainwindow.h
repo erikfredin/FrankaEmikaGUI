@@ -67,6 +67,13 @@
 
 #include <chrono>
 
+//#include "src/model.h"
+//using keras2cpp::Model;
+//using keras2cpp::Tensor;
+
+#include <fdeep/fdeep.hpp>
+
+
 // These are defined in the S826api header internally. Left here for reference
 #define AOUT0_PIN   42
 #define AOUT1_PIN   44
@@ -332,6 +339,9 @@ public:
 
     std::array<double, 16> current_EEpose;
 
+    const auto model = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
+
+
 
 
 protected:
@@ -392,6 +402,7 @@ public slots:
     void        robotrecovery(void);
     void        enableDAQ(void);
     void        clearcurrent(void);
+    void        DNNpredict(void);
 
 
 private slots:

@@ -56,6 +56,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_logpause,SIGNAL(clicked()),SLOT(DisableLog()));
     connect(ui->pushButton_logcontinue,SIGNAL(clicked()),SLOT(EnableLog()));
 
+    connect(ui->pushButton_DNNpredict,SIGNAL(clicked()),SLOT(DNNpredict()));
+
+
+
     //check box
 //
     connect(ui->checkBox_pilot,SIGNAL(clicked()),SLOT(frankathreadcontrol()));
@@ -1087,4 +1091,37 @@ void MainWindow::enableDAQ()
             DAQ.analogInputVoltages[i] = 0.0;
         }
     }
+}
+
+
+void MainWindow::DNNpredict()
+{
+    const auto model = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
+    std::cout<<"load model!"<<std::endl;
+    const auto result = model.predict(
+    {fdeep::tensor(fdeep::tensor_shape(static_cast<std::size_t>(92)),
+            std::vector<float>{ 2.24063043e+01, -1.48057763e+01, -6.44080494e+00,  6.99414861e-03,
+                               -8.01251138e-03,  9.77839592e-02,  1.70210778e+01, -1.44074961e+01,
+                               -1.75598573e+01,  2.29818797e-02, -3.41654689e-02,  1.02230576e-01,
+                                1.64592241e-01,  1.01774340e-01,  1.71096466e-01,  9.78269326e-02,
+                                1.02042214e-01,  1.58914681e-01,  9.80948065e-02,  1.65418906e-01,
+                                1.64623236e-01,  1.10136663e-01,  1.92357349e-01,  9.51044114e-02,
+                                1.13078436e-01,  1.45967498e-01,  9.80461844e-02,  1.73701611e-01,
+                                1.49756597e+01,  3.07994213e+01,  1.41298790e+01,  3.26822800e+01,
+                                3.06782222e+01,  1.57853411e+01,  3.25484999e+01,  1.48635410e+01,
+                                1.49714305e+01,  2.73591204e+01,  1.18532331e+01,  3.40956525e+01,
+                                2.62984597e+01,  1.79314642e+01,  3.25727146e+01,  1.38131978e+01,
+                                4.09217931e-02, -1.10986111e-03, -4.42859870e-02,  8.63842748e-04,
+                               -9.75924139e-04, -3.81950944e-02,  9.97779715e-04,  4.13351255e-02,
+                                6.03074627e-02,  3.97913500e-02,  6.03074627e-02,  2.00920179e-03,
+                                2.00920179e-03, -5.62890592e-02, -3.57729464e-02, -5.62890592e-02,
+                                5.59965151e-02, -2.30174581e-03, -6.06000068e-02,  3.54804024e-02,
+                               -4.00838940e-02,  5.59965151e-02, -2.30174581e-03, -6.06000068e-02,
+                                3.81297197e-02, -5.27869276e-03, -5.35671494e-02,  2.23743290e-03,
+                               -3.80780629e-03, -3.03722240e-02,  3.70831936e-03,  4.26689069e-02,
+                                6.59048281e-02,  4.50711479e-02,  6.59048281e-02,  6.70417228e-03,
+                                6.70417228e-03, -5.24964836e-02, -3.16628033e-02, -5.24964836e-02,
+                                4.92340564e-02, -9.96659945e-03, -6.91672553e-02,  2.84003761e-02,
+                               -4.83335750e-02,  4.92340564e-02, -9.96659945e-03, -6.91672553e-02})});
+    std::cout << fdeep::show_tensors(result) << std::endl;
 }
