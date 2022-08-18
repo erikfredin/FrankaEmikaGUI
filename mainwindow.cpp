@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+const auto model = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
+//std::cout<<"load model!"<<std::endl;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -57,6 +59,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_logcontinue,SIGNAL(clicked()),SLOT(EnableLog()));
 
     connect(ui->pushButton_DNNpredict,SIGNAL(clicked()),SLOT(DNNpredict()));
+    connect(ui->pushButton_dnn_inputupdate,SIGNAL(clicked()),SLOT(updateDNNinput()));
+    connect(ui->pushButton_run_dnncurent,SIGNAL(clicked()),SLOT(runDNNcurrent()));
+
+
 
 
 
@@ -112,6 +118,10 @@ void MainWindow::updateCaption(void)
     ui->label_q5->setText(tr("%1").arg(Robot_joint[4]));
     ui->label_q6->setText(tr("%1").arg(Robot_joint[5]));
     ui->label_q7->setText(tr("%1").arg(Robot_joint[6]));
+
+    ui->lineEdit_EE_x->setText(tr("%1").arg(RobotEE_offset[0]));
+    ui->lineEdit_EE_y->setText(tr("%1").arg(RobotEE_offset[1]));
+    ui->lineEdit_EE_z->setText(tr("%1").arg(RobotEE_offset[2]));
 
 }
 
@@ -1086,7 +1096,7 @@ void MainWindow::enableDAQ()
     else
     {
         DAQ.finishTask();
-        for ( int i = 0; i < 8; i++ )
+        for ( int i = 0; i < numAct; i++ )
         {
             DAQ.analogInputVoltages[i] = 0.0;
         }
@@ -1096,32 +1106,431 @@ void MainWindow::enableDAQ()
 
 void MainWindow::DNNpredict()
 {
-    const auto model = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
-    std::cout<<"load model!"<<std::endl;
+//    const auto model = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
+//    std::cout<<"load model!"<<std::endl;
+    int inputsize = 92;
+    std::vector<float> input = {};
+
+    input = DNNinputprepare(NN_B1, NN_P1, NN_B2, NN_P2);
+
     const auto result = model.predict(
-    {fdeep::tensor(fdeep::tensor_shape(static_cast<std::size_t>(92)),
-            std::vector<float>{ 2.24063043e+01, -1.48057763e+01, -6.44080494e+00,  6.99414861e-03,
-                               -8.01251138e-03,  9.77839592e-02,  1.70210778e+01, -1.44074961e+01,
-                               -1.75598573e+01,  2.29818797e-02, -3.41654689e-02,  1.02230576e-01,
-                                1.64592241e-01,  1.01774340e-01,  1.71096466e-01,  9.78269326e-02,
-                                1.02042214e-01,  1.58914681e-01,  9.80948065e-02,  1.65418906e-01,
-                                1.64623236e-01,  1.10136663e-01,  1.92357349e-01,  9.51044114e-02,
-                                1.13078436e-01,  1.45967498e-01,  9.80461844e-02,  1.73701611e-01,
-                                1.49756597e+01,  3.07994213e+01,  1.41298790e+01,  3.26822800e+01,
-                                3.06782222e+01,  1.57853411e+01,  3.25484999e+01,  1.48635410e+01,
-                                1.49714305e+01,  2.73591204e+01,  1.18532331e+01,  3.40956525e+01,
-                                2.62984597e+01,  1.79314642e+01,  3.25727146e+01,  1.38131978e+01,
-                                4.09217931e-02, -1.10986111e-03, -4.42859870e-02,  8.63842748e-04,
-                               -9.75924139e-04, -3.81950944e-02,  9.97779715e-04,  4.13351255e-02,
-                                6.03074627e-02,  3.97913500e-02,  6.03074627e-02,  2.00920179e-03,
-                                2.00920179e-03, -5.62890592e-02, -3.57729464e-02, -5.62890592e-02,
-                                5.59965151e-02, -2.30174581e-03, -6.06000068e-02,  3.54804024e-02,
-                               -4.00838940e-02,  5.59965151e-02, -2.30174581e-03, -6.06000068e-02,
-                                3.81297197e-02, -5.27869276e-03, -5.35671494e-02,  2.23743290e-03,
-                               -3.80780629e-03, -3.03722240e-02,  3.70831936e-03,  4.26689069e-02,
-                                6.59048281e-02,  4.50711479e-02,  6.59048281e-02,  6.70417228e-03,
-                                6.70417228e-03, -5.24964836e-02, -3.16628033e-02, -5.24964836e-02,
-                                4.92340564e-02, -9.96659945e-03, -6.91672553e-02,  2.84003761e-02,
-                               -4.83335750e-02,  4.92340564e-02, -9.96659945e-03, -6.91672553e-02})});
+    {fdeep::tensor(fdeep::tensor_shape(static_cast<std::size_t>(inputsize)),
+           input )});
+
     std::cout << fdeep::show_tensors(result) << std::endl;
+
+    std::string outstring = fdeep::show_tensors(result);
+    std::string cleanstring = {};
+    for (int k=0; k<outstring.size(); k++)
+    {
+        if (outstring[k] != '[' && outstring[k] != ']' && outstring[k] != ' ')
+        {
+            cleanstring.push_back(outstring[k]);
+        }
+
+    }
+
+    std::string delimiters(" ,");
+    std::vector<std::string> parts;
+    boost::split(parts, cleanstring, boost::is_any_of(delimiters));
+
+    std::vector<float> dataout = {};
+    int strsize = parts.size();
+
+    for(int k=0; k<strsize; k++)
+    {
+        dataout.push_back(std::stof(parts[k]));
+    }
+
+    std::cout<<"final dataout is "<<std::endl;
+    for (float cc : dataout)
+    {
+        std::cout<<cc<<",\t";
+    }
+    std::cout<<std::endl;
+
+    for(int k=0; k<numAct; k++)
+    {
+        if(dataout[k]>maxCurrent)
+            predictCoilCurrent[k] = maxCurrent;
+        else if (dataout[k]<-maxCurrent)
+            predictCoilCurrent[k] = -maxCurrent;
+        else
+            predictCoilCurrent[k] = dataout[k];
+    }
+
+    ui->label_dnn_predict_I1->setText(tr("%1").arg(predictCoilCurrent[0]));
+    ui->label_dnn_predict_I2->setText(tr("%1").arg(predictCoilCurrent[1]));
+    ui->label_dnn_predict_I3->setText(tr("%1").arg(predictCoilCurrent[2]));
+    ui->label_dnn_predict_I4->setText(tr("%1").arg(predictCoilCurrent[3]));
+    ui->label_dnn_predict_I5->setText(tr("%1").arg(predictCoilCurrent[4]));
+    ui->label_dnn_predict_I6->setText(tr("%1").arg(predictCoilCurrent[5]));
+    ui->label_dnn_predict_I7->setText(tr("%1").arg(predictCoilCurrent[6]));
+    ui->label_dnn_predict_I8->setText(tr("%1").arg(predictCoilCurrent[7]));
+
+}
+
+std::vector<float> MainWindow::DNNinputprepare(double NN_B1[3], double NN_P1[3], double NN_B2[3], double NN_P2[3] )
+{
+    std::vector<float> input = {};
+    //create input data
+    double r1[numAct] = {};
+    double r2[numAct] = {};
+    double r1_sup2[numAct] = {};
+    double r1_sup_3[numAct] = {};
+    double r2_sup2[numAct] = {};
+    double r2_sup_3[numAct] = {};
+    double r1_xy[numAct] = {};
+    double r1_xz[numAct] = {};
+    double r1_yz[numAct] = {};
+    double r2_xy[numAct] = {};
+    double r2_xz[numAct] = {};
+    double r2_yz[numAct] = {};
+    for (int j= 0; j<numAct; j++)
+    {
+        r1[j] = sqrt(pow((NN_P1[0]-pAct_cartesion[0][j]),2) + pow((NN_P1[1]-pAct_cartesion[1][j]),2)+ pow((NN_P1[2]-pAct_cartesion[2][j]),2));
+        r1_sup2[j] = pow(r1[j],2);
+        r1_sup_3[j] = pow(r1[j], -3);
+        double r1_vec[3] = {NN_P1[0]-pAct_cartesion[0][j], NN_P1[1]-pAct_cartesion[1][j], NN_P1[2]-pAct_cartesion[2][j]};
+        r1_xy[j] = r1_vec[0]*r1_vec[1];
+        r1_xz[j] = r1_vec[0]*r1_vec[2];
+        r1_yz[j] = r1_vec[1]*r1_vec[2];
+
+        r2[j] = sqrt(pow((NN_P2[0]-pAct_cartesion[0][j]),2) + pow((NN_P2[1]-pAct_cartesion[1][j]),2)+ pow((NN_P2[2]-pAct_cartesion[2][j]),2));
+        r2_sup2[j] = pow(r2[j],2);
+        r2_sup_3[j] = pow(r2[j], -3);
+        double r2_vec[3] = {NN_P2[0] - pAct_cartesion[0][j], NN_P2[1] - pAct_cartesion[1][j], NN_P2[2] - pAct_cartesion[2][j]};
+        r2_xy[j] = r2_vec[0]*r2_vec[1];
+        r2_xz[j] = r2_vec[0]*r2_vec[2];
+        r2_yz[j] = r2_vec[1]*r2_vec[2];
+     }
+    for (int k=0; k<3; k++)
+    {
+        input.push_back(NN_B1[k]);
+    }
+    for (int k=0; k<3; k++)
+    {
+        input.push_back(NN_P1[k]);
+    }
+    for (int k=0; k<3; k++)
+    {
+        input.push_back(NN_B2[k]);
+    }
+    for (int k=0; k<3; k++)
+    {
+        input.push_back(NN_P2[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r1_sup2[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r2_sup2[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r1_sup_3[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r2_sup_3[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r1_xy[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r1_xz[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r1_yz[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r2_xy[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r2_xz[k]);
+    }
+    for (int k=0; k<numAct; k++)
+    {
+        input.push_back(r2_yz[k]);
+    }
+
+    std::vector<float> sample = { 2.24063043e+01, -1.48057763e+01, -6.44080494e+00,  6.99414861e-03,
+                       -8.01251138e-03,  9.77839592e-02,  1.70210778e+01, -1.44074961e+01,
+                       -1.75598573e+01,  2.29818797e-02, -3.41654689e-02,  1.02230576e-01,
+                        1.64592241e-01,  1.01774340e-01,  1.71096466e-01,  9.78269326e-02,
+                        1.02042214e-01,  1.58914681e-01,  9.80948065e-02,  1.65418906e-01,
+                        1.64623236e-01,  1.10136663e-01,  1.92357349e-01,  9.51044114e-02,
+                        1.13078436e-01,  1.45967498e-01,  9.80461844e-02,  1.73701611e-01,
+                        1.49756597e+01,  3.07994213e+01,  1.41298790e+01,  3.26822800e+01,
+                        3.06782222e+01,  1.57853411e+01,  3.25484999e+01,  1.48635410e+01,
+                        1.49714305e+01,  2.73591204e+01,  1.18532331e+01,  3.40956525e+01,
+                        2.62984597e+01,  1.79314642e+01,  3.25727146e+01,  1.38131978e+01,
+                        4.09217931e-02, -1.10986111e-03, -4.42859870e-02,  8.63842748e-04,
+                       -9.75924139e-04, -3.81950944e-02,  9.97779715e-04,  4.13351255e-02,
+                        6.03074627e-02,  3.97913500e-02,  6.03074627e-02,  2.00920179e-03,
+                        2.00920179e-03, -5.62890592e-02, -3.57729464e-02, -5.62890592e-02,
+                        5.59965151e-02, -2.30174581e-03, -6.06000068e-02,  3.54804024e-02,
+                       -4.00838940e-02,  5.59965151e-02, -2.30174581e-03, -6.06000068e-02,
+                        3.81297197e-02, -5.27869276e-03, -5.35671494e-02,  2.23743290e-03,
+                       -3.80780629e-03, -3.03722240e-02,  3.70831936e-03,  4.26689069e-02,
+                        6.59048281e-02,  4.50711479e-02,  6.59048281e-02,  6.70417228e-03,
+                        6.70417228e-03, -5.24964836e-02, -3.16628033e-02, -5.24964836e-02,
+                        4.92340564e-02, -9.96659945e-03, -6.91672553e-02,  2.84003761e-02,
+                       -4.83335750e-02,  4.92340564e-02, -9.96659945e-03, -6.91672553e-02};
+    return input;
+}
+
+void MainWindow::updateDNNinput(void)
+{
+
+    NN_B1[0] = ui->lineEdit_dnnInput_b1x->text().toDouble();
+    NN_B1[1] = ui->lineEdit_dnnInput_b1y->text().toDouble();
+    NN_B1[2] = ui->lineEdit_dnnInput_b1z->text().toDouble();
+    NN_B2[0] = ui->lineEdit_dnnInput_b2x->text().toDouble();
+    NN_B2[1] = ui->lineEdit_dnnInput_b2y->text().toDouble();
+    NN_B2[2] = ui->lineEdit_dnnInput_b2z->text().toDouble();
+
+    NN_P1[0] = ui->lineEdit_dnnInput_p1x->text().toDouble();
+    NN_P1[1] = ui->lineEdit_dnnInput_p1y->text().toDouble();
+    NN_P1[2] = ui->lineEdit_dnnInput_p1z->text().toDouble();
+    NN_P2[0] = ui->lineEdit_dnnInput_p2x->text().toDouble();
+    NN_P2[1] = ui->lineEdit_dnnInput_p2y->text().toDouble();
+    NN_P2[2] = ui->lineEdit_dnnInput_p2z->text().toDouble();
+
+    std::cout<< "DNN Inputs are updated as: " << std::endl;
+    std::cout << "   NN_B1: ";
+    for(int k=0; k<3; k++)
+        std::cout << NN_B1[k]<<"   ";
+    std::cout << "NN_P1:  ";
+    for(int k=0; k<3; k++)
+        std::cout << NN_P1[k]<<"   ";
+    std::cout <<std::endl << "   NN_B2: ";
+    for(int k=0; k<3; k++)
+        std::cout << NN_B2[k]<<"   ";
+    std::cout << "NN_P2:  ";
+    for(int k=0; k<3; k++)
+        std::cout << NN_P2[k]<<"   ";
+    std::cout <<std::endl;
+}
+
+
+void MainWindow::runDNNcurrent(void)
+{
+    MainWindow::updateCurrents_CalibrationOnly(predictCoilCurrent);
+}
+
+
+void MainWindow::moveRot_P1(void)
+{
+    std::cout << std::endl<< "command position in table frame is: "<<NN_P1[0]<<", "<<NN_P1[1]<<", "<<NN_P1[2]<<std::endl;
+
+    //covert cmd position in table frame to robot frame
+    Eigen::Vector4d pos_cmd(NN_P1[0], NN_P1[1], NN_P1[2], 1);
+    Eigen::Vector4d pos_robot = transT2R*pos_cmd;
+
+    double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
+
+    std::cout<< "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2]<<std::endl;
+
+    //move robot in absolute position
+    franka::Robot robot(fci_ip);
+    try{
+        setDefaultBehavior(robot);
+        // Set additional parameters always before the control loop, NEVER in the control loop!
+
+//                            std::array<double, 16> initial_pose;
+        double time = 0.0;
+
+        /// ----------------robot control loop---------------------------------
+        robot.control([=, &time](const franka::RobotState& robot_state,
+                                 franka::Duration period) -> franka::CartesianVelocities
+//                            robot.control([&time, &initial_pose, &abs_robotpos]( const franka::RobotState& robot_state,
+//                                                                 franka::Duration period) -> franka::CartesianPose
+        {
+          time += period.toSec();
+//                              if (time == 0.0) {
+//                                initial_pose = robot_state.O_T_EE_c; //Last commanded end effector pose of motion generation in base frame.
+//                                //robot_state.O_T_EE; Measured end effector pose in base frame.
+//                                //robot_state.O_T_EE_d; Last desired end effector pose of motion generation in base frame.
+//                              }
+//                              std::array<double, 16> new_pose = initial_pose;
+          double tolerance = 0.001; //1mm
+          double error[3];
+          double direction[3];
+          current_EEpose = robot_state.O_T_EE; //not sure whether should use _d
+
+          //default unit is meter and rad, so we keep that
+          Robot_tip_posisition[0] = current_EEpose[12];
+          Robot_tip_posisition[1] = current_EEpose[13];
+          Robot_tip_posisition[2] = current_EEpose[14];
+
+//                              qInfo() << "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2];
+//                              qInfo() << "current robot position is: "<<current_pose[12]<<", "<<current_pose[13]<<", "<<current_pose[14];
+          for(int k=0; k<3; k++)
+          {
+              double temp_e = abs_robotpos[k]-current_EEpose[12+k];
+              if (temp_e>0)
+                 direction[k] = 1.0;
+              else
+                  direction[k] = -1.0;
+
+              if (abs(temp_e)>=tolerance)
+                  error[k] = temp_e;
+              else
+              {
+                  error[k] = 0.0;
+                  direction[k] = 0.0;
+              }
+          }
+//                              std::cout<<"pos error is: "<<error[0]<<" "<<error[1]<<" "<<error[2]<<std::endl;
+//                              double detp = 0.00001; //0.1mm
+
+//                              new_pose[12] = current_pose[12]+direction[0]*detp;
+//                              new_pose[13] = current_pose[13]+direction[1]*detp;
+//                              new_pose[14] = current_pose[14]+direction[2]*detp;
+          double v_x = 0.002;
+          double v_y = 0.002;
+          double v_z = 0.002;
+          double maxv = 0.010;  //10mm/s
+          double maxDelt_e = 0.05; //50mm
+          double A = maxv/(maxDelt_e*maxDelt_e);
+          double v_cmd[3] = {0.0};
+
+          for (int k=0; k<3; k++)
+          {
+              if(abs(error[k])<=maxDelt_e)
+                   v_cmd[k] = maxv*sin((M_PI/2)*(error[k]/maxDelt_e));
+//                                      v_cmd[k] = A*pow(error[k],2);
+              else
+                  v_cmd[k] = maxv*direction[k];
+          }
+
+//                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
+          franka::CartesianVelocities output = {{v_cmd[0], v_cmd[1], v_cmd[2], 0.0, 0.0, 0.0}};
+          if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
+            std::cout << "single motion Finished: ["<<robotmovecount+1<<"/"<<robotmoveloop <<"]" << std::endl;
+            std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
+            output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+            Robotmotionsuccess = 1;
+            return franka::MotionFinished(output);
+          }
+          return output;
+        });
+    }catch (const franka::Exception& e) {
+    std::cout << e.what() << std::endl;
+    std::cout << "Running error recovery..." << std::endl;
+    Robotmotionsuccess = 0;
+    robot.automaticErrorRecovery();
+    }
+}
+
+void MainWindow::moveRot_P2(void)
+{
+    std::cout << std::endl<< "command position in table frame is: "<<NN_P2[0]<<", "<<NN_P2[1]<<", "<<NN_P2[2]<<std::endl;
+
+    //covert cmd position in table frame to robot frame
+    Eigen::Vector4d pos_cmd(NN_P2[0], NN_P2[1], NN_P2[2], 1);
+    Eigen::Vector4d pos_robot = transT2R*pos_cmd;
+
+    double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
+
+    std::cout<< "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2]<<std::endl;
+
+    //move robot in absolute position
+    franka::Robot robot(fci_ip);
+    try{
+        setDefaultBehavior(robot);
+        // Set additional parameters always before the control loop, NEVER in the control loop!
+
+//                            std::array<double, 16> initial_pose;
+        double time = 0.0;
+
+        /// ----------------robot control loop---------------------------------
+        robot.control([=, &time](const franka::RobotState& robot_state,
+                                 franka::Duration period) -> franka::CartesianVelocities
+//                            robot.control([&time, &initial_pose, &abs_robotpos]( const franka::RobotState& robot_state,
+//                                                                 franka::Duration period) -> franka::CartesianPose
+        {
+          time += period.toSec();
+//                              if (time == 0.0) {
+//                                initial_pose = robot_state.O_T_EE_c; //Last commanded end effector pose of motion generation in base frame.
+//                                //robot_state.O_T_EE; Measured end effector pose in base frame.
+//                                //robot_state.O_T_EE_d; Last desired end effector pose of motion generation in base frame.
+//                              }
+//                              std::array<double, 16> new_pose = initial_pose;
+          double tolerance = 0.001; //1mm
+          double error[3];
+          double direction[3];
+          current_EEpose = robot_state.O_T_EE; //not sure whether should use _d
+
+          //default unit is meter and rad, so we keep that
+          Robot_tip_posisition[0] = current_EEpose[12];
+          Robot_tip_posisition[1] = current_EEpose[13];
+          Robot_tip_posisition[2] = current_EEpose[14];
+
+//                              qInfo() << "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2];
+//                              qInfo() << "current robot position is: "<<current_pose[12]<<", "<<current_pose[13]<<", "<<current_pose[14];
+          for(int k=0; k<3; k++)
+          {
+              double temp_e = abs_robotpos[k]-current_EEpose[12+k];
+              if (temp_e>0)
+                 direction[k] = 1.0;
+              else
+                  direction[k] = -1.0;
+
+              if (abs(temp_e)>=tolerance)
+                  error[k] = temp_e;
+              else
+              {
+                  error[k] = 0.0;
+                  direction[k] = 0.0;
+              }
+          }
+//                              std::cout<<"pos error is: "<<error[0]<<" "<<error[1]<<" "<<error[2]<<std::endl;
+//                              double detp = 0.00001; //0.1mm
+
+//                              new_pose[12] = current_pose[12]+direction[0]*detp;
+//                              new_pose[13] = current_pose[13]+direction[1]*detp;
+//                              new_pose[14] = current_pose[14]+direction[2]*detp;
+          double v_x = 0.002;
+          double v_y = 0.002;
+          double v_z = 0.002;
+          double maxv = 0.010;  //10mm/s
+          double maxDelt_e = 0.05; //50mm
+          double A = maxv/(maxDelt_e*maxDelt_e);
+          double v_cmd[3] = {0.0};
+
+          for (int k=0; k<3; k++)
+          {
+              if(abs(error[k])<=maxDelt_e)
+                   v_cmd[k] = maxv*sin((M_PI/2)*(error[k]/maxDelt_e));
+//                                      v_cmd[k] = A*pow(error[k],2);
+              else
+                  v_cmd[k] = maxv*direction[k];
+          }
+
+//                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
+          franka::CartesianVelocities output = {{v_cmd[0], v_cmd[1], v_cmd[2], 0.0, 0.0, 0.0}};
+          if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
+            std::cout << "single motion Finished: ["<<robotmovecount+1<<"/"<<robotmoveloop <<"]" << std::endl;
+            std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
+            output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+            Robotmotionsuccess = 1;
+            return franka::MotionFinished(output);
+          }
+          return output;
+        });
+    }catch (const franka::Exception& e) {
+    std::cout << e.what() << std::endl;
+    std::cout << "Running error recovery..." << std::endl;
+    Robotmotionsuccess = 0;
+    robot.automaticErrorRecovery();
+    }
 }

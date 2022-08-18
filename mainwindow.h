@@ -73,6 +73,8 @@
 
 #include <fdeep/fdeep.hpp>
 
+#include <boost/algorithm/string.hpp>
+
 
 // These are defined in the S826api header internally. Left here for reference
 #define AOUT0_PIN   42
@@ -152,11 +154,11 @@ public:
     Eigen::Vector3d robottip_eulerAngles;
     Eigen::Vector3d robottip_position;
 
-    double Robot_tip_posisition[3];
-    double Robot_orient[3];
-    double Robot_joint[7];
+    double Robot_tip_posisition[3] = {0.0, 0.0, 0.0};
+    double Robot_orient[3] = {0.0, 0.0, 0.0};
+    double Robot_joint[7] = { 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0};
 
-    double RobotEE_offset[3];
+    double RobotEE_offset[3] = {0.0, 0.0, 338.2};
 
     void SetControlMode(const int & controlMode);
 //    void SetFileName(const std::string & fileNameBase);
@@ -185,14 +187,23 @@ public:
     // Considering the system as built:
     // Declare the Electromagnets (EM1, EM2, EM3, EM4, EM5, EM6, EM7, EM8)
     // in the order that they are wired. See comment below
+//    const double d1 =  0.287/sqrt(2.0);
+//    const double d2 =  0.093*sqrt(2.0);
+//    const double h1 = -0.300;
+//    double pAct_cartesion[numField][numAct] = {
+//    //    EM1, EM4, EM6, EM7, EM2, EM8, EM5, EM3  (As wired)
+//        { -d1, 0.0,  d1,  d2, -d2,  d1, 0.0, -d1 },
+//        { -d1, -d2, -d1, 0.0, 0.0,  d1,  d2,  d1 },
+//        {  h1,  h1,  h1,  h1,  h1,  h1,  h1,  h1 }
+//        };
     const double d1 =  0.287/sqrt(2.0);
     const double d2 =  0.093*sqrt(2.0);
-    const double h1 = -0.300;
+    const double h1 = -0.37897/2.0;
     double pAct_cartesion[numField][numAct] = {
-    //    EM1, EM4, EM6, EM7, EM2, EM8, EM5, EM3  (As wired)
-        { -d1, 0.0,  d1,  d2, -d2,  d1, 0.0, -d1 },
-        { -d1, -d2, -d1, 0.0, 0.0,  d1,  d2,  d1 },
-        {  h1,  h1,  h1,  h1,  h1,  h1,  h1,  h1 }
+    //    EM1, EM2, EM3,  EM4,  EM5, EM6, EM7,  EM8  (As wired)
+        { -d1, -d2, -d1,  0.0,  0.0, d1,   d2,  d1 },
+        { -d1,  0.0, d1,  -d2,  d2,  -d1,  0.0, d1 },
+        {  h1,  h1,  h1,   h1,  h1,  h1,   h1,  h1 }
         };
 
 //    const double m = 6324.48; // [Am^2] this is the theoretical magnetic moment on each EM based on simulation
@@ -337,10 +348,16 @@ public:
     double       currentcooldownloop = 10.0;
     double       tempCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
+
     std::array<double, 16> current_EEpose;
 
-    const auto model = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
-
+    // inputs for NN predictor
+    double NN_B1[3] = {30.0, 10.0,   0.0};
+    double NN_B2[3] = {20.0, 5.0, 0.0};
+    double NN_P1[3] = {50.0, -50.0, 60.0};
+    double NN_P2[3] = {30.0, -50.0, 60.0};
+    std::vector<float> DNNinputprepare(double NN_B1[3], double NN_P1[3], double NN_B2[3], double NN_P2[3]);
+    double       predictCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 
 
@@ -403,6 +420,10 @@ public slots:
     void        enableDAQ(void);
     void        clearcurrent(void);
     void        DNNpredict(void);
+    void        updateDNNinput(void);
+    void        runDNNcurrent(void);
+    void        moveRot_P1(void);
+    void        moveRot_P2(void);
 
 
 private slots:

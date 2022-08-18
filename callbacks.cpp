@@ -361,13 +361,13 @@ void MainWindow::callbacks(void)
                         }
 
                     // record
-                        if(LogEnabled){
+//                        if(LogEnabled){
                              MainWindow::Record();
-                        }
-                        else
-                        {
-                            qInfo()<<"log is not enabled!";
-                        }
+//                        }
+//                        else
+//                        {
+//                            qInfo()<<"log is not enabled!";
+//                        }
 
                         robotmovecount++;
                     }
@@ -377,6 +377,11 @@ void MainWindow::callbacks(void)
                         robotloopisdone = true;
                         currentcount++;
                         std::cout<<"single current loop is done ["<<currentcount<<"/"<<currentloop <<"]"<<std::endl;
+                        if (currentcount == currentloop)
+                        {
+                            qInfo()<<"calibration data collection is done! set current to zeros";
+                            MainWindow::CloseFiles();
+                        }
                     }
                 }
             }
@@ -403,9 +408,9 @@ void MainWindow::callbacks(void)
 
 
 
-// record
-//    if(LogEnabled)
-//         MainWindow::Record();
+ //record
+    if(LogEnabled && (!CalibrationDataCollet))
+         MainWindow::Record();
 
 
     if (connectedGamepad.enabled) // Update Direct Local B-field

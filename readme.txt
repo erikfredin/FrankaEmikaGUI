@@ -1,0 +1,46 @@
+*Robot register data collect:
+- check "pilot thread' to enalbe freedrag of the robot, and drag the robot to target #1
+- uncheck "pilot thread" to kill the thread
+- click "Robot recovery" to auto recover Franka
+- check "Streaming data from Franka" to fetch current Franka robot tip position
+- click "Robot register data collect", to record robottip position for online registration
+- #set file name and click "Log on" if you want to save the tippostion to file
+- #click "pause" to pause the data logging
+- uncheck "Streaming data from Franka" to stop connection with Franka controller
+------repeat following until all points are reached-----------------------
+- check "pilot thread' to enalbe freedrag of the robot, and drag the robot to target #2
+- uncheck "pilot thread" to kill the thread
+- click "Robot recovery" to auto recover Franka
+- check "Streaming data from Franka" to fetch current Franka robot tip position
+- click "Robot register data collect", to record robottip position for online registration
+- #click "continue" to continue the data logging
+- #click "pause" to pause the data logging
+- uncheck "Streaming data from Franka" to stop connection with Franka controller
+--------------------------------------------------------------------------
+- when all 9 target position are collected, the registration matrix is calculated and displayed,
+  then remember to UPDATE matrix "transT2R" mannualy. 
+- #click "Log off" to stop logging and save data to .csv file.
+
+
+*Calibration data collect
+- manually set motion range of robot in mainwindow.h, currently it is [-50,50], [-50,50], [75, 125]
+  origin is set at xy plane center for the table
+- mannually set "currentloop" and "robotmoveloop", robot will move "robotmoveloop" times and 
+  loop inside of "currentloop"
+- check "Enable DAQ" to collect data from guassmeter probe
+- Set file name
+- click "Calibration data collect ON" and logging will start automatically,
+  coil currents and robot position are randomly assigned each time
+- after all loops are passed, calibration shuts down automatically, logging will stops, 
+  and the data will be saved to .csv file. 
+- click "Calibration data collect ON" if you want to stop the process early
+
+
+*DNN predict
+- input B1, P1, B2, P2, click "update". Note that P1, P2 should be in [-50,50], [-50,50], [75, 125]
+- click "DNN predict", look at predicted current, if no problem
+- click "Run DNN currents", send current to S826
+- click "Move Robot to P1" to move Franka tip to P1
+- click "Move Robot to P2" to move Franka tip to P2
+
+
