@@ -61,9 +61,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_DNNpredict,SIGNAL(clicked()),SLOT(DNNpredict()));
     connect(ui->pushButton_dnn_inputupdate,SIGNAL(clicked()),SLOT(updateDNNinput()));
     connect(ui->pushButton_run_dnncurent,SIGNAL(clicked()),SLOT(runDNNcurrent()));
+    connect(ui->pushButton_initializerobot,SIGNAL(clicked()),SLOT(initializeFranka()));
 
+    connect(ui->pushButton_moveRot2_P1,SIGNAL(clicked()),SLOT(moveRot_P1()));
+    connect(ui->pushButton_moveRot2_P2,SIGNAL(clicked()),SLOT(moveRot_P2()));
 
-
+    connect(ui->pushButton_runGlobalField,SIGNAL(clicked()),SLOT(runGlobalfield()));
 
 
     //check box
@@ -802,10 +805,10 @@ bool MainWindow::OpenFiles(std::string &fileNameBase){
                 LogFileAllData<<"msdFieldvalue_mT_"<<i+1<<Delim;
 
             for (i = 0; i < numProbePos; i++)
-                LogFileAllData<<"robotMsdPos_mm_"<<i+1<<Delim;
+                LogFileAllData<<"robotMsdPos_m_"<<i+1<<Delim;
 
             for (i = 0; i < numProbePos; i++)
-                LogFileAllData<<"tableCmdPos_mm_"<<i+1<<Delim;
+                LogFileAllData<<"tableCmdPos_m_"<<i+1<<Delim;
 
 
             for (i = 0;i < numAct; i++)
@@ -934,11 +937,129 @@ void MainWindow::updateCurrents(void)
 
     if (!overheatingFlag)
     {
+        // Calculate the necessary current setpoints based on the desired global field
+        if (isGradientControlled)
+        {
+            // Consider Gradient components here:
+            // N is numField+numGrad x numAct
+            cv::invert(cv::Mat(numField+numGrad,numAct,CV_64F,N),cv::Mat(numAct,numField+numGrad,CV_64F,invN),cv::DECOMP_SVD); // Singular Value Decomposition is slowest but it can handle nonsquare
+            // This would have been made into a simpler function but I suck at pointers and functions of matrices
+            // It currently makes 2 matrices from the values of N and invN, takes the inverse of N and stores it in invN
 
+            // Multiply the inverse matrix with the desired field and the resulting vector is the necessary currents
+            // If the desired fields result in currents that are larger than what is possible to generate, then
+            // all currents will need to be scaled down by the same factor.
+            double maxCurrentBuf = 0.0;
+            // Explicit matrix multiplication here
+            for (int i = 0; i < numAct; i++)
+            {
+                double sum = 0.0;
+                for ( int j = 0; j < numField+numGrad; j++)
+                {
+                    sum += invN[i][j]*B_Global_Desired[j];
+                }
+                currentSetpoints[i] = sum;
+                // Check that none of the currents are above the max by finding the max and scaling all down accordingly afterwards.
+                if ( abs(currentSetpoints[i]) > maxCurrentBuf)
+                {
+                    maxCurrentBuf = abs(currentSetpoints[i]);
+                }
+            }
+            // Scale down all if necessary
+            // Currents are normalized and fall on a scale between 0-1 representing currents
+            // from zero to max current (0 A - 25 A)
+            if (maxCurrentBuf > 1.0)
+            {
+                double scalingFactor = 1.0/maxCurrentBuf;
+                for (int i = 0; i < numAct; i++)
+                {
+                    // Multiply all setpoints by (positive and less than unity) scaling factor
+                    currentSetpoints[i] *= scalingFactor;
+                    // Scale setpoints to their actual value
+                    currentSetpoints[i] *= maxCurrent;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < numAct; i++)
+                {
+                    // Scale setpoints to their actual value
+                    currentSetpoints[i] *= maxCurrent;
+                }
+            }
+
+        }
+        else
+        {
+            // Don't worry about gradients:
+            // M is numField x numAct
+            cv::invert(cv::Mat(numField,numAct,CV_64F,M),cv::Mat(numAct,numField,CV_64F,pseudoinvM),cv::DECOMP_SVD); // Singular Value Decomposition is slowest but it can handle nonsquare
+            // This would have been made into a simpler function but I suck at pointers and functions of matrices
+            // It currently makes 2 matrices from the values of M and pseudoinvM, takes the inverse of M and stores it in pseudoinvM
+
+            // Multiply the inverse matrix with the desired field and the resulting vector is the necessary currents
+            double maxCurrentBuf = 0.0;
+            for (int i = 0; i < numAct; i++)
+            {
+                double sum = 0.0;
+                for ( int j = 0; j < numField; j++)
+                {
+                    sum += pseudoinvM[i][j]*B_Global_Desired[j];
+                }
+                currentSetpoints[i] = sum;
+                // Check that none of the currents are above the max by finding the max and scaling all down accordingly afterwards.
+                if ( abs(currentSetpoints[i]) > maxCurrentBuf)
+                {
+                    maxCurrentBuf = abs(currentSetpoints[i]);
+                }
+            }
+            // Scale down all currents if necessary (if max required current is > max allowable current)
+            // And scale up normalized currents to theiir actual values.
+            if ( maxCurrentBuf > 1.0 )
+            {
+                double scalingFactor = 1.0/maxCurrentBuf;
+                for (int i = 0; i < numAct; i++)
+                {
+                    // Multiply all setpoints by (positive and less than unity) scaling factor
+                    currentSetpoints[i] *= scalingFactor;
+                    // Scale setpoints to their actual value
+                    currentSetpoints[i] *= maxCurrent;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < numAct; i++)
+                {
+                    // Scale setpoints to their actual value
+                    currentSetpoints[i] *= maxCurrent;
+                }
+            }
+        }
+
+
+        // No matter the state, find the theoretical magnetic field produced by the setpoint currents
+        for (int k = 0; k < numField+numGrad; k++)
+        {
+            double sum = 0.0;
+            for (int l = 0; l < numAct; l++)
+            {
+                sum += N[k][l]*currentSetpoints[l]/maxCurrent;
+            }
+            B_Global_Output[k] = sum;
+        }
+        // Send current setpoints as normal
+        // Need to convert to voltages first
+
+        // TODO convert amps to volts
+        std::cout<< "wrote current " ;
         for (int i = 0; i < numAct; i++)
         {
-            outputAnalogVoltages[i] = 0.0; // Voltage = (Amps) * (Volts/Amp)
+            outputAnalogVoltages[i] = currentSetpoints[i] * currentControlAdj[i]; // Voltage = (Amps) * (Volts/Amp)
+            // TODO limit voltages sent to S826
+            std::cout<<i<<": "<<currentSetpoints[i] <<",\t";
         }
+        std::cout<< std::endl;
+
     }
     else
     {
@@ -948,6 +1069,7 @@ void MainWindow::updateCurrents(void)
         for (int i = 0; i < numAct; i++)
         {
             outputAnalogVoltages[i] = 0.0; // Voltage = (Amps) * (Volts/Amp)
+            std::cerr << "Currents Clearing for coil "<<i+1<<std::endl;
         }
 
 
@@ -959,7 +1081,7 @@ void MainWindow::updateCurrents(void)
     if (s826.boardConnected)
     {
         s826.analogWriteAll(s826.rangeCodesDAC, outputAnalogVoltages);
-        qInfo() << "Wrote values to the S826.";
+//        qInfo() << "Wrote values to the S826.";
     }
 
 
@@ -1297,12 +1419,12 @@ void MainWindow::updateDNNinput(void)
     NN_B2[1] = ui->lineEdit_dnnInput_b2y->text().toDouble();
     NN_B2[2] = ui->lineEdit_dnnInput_b2z->text().toDouble();
 
-    NN_P1[0] = ui->lineEdit_dnnInput_p1x->text().toDouble();
-    NN_P1[1] = ui->lineEdit_dnnInput_p1y->text().toDouble();
-    NN_P1[2] = ui->lineEdit_dnnInput_p1z->text().toDouble();
-    NN_P2[0] = ui->lineEdit_dnnInput_p2x->text().toDouble();
-    NN_P2[1] = ui->lineEdit_dnnInput_p2y->text().toDouble();
-    NN_P2[2] = ui->lineEdit_dnnInput_p2z->text().toDouble();
+    NN_P1[0] = ui->lineEdit_dnnInput_p1x->text().toDouble()*0.001;
+    NN_P1[1] = ui->lineEdit_dnnInput_p1y->text().toDouble()*0.001;
+    NN_P1[2] = ui->lineEdit_dnnInput_p1z->text().toDouble()*0.001;
+    NN_P2[0] = ui->lineEdit_dnnInput_p2x->text().toDouble()*0.001;
+    NN_P2[1] = ui->lineEdit_dnnInput_p2y->text().toDouble()*0.001;
+    NN_P2[2] = ui->lineEdit_dnnInput_p2z->text().toDouble()*0.001;
 
     std::cout<< "DNN Inputs are updated as: " << std::endl;
     std::cout << "   NN_B1: ";
@@ -1415,7 +1537,7 @@ void MainWindow::moveRot_P1(void)
 //                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
           franka::CartesianVelocities output = {{v_cmd[0], v_cmd[1], v_cmd[2], 0.0, 0.0, 0.0}};
           if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
-            std::cout << "single motion Finished: ["<<robotmovecount+1<<"/"<<robotmoveloop <<"]" << std::endl;
+            std::cout << "Moving to P1 Finished!" << std::endl;
             std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
             output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
             Robotmotionsuccess = 1;
@@ -1519,7 +1641,7 @@ void MainWindow::moveRot_P2(void)
 //                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
           franka::CartesianVelocities output = {{v_cmd[0], v_cmd[1], v_cmd[2], 0.0, 0.0, 0.0}};
           if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
-            std::cout << "single motion Finished: ["<<robotmovecount+1<<"/"<<robotmoveloop <<"]" << std::endl;
+            std::cout << "Moving to P2 Finished!" << std::endl;
             std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
             output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
             Robotmotionsuccess = 1;
@@ -1533,4 +1655,30 @@ void MainWindow::moveRot_P2(void)
     Robotmotionsuccess = 0;
     robot.automaticErrorRecovery();
     }
+}
+
+void MainWindow::initializeFranka(void)
+{
+    franka::Robot robot(fci_ip);
+    setDefaultBehavior(robot);
+    // First move the robot to a suitable joint configuration
+//            std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
+    std::array<double, 7> q_goal = {{-0.0690753, -0.0159581, -0.00171238, -1.94264, -0.0153294, 1.91711, 0.724667}};
+    MotionGenerator motion_generator(0.5, q_goal);
+    robot.control(motion_generator);
+    std::cout << "Finished moving to initial joint configuration in callback." << std::endl;
+    robotinitialized = true;
+}
+
+
+void MainWindow::runGlobalfield(void)
+{
+    B_Global_Desired[0] = ui->lineEdit_Global_Bx->text().toDouble()/1000.0; //mT to T
+    B_Global_Desired[1] = ui->lineEdit_Global_By->text().toDouble()/1000.0;
+    B_Global_Desired[2] = ui->lineEdit_Global_Bz->text().toDouble()/1000.0;
+    std::cout<<"B_Global_Desired: ";
+    for (double cc : B_Global_Desired)
+        std::cout<<cc<<" ";
+    std::cout<<std::endl;
+    updateCurrents();
 }

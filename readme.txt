@@ -1,4 +1,8 @@
-*Robot register data collect:
+**Franka end effector offset
+- for guassmeter probe, RobotEE_offset[3] = {0.0, 0.0, 338.2} /unit:mm
+- for registration bar, RobotEE_offset[3] = {0.0, 0.0, 80?} /unit:mm
+
+**Robot register data collect:
 - check "pilot thread' to enalbe freedrag of the robot, and drag the robot to target #1
 - uncheck "pilot thread" to kill the thread
 - click "Robot recovery" to auto recover Franka
@@ -22,7 +26,7 @@
 - #click "Log off" to stop logging and save data to .csv file.
 
 
-*Calibration data collect
+**Calibration data collect
 - manually set motion range of robot in mainwindow.h, currently it is [-50,50], [-50,50], [75, 125]
   origin is set at xy plane center for the table
 - mannually set "currentloop" and "robotmoveloop", robot will move "robotmoveloop" times and 
@@ -36,7 +40,7 @@
 - click "Calibration data collect ON" if you want to stop the process early
 
 
-*DNN predict
+**DNN predict
 - input B1, P1, B2, P2, click "update". Note that P1, P2 should be in [-50,50], [-50,50], [75, 125]
 - click "DNN predict", look at predicted current, if no problem
 - click "Run DNN currents", send current to S826
@@ -44,3 +48,12 @@
 - click "Move Robot to P2" to move Franka tip to P2
 
 
+
+Debug:
+Franka_Progrom:
+B_Global_Desired: 0.01 0 0 0 0 0 0 0 
+0: 15.731, 1: -0.0495944, 2: -20.0479, 3: 1.03966, 4: -1.92972,	5: -19.9266, 6: -0.230327, 7: 19.1166,	
+setting zero to the S826.
+EM_program
+Input B = 10mT, 0,0
+0: 1.33573 1: -0.261861 2: -1.46208 3: -6.31208 4: 6.18944 5: -1.26992 6: 0.407749 7: 1.4175 

@@ -581,9 +581,9 @@
     <property name="geometry">
      <rect>
       <x>580</x>
-      <y>400</y>
-      <width>111</width>
-      <height>71</height>
+      <y>490</y>
+      <width>101</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="text">
@@ -970,7 +970,7 @@
      </rect>
     </property>
     <property name="title">
-     <string>P1 (mT)</string>
+     <string>P1 (mm)</string>
     </property>
     <widget class="QLineEdit" name="lineEdit_dnnInput_p1x">
      <property name="geometry">
@@ -1022,7 +1022,7 @@
      </rect>
     </property>
     <property name="title">
-     <string>P2(mT)</string>
+     <string>P2(mm)</string>
     </property>
     <widget class="QLineEdit" name="lineEdit_dnnInput_p2x">
      <property name="geometry">
@@ -1063,6 +1063,97 @@
       <string>0.0</string>
      </property>
     </widget>
+   </widget>
+   <widget class="QPushButton" name="pushButton_initializerobot">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>300</y>
+      <width>101</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Initialize robot</string>
+    </property>
+   </widget>
+   <widget class="Line" name="line_4">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>380</y>
+      <width>501</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="Group_dnninput_b1_2">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>410</y>
+      <width>191</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Global field (mT)</string>
+    </property>
+    <widget class="QLineEdit" name="lineEdit_Global_Bx">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0.0</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_Global_By">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>20</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0.0</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_Global_Bz">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>20</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0.0</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="pushButton_runGlobalField">
+    <property name="geometry">
+     <rect>
+      <x>780</x>
+      <y>420</y>
+      <width>101</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Run Global field</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

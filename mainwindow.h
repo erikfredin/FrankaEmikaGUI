@@ -252,15 +252,40 @@ public:
     bool subroutineState;
 
     /// CALIBRATION CONSTANTS
+
+    /// CONTROL MATRICES
+    // Declare the control matrix for relating the currents to the magnetic field and gradients
+    // This matrix considers the gradients as well as the field components
+    double N[numAct][numField+numGrad] = { {  0.0036336,	-0.00078,	-0.004188,	-0.0172944,	 0.01758,	-0.0034944,	 0.0017976,	 0.0040032 },
+                                           {  0.0037728,	 0.0181776,	 0.003588,	-0.0010728,	 0.0008232,	-0.0040848,	-0.0170712,	-0.0036168 },
+                                           { -0.0007968,	 0.0125472,	-0.0012336,	 0.012252,	 0.01212,	-0.0011952,	 0.0121992,	-0.0011472 },
+                                           { -0.0153312,	 0.15354,	-0.0191832,	-0.0795432,	-0.0935904,	-0.012216,	 0.1548408,	-0.0230928 },
+                                           { -0.0383184,	 0.0036216,	 0.0412104,	-0.0063,	-0.0008544,	-0.0371352,	 0.015732,	 0.0364968 },
+                                           { -0.0083544,	 0.0153336,	 0.0099864,	 0.2313216,	-0.2274,	 0.0070104,	-0.011592,	-0.01098   },
+                                           { -0.0187776,	-0.0901176,	-0.0144816,	 0.1492368,	 0.1640112,	-0.0203568,	-0.0964416,	-0.0139104 },
+                                           { -0.0108264,	-0.247728,	-0.0094248,	 0.0090024,	-0.0205296,	 0.0097824,	 0.2304216,	 0.0087936 } };
+    // Declare the inverse of the control matrix relating the magnetic field components to the currents
+    double invN[numField+numGrad][numAct] =  {0.0};
+    // Declare the control matrix for relating the currents to the magnetic field
+    // This matrix does not consider the gradients, only the field components
+    // Uses these calibrated field values unless useCalibratedFieldValues is set to false
+    double M[numField][numAct] =   { { 0.0036336,	-0.00078,	-0.004188,	-0.0172944,	0.01758,	-0.0034944,	 0.0017976,	 0.0040032},
+                                     { 0.0037728,	 0.0181776,	 0.003588,	-0.0010728,	0.0008232,  -0.0040848,	-0.0170712,	-0.0036168},
+                                     {-0.0007968,	 0.0125472,	-0.0012336,	 0.012252,	0.01212,	-0.0011952,	 0.0121992,	-0.0011472} };
+    // Declare the psuedo-inverse of the non-square control matrix relating the currents to the magnetic field components
+    double pseudoinvM[numAct][numField] =  {0.0};
+
+    /// CALIBRATION CONSTANTS
     // These are the calibration constants for each electromagnet current signals
 //    const double currentControlAdj[numAct] = {5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0}; // [T/V]
 //    const double currentControlAdj[numAct] = {0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2}; // [V/A] Max 5V for 25 A Output (OLD ESTIMATES)
     const double currentControlAdj[numAct] = {1.0/6.7501, 1.0/6.6705, 1.0/6.4118, 1.0/6.7818, 1.0/6.7703, 1.0/6.7703, 1.0/6.7107, 1.0/6.8500}; // [V/A] Max Command signal for 24 A Output shown above
 //    const double currentSenseAdj[numAct] = {8.05, 8.05, 8.05, 8.05, 8.05, 8.05, 8.05, 8.05}; // [A/V] (OLD ESTIMATES)
-//    const double currentSenseAdj[numAct] = {6.7501, 6.6705, 6.4118, 3.8831, 6.7703, 6.7703, 6.7107, 6.8500}; // [A/V] (OLD ESTIMATES)
-    const double currentSenseAdj[numAct] = {1.0/0.6338, 1.0/0.6516, 1.0/0.6791, 1.0/0.64, 1.0/0.6422, 1.0/0.6395, 1.0/0.6341, 1.0/0.6392}; // [A/V] (NEW ESTIMATES) (NOTE EM7 is not calibrated)
+    const double currentSenseAdj[numAct] = {6.7501, 6.6705, 6.4118, 3.8831, 6.7703, 6.7703, 6.7107, 6.8500}; // [A/V] (OLD ESTIMATES)
+//    const double currentSenseAdj[numAct] = {1.0/0.6338, 1.0/0.6516, 1.0/0.6791, 1.0/0.64, 1.0/0.6422, 1.0/0.6395, 1.0/0.6341, 1.0/0.6392}; // [A/V] (NEW ESTIMATES) (NOTE EM7 is not calibrated)
     const double temperatureSenseAdj[numAct] = {20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0}; // [deg C/V]
-//    const double ATINanoVoltageOffsets[6] = {-1.26987250,	3.78201850,	2.1132725,	2.020594,	-0.4165031,	-0.75069465}; // just magnet experiments
+
+ //    const double ATINanoVoltageOffsets[6] = {-1.26987250,	3.78201850,	2.1132725,	2.020594,	-0.4165031,	-0.75069465}; // just magnet experiments
     const double ATINanoVoltageOffsets[6] = {-1.3171104,	3.8164696,	2.2166968,	1.9402872,	-0.44156372,	-1.0281404}; // Gripper experiments
 
     double ATINanoCalibrationMatrix[6][6] =       {{  0.00749,	 0.02250,	 0.01747,	-0.80775,	-0.02452,	 0.81951},
@@ -424,6 +449,8 @@ public slots:
     void        runDNNcurrent(void);
     void        moveRot_P1(void);
     void        moveRot_P2(void);
+    void        initializeFranka(void);
+    void        runGlobalfield(void);
 
 
 private slots:
