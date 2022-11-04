@@ -63,6 +63,9 @@ DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\poco\cmake-build\li
 DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\poco\cmake-build\bin\Debug"
 DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
 
+LIBS += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\liborl-master\build\Debug\orl.lib"
+INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\liborl-master\include"
+
 #DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\liborl-master"
 
 #DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\boost_1_79_0\boost_1_79_0\stage\lib"

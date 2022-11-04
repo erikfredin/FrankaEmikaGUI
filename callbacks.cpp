@@ -431,7 +431,11 @@ void MainWindow::callbacks(void)
     //        qDebug() << "Working";
 
             // Set desired B local field
-            std::cout<<"joystick values: " <<connectedGamepad.joystickValues <<std::endl; // Increase nonlinearly to add sensitivity and control
+            std::cout<<"joystick values"<<std::endl;
+            for (int i=0; i<10; i++)
+                std::cout<<"[ "<< i << "]:  "<<connectedGamepad.joystickValues[i]<<"    "; // Increase nonlinearly to add sensitivity and control
+           std::cout<<std::endl;
+
     }
 
 

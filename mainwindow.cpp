@@ -68,6 +68,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     connect(ui->pushButton_runGlobalField,SIGNAL(clicked()),SLOT(runGlobalfield()));
 
+    connect(ui->pushButton_Cartesiantest,SIGNAL(clicked()),SLOT(Cartesiantest()));
+
+
 
     //check box
 //
@@ -75,7 +78,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->checkBox_streaming,SIGNAL(clicked()),SLOT(robotstreaming()));
     connect(ui->checkBox_enableDAQ,SIGNAL(clicked()),SLOT(enableDAQ()));
 
-
+    connect(ui->checkBox_controllerEnable,SIGNAL(clicked()),SLOT(enableController()));
 
 //    connect(ui->lineEdit_EE_x,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
 //    connect(ui->lineEdit_EE_y,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
@@ -126,6 +129,23 @@ void MainWindow::updateCaption(void)
     ui->lineEdit_EE_y->setText(tr("%1").arg(RobotEE_offset[1]));
     ui->lineEdit_EE_z->setText(tr("%1").arg(RobotEE_offset[2]));
 
+}
+
+void MainWindow::enableController(void)
+{
+    // For Enabling or disabling the gamepad or game controller.
+    controllerState = ui->checkBox_controllerEnable->checkState();
+
+    // Enable the controller if the checkbox is checked
+    if (controllerState)
+    {
+        connectedGamepad.enableController();
+    }
+    else
+    {
+        // If checkbox is unchecked, disable controller and reset field values
+        connectedGamepad.disableController();
+    }
 }
 
 
@@ -1682,3 +1702,48 @@ void MainWindow::runGlobalfield(void)
     std::cout<<std::endl;
     updateCurrents();
 }
+
+
+void MainWindow::Cartesiantest(void)
+{
+    try {
+
+            orl::Robot robot(fci_ip);
+            std::cout << "WARNING: This example will move the robot! "
+                      << "Please make sure to have the user stop button at hand!" << std::endl
+                      << "Double tap the robot to continue..." << std::endl;
+            robot.double_tap_robot_to_continue();
+            std::array<double, 7> q_goal = {{0.542536, 0.258638, -0.141972, -1.99709, -0.0275616, 2.38391, 1.12856}};
+            robot.joint_motion(q_goal, 0.2);
+
+            orl::Pose pregrasp_pose(robot.get_current_pose());
+            pregrasp_pose.set_position(0.4, 0.15, 0.20);
+            pregrasp_pose.set_RPY(-M_PI, 0, 0);
+
+            orl::Pose move_pose(robot.get_current_pose());
+            move_pose.set_position(0.7, 0.15, 0.20);
+            move_pose.set_RPY(-M_PI, 0, 0);
+
+            robot.close_gripper();
+            robot.cart_motion(pregrasp_pose, 5);
+            robot.cart_motion(move_pose, 5, orl::StopConditions::Force(5));
+            robot.cart_motion(pregrasp_pose, 5);
+            robot.joint_motion(q_goal, 0.2);
+
+        } catch (const franka::Exception &e) {
+            std::cout << e.what() << std::endl;
+        }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

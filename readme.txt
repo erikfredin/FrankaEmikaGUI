@@ -57,3 +57,19 @@ setting zero to the S826.
 EM_program
 Input B = 10mT, 0,0
 0: 1.33573 1: -0.261861 2: -1.46208 3: -6.31208 4: 6.18944 5: -1.26992 6: 0.407749 7: 1.4175 
+
+
+
+//    const double m = 6324.48; // [Am^2] this is the theoretical magnetic moment on each EM based on simulation
+    // 2*pi*(0.12+0.360/2)^3*(0.035366483)/mu_0 = 4.7745e+03 [A m^2] From 2021/01/13 COMSOL Simulations
+    const double m = 4774.5; // [Am^2] this is most recent number. It is also similar to a volume-scaled permanent magnet
+    double mAct_cartesion[numField][numAct] = { // All are in positive z direction
+        { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+        { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+        {   m,   m,   m,   m,   m,   m,   m,   m}
+        };
+
+
+
+
+

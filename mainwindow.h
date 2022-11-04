@@ -61,8 +61,8 @@
 //#include <boost/>
 #include <thread>
 
-//#include <liborl/liborl.h>
-//#include <memory>
+#include <liborl/liborl.h>
+#include <memory>
 
 
 #include <chrono>
@@ -131,7 +131,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-//using namespace orl;
+using namespace orl;
 
 class MainWindow : public QMainWindow
 {
@@ -176,8 +176,8 @@ public:
     const static int     numProbePos = 3;
 
     constexpr static double maxAllowableTemp  = 90.0;  // [C] Maximum temperature that the system is allowed to operate at. Kill currents if temperature exceeds
-//    constexpr static double maxCurrent = 24.0; // [A], maxvalue based on Adam's code
-    constexpr static double maxCurrent = 23.5; // [A], decrease to 23.5A to make it safer
+    constexpr static double maxCurrent = 24.0; // [A], maxvalue based on Adam's code
+//    constexpr static double maxCurrent = 23.5; // [A], decrease to 23.5A to make it safer
     // MAX COMMAND SIGNALS Found through current experimentation with clamp meter -Adam 2021/09/13
 //    constexpr static double maxCurrentCommand[numAct] = { 3.5555, 3.5976, 3.7431, 6.1806, 3.5449, 3.5449, 3.5764, 3.5036 }; // [V] For max 24 A
     constexpr static double maxCurrentCommand[numAct] = { 3.5555/2.0, 3.5976/2.0, 3.7431/2.0, 3.5389/2.0, 3.5449/2.0, 3.5449/2.0, 3.5764/2.0, 3.5036/2.0 }; // [V] For max 12 A (old EM7 6.1806/2.0)
@@ -233,7 +233,7 @@ public:
 
     /// CONTROL BOOLEANS and STATE VALUES
     bool overheatingFlag = false;
-    bool isGradientControlled = true;
+    bool isGradientControlled = false;
     bool controllerState; // State for enabling or disabling the game controller.
     bool useCalibratedFieldValues = true;
     // Enable/Disable Plots State
@@ -452,6 +452,9 @@ public slots:
     void        initializeFranka(void);
     void        runGlobalfield(void);
 
+    void        Cartesiantest(void);
+
+    void        enableController(void);
 
 private slots:
     void       callbacks(void);
