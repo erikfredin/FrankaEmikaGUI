@@ -31,7 +31,9 @@ SOURCES += \
     daq.cpp \
     s826.cpp \
     gamepadmonitor.cpp \
-    magneticmathfunctions.cpp
+    magneticmathfunctions.cpp \
+    electromagnet_calibration.cpp \
+    scalorPotential.cpp
 
 
 HEADERS += \
@@ -44,7 +46,10 @@ HEADERS += \
     robotstatus.h \
     s826.h \
     gamepadmonitor.h \
-    magneticmathfunctions.h
+    magneticmathfunctions.h \
+    EigenToYAML.h \
+    electromagnet_calibration.h \
+    scalorPotential.h
 
 FORMS += \
     mainwindow.ui
@@ -63,15 +68,24 @@ DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\poco\cmake-build\li
 DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\poco\cmake-build\bin\Debug"
 DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
 
-LIBS += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\liborl-master\build\Debug\orl.lib"
-INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\liborl-master\include"
+#LIBS += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\liborl-master\build\Debug\orl.lib"
+#INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\liborl-master\include"
 
-#DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\liborl-master"
+LIBS += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\liborl-master - modified\build\Debug\orl.lib"
+INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\liborl-master - modified\include"
 
-#DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\boost_1_79_0\boost_1_79_0\stage\lib"
 
 
-#INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\libfranka\lib"
+#win32:CONFIG(release, debug|release): LIBS += -LC:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/yaml-cpp-master/build/Debug/ -lyaml-cppd
+#else:win32:CONFIG(debug, debug|release): LIBS += -LC:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/yaml-cpp-master/build/Debug/ -lyaml-cppd
+
+#LIBS +="C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\yaml-cpp-master\build\Debug\yaml-cppd.lib"
+#LIBS +="C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\yaml-cpp-yaml-cpp-0.5.3\build\Debug\yaml-cpp.lib"
+LIBS +="C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\yaml-cpp-yaml-cpp-0.5.3\build\Debug\libyaml-cppmdd.lib"
+INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\yaml-cpp-yaml-cpp-0.5.3\include"
+#DEPENDPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\yaml-cpp-master\build\Debug"
+
+
 INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\Franka_Emika_Console\libfranka\include"
 INCLUDEPATH += "C:\Users\MicroRoboticsLab\Documents\libfranka\Eigen3"
 

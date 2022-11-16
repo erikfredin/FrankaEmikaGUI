@@ -75,6 +75,9 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include "electromagnet_calibration.h"
+#include "scalorPotential.h"
+
 
 // These are defined in the S826api header internally. Left here for reference
 #define AOUT0_PIN   42
@@ -133,6 +136,9 @@ QT_END_NAMESPACE
 
 using namespace orl;
 
+using namespace std::literals;
+//class ElectromagnetCalibration;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -145,7 +151,7 @@ public:
 
 
     // set Franka robot controller ip address here
-    std::string fci_ip = "172.16.0.2";
+    std::string fci_ip = "192.168.100.2";
 
 //    bool isRobotConnected = false;
 //    Eigen::Vector3d position_d;
@@ -158,7 +164,7 @@ public:
     double Robot_orient[3] = {0.0, 0.0, 0.0};
     double Robot_joint[7] = { 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0};
 
-    double RobotEE_offset[3] = {0.0, 0.0, 338.2};
+    double RobotEE_offset[3] = {0.0, 0.0, 0.0};
 
     void SetControlMode(const int & controlMode);
 //    void SetFileName(const std::string & fileNameBase);
@@ -225,6 +231,10 @@ public:
     /// S826 BOARD FOR CONTROL
     S826 s826;
 
+//    std::string name1 = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
+//    ElectromagnetCalibration mymodel(name1);
+
+//ElectromagnetCalibration mymodel(std::string("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml"));
 
     /// DAQ FOR FEEDBACK
     daq DAQ;
@@ -340,7 +350,7 @@ public:
     //cooornates of nut center 1,2,3,4,5,6,7,8,0
     double     tabledata[4][registerdataNum] = {  {-202.94*0.001,   -131.52*0.001,   -202.94*0.001,     0.0,            0.0,              202.94*0.001,     131.52*0.001,     202.94*0.001,     0.0},
                                                   {-202.94*0.001,    0.0,            202.94*0.001,      -131.52*0.001,  131.52*0.001,     -202.94*0.001,     0.0,             202.94*0.001,     0.0},
-                                                  {0.0,             6.5*0.001,       14.7*0.001,        8.8*0.001,       10.3*0.001,        17.4*0.001,       20.9*0.001,      12.6*0.001,     85.075*0.001},
+                                                  {0.0,             6.5*0.001,       14.7*0.001,        8.8*0.001,       10.3*0.001,        17.4*0.001,       20.9*0.001,      12.6*0.001,     85.3*0.001},
                                                   {1.0,             1.0,                1.0,            1.0,            1.0,                1.0,              1.0,             1.0,           1.0}};
 
     Eigen::Matrix4d     transT2R;
@@ -455,6 +465,7 @@ public slots:
     void        Cartesiantest(void);
 
     void        enableController(void);
+    void        setFrankaguidingmode(void);
 
 private slots:
     void       callbacks(void);

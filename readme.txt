@@ -1,6 +1,6 @@
 **Franka end effector offset
 - for guassmeter probe, RobotEE_offset[3] = {0.0, 0.0, 338.2} /unit:mm
-- for registration bar, RobotEE_offset[3] = {0.0, 0.0, 80?} /unit:mm
+- for registration bar, RobotEE_offset[3] = {0.0, 0.0, 80} /unit:mm
 
 **Robot register data collect:
 - check "pilot thread' to enalbe freedrag of the robot, and drag the robot to target #1
