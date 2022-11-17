@@ -516,7 +516,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>410</y>
+      <y>380</y>
       <width>141</width>
       <height>41</height>
      </rect>
@@ -528,8 +528,8 @@
    <widget class="QPushButton" name="pushButton_calibrationcollect">
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>390</y>
+      <x>330</x>
+      <y>380</y>
       <width>141</width>
       <height>41</height>
      </rect>
@@ -554,7 +554,7 @@
    <widget class="QPushButton" name="pushButton_calibrationcollect_off">
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>330</x>
       <y>430</y>
       <width>141</width>
       <height>41</height>
@@ -567,8 +567,8 @@
    <widget class="QCheckBox" name="checkBox_enableDAQ">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>390</y>
+      <x>180</x>
+      <y>440</y>
       <width>91</width>
       <height>31</height>
      </rect>
@@ -1192,6 +1192,19 @@
     </property>
     <property name="text">
      <string>Guiding mode</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_initialprobeorient">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>380</y>
+      <width>111</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Initial Probe Orient</string>
     </property>
    </widget>
   </widget>

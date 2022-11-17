@@ -466,6 +466,7 @@ public slots:
 
     void        enableController(void);
     void        setFrankaguidingmode(void);
+    void        initialProbeOrient(void);
 
 private slots:
     void       callbacks(void);

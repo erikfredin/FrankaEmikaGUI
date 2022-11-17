@@ -74,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     connect(ui->pushButton_Cartesiantest,SIGNAL(clicked()),SLOT(Cartesiantest()));
 
+    connect(ui->pushButton_initialprobeorient,SIGNAL(clicked()),SLOT(initialProbeOrient()));
 
 
     //check box
@@ -561,12 +562,12 @@ void MainWindow::experimental_control()
 
         // First move the robot to a suitable joint configuration
         std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, 0}};
-        MotionGenerator motion_generator(0.5, q_goal);
+//        MotionGenerator motion_generator(0.5, q_goal);
         std::cout << "WARNING: This example will move the robot! "
                   << "Please make sure to have the user stop button at hand!" << std::endl
                   << "Press Enter to continue..." << std::endl;
 //        std::cin.ignore();
-        robot.control(motion_generator);
+//        robot.control(motion_generator);
         std::cout << "Finished moving to initial joint configuration." << std::endl;
 
         // Set additional parameters always before the control loop, NEVER in the control loop!
@@ -592,7 +593,7 @@ void MainWindow::experimental_control()
             lower_force_thresholds_acceleration, upper_force_thresholds_acceleration,
             lower_force_thresholds_nominal, upper_force_thresholds_nominal);
 
-        double time_max = 3.0;
+        double time_max = 8.0;
         double v_max = 0.1;
         double angle = M_PI / 4.0;
         double time = 0.0;
@@ -607,8 +608,12 @@ void MainWindow::experimental_control()
           double v_x = 0.01;
           double v_y = 0.01;
           double v_z = 0.01;
+          double omega_x = 0.02;
+          double omega_y = 0.02;
+          double omega_z = 0.05;
 
-          franka::CartesianVelocities output = {{v_x, v_y, v_z, 0.0, 0.0, 0.0}};
+//          franka::CartesianVelocities output = {{v_x, v_y, v_z, 0.0, 0.0, 0.0}};
+          franka::CartesianVelocities output = {{ 0.0, 0.0, 0.0, 0.0, 0.0, omega_z}};
           if (time >= 2 * time_max) {
             std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
             return franka::MotionFinished(output);
@@ -1878,7 +1883,126 @@ void MainWindow::setFrankaguidingmode(void)
 }
 
 
+void MainWindow::initialProbeOrient(void)
+{
+    Eigen::Matrix3d Probeintable;
+    Probeintable << 0.0,  1.0, 0.0,
+                    -1.0, 0.0, 0.0,
+                    0.0,  0.0, 1.0;
+    Eigen::Matrix3d rotT2R;
+    rotT2R = transT2R.block<3,3>(0,0);  //	 matrix.block<p,q>(i,j);
+    Eigen::Matrix3d ProbeinRobot;
+    //desired initial Probe orient
+    ProbeinRobot = rotT2R*Probeintable;
+    std::cout<<"ProbeinRobot: " <<ProbeinRobot<<std::endl;
+    //now control franka to rotate to this Probe orient
+    //transform rotation to euler angle
+//    Eigen::Vector3d desired_eulerangle = ProbeinRobot.eulerAngles(2, 1, 0); //z, y, x
 
+//    std::cout<<"desired_eulerangle: "<<desired_eulerangle<<std::endl;
+
+    //move robot in absolute position
+    franka::Robot robot(fci_ip);
+    try{
+        setDefaultBehavior(robot);
+        // Set additional parameters always before the control loop, NEVER in the control loop!
+
+//                            std::array<double, 16> initial_pose;
+        double time = 0.0;
+
+        /// ----------------robot control loop---------------------------------
+        robot.control([=, &time](const franka::RobotState& robot_state,
+                                 franka::Duration period) -> franka::CartesianVelocities
+//                            robot.control([&time, &initial_pose, &abs_robotpos]( const franka::RobotState& robot_state,
+//                                                                 franka::Duration period) -> franka::CartesianPose
+        {
+          time += period.toSec();
+//                              if (time == 0.0) {
+//                                initial_pose = robot_state.O_T_EE_c; //Last commanded end effector pose of motion generation in base frame.
+//                                //robot_state.O_T_EE; Measured end effector pose in base frame.
+//                                //robot_state.O_T_EE_d; Last desired end effector pose of motion generation in base frame.
+//                              }
+//                              std::array<double, 16> new_pose = initial_pose;
+          double tolerance = 0.001; //rad -> 0.057degree
+          double error[3] = {0.0, 0.0, 0.0};
+          double direction[3];
+          current_EEpose = robot_state.O_T_EE; //not sure whether should use _d
+
+         Eigen::Affine3d initial_transform(Eigen::Matrix4d::Map(robot_state.O_T_EE.data()));
+          Eigen::Vector3d position_d(initial_transform.translation());
+      //    position_d = position_d*1000;//from m to mm
+      //    Eigen::Quaterniond orientation_d(initial_transform.linear());
+          Eigen::Matrix3d measured_rotation(initial_transform.linear());
+
+
+          //calculate pose difference
+          Eigen::Matrix3d pose_diff = measured_rotation*(ProbeinRobot.inverse());
+
+          Eigen::Vector3d eulerangle_diff = pose_diff.eulerAngles(2,1,0);
+
+//          Eigen::Vector3d measured_eulerangle = rotation.eulerAngles(2, 1, 0);
+//          std::cout<<"measured_eulerangle: "<<measured_eulerangle<<std::endl;
+
+          for(int k=0; k<3; k++)
+          {
+              double temp_e = eulerangle_diff[k];
+
+              if (temp_e>0)
+                 direction[k] = 1.0;
+              else
+                  direction[k] = -1.0;
+
+              if (abs(temp_e)>=tolerance)
+                  error[k] = temp_e;
+              else
+              {
+                  error[k] = 0.0;
+                  direction[k] = 0.0;
+              }
+
+          }
+
+          std::cout<<"diff_eulerangle x-y-z: "<<eulerangle_diff[2]<< " "<<eulerangle_diff[1]<< " " <<eulerangle_diff[0]<<std::endl;
+          std::cout<<"error x-y-z : "<<error[2] <<" "<<error[1]<<" "<<error[0] <<std::endl;
+
+          double max_omega = 0.050;  //rad/s
+          double maxDelt_e = 0.1; // 1rad = 57degree
+
+//          double A = maxv/(maxDelt_e*maxDelt_e);
+          double v_cmd[3] = {0.0};
+
+          for (int k=0; k<3; k++)
+          {
+              if(abs(error[k])<=maxDelt_e)
+                   v_cmd[k] = max_omega*sin((M_PI/2)*(error[k]/maxDelt_e));
+//                                      v_cmd[k] = A*pow(error[k],2);
+              else
+                  v_cmd[k] = max_omega*direction[k];
+          }
+          std::cout<<"v_cmd: "<<v_cmd[2] <<" "<<v_cmd[1]<<" "<<v_cmd[0] <<std::endl<<std::endl<<std::endl;
+
+
+//         franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
+          franka::CartesianVelocities output = {{0.0, 0.0, 0.0, v_cmd[2], v_cmd[1], v_cmd[0]}};
+
+//          franka::CartesianVelocities output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0,}};
+          if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
+            std::cout << "Orientation initialized Finished" << std::endl;
+            std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
+            output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+            Robotmotionsuccess = 1;
+            return franka::MotionFinished(output);
+          }
+          return output;
+        });
+    }catch (const franka::Exception& e) {
+    std::cout << e.what() << std::endl;
+    std::cout << "Running error recovery..." << std::endl;
+    Robotmotionsuccess = 0;
+    robot.automaticErrorRecovery();
+    }
+
+}
 
 
 
