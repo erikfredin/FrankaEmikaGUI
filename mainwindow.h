@@ -368,6 +368,7 @@ public:
     double       righttopcorner[3] = {50.0, 50.0, 125.0};
     double       incstep = 10.0;
     bool         CalibrationDataCollet_Random = false;
+    bool         CalibrationDataCollet_sequence = false;
     double       cmdCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     int          currentloop = 1;
     int          currentcount = 0;
@@ -383,7 +384,7 @@ public:
     double       currentcooldownloop = 10.0;
     double       tempCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-    bool         CalibrationDataCollet_Scansequence = false;
+
 
 
     //Field Calibration Parameters
@@ -539,6 +540,8 @@ private slots:
 
     void       calibratesetflag(void);
     void       calibratesetflagoff(void);
+    void       calibratesetflag_sequence(void);
+    void       calibratesetflagoff_sequence(void);
 
 };
 #endif // MAINWINDOW_H

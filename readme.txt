@@ -32,6 +32,7 @@
   origin is set on xy plane center of the table
 - mannually set "currentloop" and "robotmoveloop", robot will move "robotmoveloop" times and 
   loop inside of "currentloop"
+- Set EE_offset!!!!!!!!!
 - check "Enable DAQ" to collect data from guassmeter probe
 - Set file name
 - click "Calibration data collect ON" and logging will start automatically,

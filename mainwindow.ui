@@ -515,27 +515,27 @@
    <widget class="QPushButton" name="pushButton_registercollect">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>380</y>
-      <width>141</width>
+      <x>0</x>
+      <y>370</y>
+      <width>111</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>Robot register data collect</string>
+     <string>Robot register collect</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_calibrationcollect">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>380</y>
+      <x>130</x>
+      <y>370</y>
       <width>141</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>Calibration data collet ON</string>
+     <string>Calib Random Collect ON</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_robotrecovery">
@@ -554,21 +554,21 @@
    <widget class="QPushButton" name="pushButton_calibrationcollect_off">
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>130</x>
       <y>430</y>
       <width>141</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>Calibration data collet OFF</string>
+     <string>Calib Random Collect  OFF</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="checkBox_enableDAQ">
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>440</y>
+      <x>290</x>
+      <y>380</y>
       <width>91</width>
       <height>31</height>
      </rect>
@@ -1197,14 +1197,40 @@
    <widget class="QPushButton" name="pushButton_initialprobeorient">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>380</y>
-      <width>111</width>
+      <x>280</x>
+      <y>430</y>
+      <width>101</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
      <string>Initial Probe Orient</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_calibrationcollect_sequence_on">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>370</y>
+      <width>131</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Calib SequenceCollect On</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_calibrationcollect_sequence_off">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>430</y>
+      <width>131</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Calib SequenceCollect Off</string>
     </property>
    </widget>
   </widget>

@@ -406,7 +406,7 @@ void MainWindow::callbacks(void)
 
 
 
-    if (CalibrationDataCollet_Scansequence == true)
+    if (CalibrationDataCollet_sequence == true)
     {
         /// 9. DATA COLLECTION FOR FIELD CALIBRATION WITH NEURAL NETWORK
         //
@@ -419,9 +419,9 @@ void MainWindow::callbacks(void)
         // --
         // -
         double I_command[8] = {0,0,0,0,0,0,0,0};
-        int step_x = 0.02; //unit: meter
-        int step_y = 0.02;
-        int step_z = 0.02;
+        double step_x = 0.02; //unit: meter
+        double step_y = 0.02;
+        double step_z = 0.02;
 
 
         if (robotinitflag == false)
@@ -429,9 +429,14 @@ void MainWindow::callbacks(void)
             //move robot to initcorner
             //need to manualy move robot roughly close to the initconner before run below code!
 //            double abs_robotpos[3] = {robot_x, robot_y, robot_z};
-            FrankaAbscartmotion( robotinitcorner);
+            //covert cmd position in table frame to robot frame
+            qInfo() << "Initial position in table is: "<<robotinitcorner[0]<<robotinitcorner[1]<<robotinitcorner[2];
+            Eigen::Vector4d pos_cmd(robotinitcorner[0], robotinitcorner[1], robotinitcorner[2], 1);
+            Eigen::Vector4d pos_robot = transT2R*pos_cmd;
+            double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
 
-            qInfo() << "robotP is: "<<robot_x<<robot_y<<robot_z;
+            FrankaAbscartmotion( abs_robotpos);
+
             qInfo() << "robot is initilized!!!";
             robotinitflag = true;
         }
@@ -445,18 +450,21 @@ void MainWindow::callbacks(void)
                     {
                         if (robot_y >= robotrange_y[0]&& robot_y <= robotrange_y[1])
                         {
-                            if (robot_z >= robotrange_z[0]&& robot_z <= robotrange_z[1])
+                            if (robot_z >= robotrange_z[0]-0.001&& robot_z <= robotrange_z[1])
                             {
                                 // move robot to desired position
+                                std::cout<< "command position in table frame is: "<<robot_x<<", "<<robot_y<<", "<<robot_z<<std::endl;
                                 //covert cmd position in table frame to robot frame
                                 Eigen::Vector4d pos_cmd(robot_x, robot_y, robot_z, 1);
+                                robotposcmd[0] = robot_x;
+                                robotposcmd[1] = robot_y;
+                                robotposcmd[2] = robot_z;
                                 Eigen::Vector4d pos_robot = transT2R*pos_cmd;
                                 double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
                                 // run robot
-                                FrankaAbscartmotion( abs_robotpos);
-                                qInfo() << "robotP is: "<<robot_x<<robot_y<<robot_z;
-
-                                ReadFrankaPoseStatus();
+//                                FrankaAbscartmotion( abs_robotpos);
+                                //read robot status
+//                                ReadFrankaPoseStatus();
                                 if (DAQ.isEnabled())
                                 {
                                     // Read analog inputs from the DAQ by reading values and passing by ref.
@@ -508,16 +516,18 @@ void MainWindow::callbacks(void)
                                 if(robot_y >= robotrange_y[0]&& robot_y <= robotrange_y[1])
                                 {
                                     // move robot to desired position
+                                    std::cout<< "command position in table frame is: "<<robot_x<<", "<<robot_y<<", "<<robot_z<<std::endl;
                                     //covert cmd position in table frame to robot frame
                                     Eigen::Vector4d pos_cmd(robot_x, robot_y, robot_z, 1);
+                                    robotposcmd[0] = robot_x;
+                                    robotposcmd[1] = robot_y;
+                                    robotposcmd[2] = robot_z;
                                     Eigen::Vector4d pos_robot = transT2R*pos_cmd;
                                     double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
                                     // run robot
-                                    FrankaAbscartmotion( abs_robotpos);
-                                    qInfo() << "robotP is: "<<robot_x<<robot_y<<robot_z;
-    //                                        robot_z = robot_z - step_z;
-
-                                    ReadFrankaPoseStatus();
+//                                    FrankaAbscartmotion( abs_robotpos);
+                                    //read robot status
+//                                    ReadFrankaPoseStatus();
                                     if (DAQ.isEnabled())
                                     {
                                         // Read analog inputs from the DAQ by reading values and passing by ref.
@@ -555,10 +565,6 @@ void MainWindow::callbacks(void)
                             {
                                 robot_x = robot_x - step_x;
                             }
-                            //robot_x = robot_x - step_x;
-    //                                robot_y = robotinitcorner[1];
-    //                                robot_z = robotinitcorner[2];
-
                             if (robot_z < robotrange_z[0])
                             {
                                 robot_z = robotrange_z[0];
@@ -587,16 +593,18 @@ void MainWindow::callbacks(void)
                             if(robot_x >= robotrange_x[0] && robot_x <= robotrange_x[1])
                             {
                                 // move robot to desired position
+                                std::cout<< "command position in table frame is: "<<robot_x<<", "<<robot_y<<", "<<robot_z<<std::endl;
                                 //covert cmd position in table frame to robot frame
                                 Eigen::Vector4d pos_cmd(robot_x, robot_y, robot_z, 1);
+                                robotposcmd[0] = robot_x;
+                                robotposcmd[1] = robot_y;
+                                robotposcmd[2] = robot_z;
                                 Eigen::Vector4d pos_robot = transT2R*pos_cmd;
                                 double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
                                 // run robot
-                                FrankaAbscartmotion( abs_robotpos);
-                                qInfo() << "robotP is: "<<robot_x<<robot_y<<robot_z;
-    //                                    robot_z = robot_z - step_z;
-
-                                ReadFrankaPoseStatus();
+//                                FrankaAbscartmotion( abs_robotpos);
+                                //read robot status
+//                                ReadFrankaPoseStatus();
                                 if (DAQ.isEnabled())
                                 {
                                     // Read analog inputs from the DAQ by reading values and passing by ref.
@@ -626,7 +634,7 @@ void MainWindow::callbacks(void)
                     }
                     else // single loop data collection is done!
                     {
-                        qInfo()<<"Loop " << loopcount <<" is done! Now re-zero robot!!!";
+                        qInfo()<<"Loop " << loopcount <<" is done..........";
                         singleloopdone = true;
 
                         if (robot_z < robotrange_z[0])
@@ -684,7 +692,6 @@ void MainWindow::callbacks(void)
                     }
                     singleloopdone = false;
                     loopcount++;
-
                 }
             }
             else // loop reach max count, data collection finished!
@@ -693,6 +700,7 @@ void MainWindow::callbacks(void)
                 updateCurrents_CalibrationOnly(zeroCurrent); //send 0 to S826
                 Datacollectdoneflag = true;
             }
+        }
     }
 
 

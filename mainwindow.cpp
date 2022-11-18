@@ -49,6 +49,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_calibrationcollect,SIGNAL(clicked()),SLOT(calibratesetflag()));
     connect(ui->pushButton_calibrationcollect_off,SIGNAL(clicked()),SLOT(calibratesetflagoff()));
 
+    connect(ui->pushButton_calibrationcollect_sequence_on,SIGNAL(clicked()),SLOT(calibratesetflag_sequence()));
+    connect(ui->pushButton_calibrationcollect_sequence_off,SIGNAL(clicked()),SLOT(calibratesetflagoff_sequence()));
+
+
     connect(ui->pushButton_clearcurrent,SIGNAL(clicked()),SLOT(clearcurrent()));
 
     connect(ui->pushButton_robotrecovery,SIGNAL(clicked()),SLOT(robotrecovery()));
@@ -1177,6 +1181,17 @@ void MainWindow::calibratesetflagoff(void)
 }
 
 
+void MainWindow::calibratesetflag_sequence(void)
+{
+    CalibrationDataCollet_sequence = true;
+}
+
+void MainWindow::calibratesetflagoff_sequence(void)
+{
+    CalibrationDataCollet_sequence = false;
+}
+
+
 
 
 void MainWindow::registration(double tabledata[4][registerdataNum], double robotdata[4][registerdataNum] ) //output Tt2r, Probot = Tt2r*Ptable
@@ -1886,8 +1901,8 @@ void MainWindow::setFrankaguidingmode(void)
 void MainWindow::initialProbeOrient(void)
 {
     Eigen::Matrix3d Probeintable;
-    Probeintable << 0.0,  1.0,  0.0,
-                    1.0,  0.0,  0.0,
+    Probeintable << 0.0,  -1.0,  0.0,
+                    -1.0,  0.0,  0.0,
                     0.0,  0.0, -1.0;
     Eigen::Matrix3d rotT2R;
     rotT2R = transT2R.block<3,3>(0,0);  //	 matrix.block<p,q>(i,j);
@@ -1924,7 +1939,7 @@ void MainWindow::initialProbeOrient(void)
 //                              }
 //                              std::array<double, 16> new_pose = initial_pose;
 
-          double tolerance = 0.001; //rad -> 0.057degree
+          double tolerance = 0.003; //0.001rad -> 0.057degree
           double error[3] = {0.0, 0.0, 0.0};
           double direction[3];
           current_EEpose = robot_state.O_T_EE; //not sure whether should use _d
@@ -1939,7 +1954,7 @@ void MainWindow::initialProbeOrient(void)
           //calculate pose difference
           Eigen::Matrix3d pose_diff = measured_rotation.inverse()*ProbeinRobot;
 
-          Eigen::Vector3d eulerangle_diff = pose_diff.eulerAngles(2,1,0);
+          Eigen::Vector3d eulerangle_diff = pose_diff.eulerAngles(0,1,2); //x,y,z
 
 //          Eigen::Vector3d measured_eulerangle = rotation.eulerAngles(2, 1, 0);
 //          std::cout<<"measured_eulerangle: "<<measured_eulerangle<<std::endl;
@@ -1948,10 +1963,47 @@ void MainWindow::initialProbeOrient(void)
           {
               double temp_e = eulerangle_diff[k];
 
-              if (temp_e>0)
-                 direction[k] = 1.0;
-              else
+              if(M_PI-abs(temp_e)<=tolerance || abs(temp_e)<=tolerance )
+              {
+                  error[k] = 0.0;
+                  direction[k] = 0.0;
+              }
+              else if(temp_e<=M_PI_2 &&temp_e>0)
+              {
+                  error[k] = temp_e;
+                  direction[k] = 1.0;
+              }
+              else if(temp_e<M_PI &&temp_e>M_PI_2)
+              {
+                  error[k] = temp_e-M_PI;
                   direction[k] = -1.0;
+              }
+              else if (temp_e>-M_PI_2 && temp_e<0)
+              {
+                  error[k] = temp_e;
+                  direction[k] = -1.0;
+              }
+              else if (temp_e>-M_PI && temp_e<-M_PI_2)
+              {
+                  error[k] = M_PI+temp_e;
+                  direction[k] = 1.0;
+              }
+
+           /*   if (temp_e>M_PI)
+              {
+                 direction[k] = -1.0;
+                 error[k] = M_PI - temp_e;
+              }
+              else if (abs(temp_e-M_PI)<tolerance)
+              {
+                  error[k] = 0.0;
+                  direction[k] = 0.0;
+              }
+              else
+              {
+                  error[k] = temp_e;
+                  direction[k] = 1.0;
+              }
 
               if (abs(temp_e)>=tolerance)
                   error[k] = temp_e;
@@ -1959,14 +2011,14 @@ void MainWindow::initialProbeOrient(void)
               {
                   error[k] = 0.0;
                   direction[k] = 0.0;
-              }
+              }*/
 
           }
 
-          std::cout<<"diff_eulerangle x-y-z: "<<eulerangle_diff[2]<< " "<<eulerangle_diff[1]<< " " <<eulerangle_diff[0]<<std::endl;
-          std::cout<<"error x-y-z : "<<error[2] <<" "<<error[1]<<" "<<error[0] <<std::endl;
+          std::cout<<"diff_eulerangle x-y-z: "<<eulerangle_diff[0]<< " "<<eulerangle_diff[1]<< " " <<eulerangle_diff[2]<<std::endl;
+          std::cout<<"error x-y-z : "<<error[0] <<" "<<error[1]<<" "<<error[2] <<std::endl;
 
-          double max_omega = 0.050;  //rad/s
+          double max_omega = 0.030;  //rad/s
           double maxDelt_e = 0.1; // 1rad = 57degree
 
 //          double A = maxv/(maxDelt_e*maxDelt_e);
@@ -1980,11 +2032,11 @@ void MainWindow::initialProbeOrient(void)
               else
                   v_cmd[k] = max_omega*direction[k];
           }
-          std::cout<<"v_cmd: "<<v_cmd[2] <<" "<<v_cmd[1]<<" "<<v_cmd[0] <<std::endl<<std::endl<<std::endl;
+          std::cout<<"v_cmd: "<<v_cmd[0] <<" "<<v_cmd[1]<<" "<<v_cmd[2] <<std::endl<<std::endl<<std::endl;
 
 
 //         franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
-          franka::CartesianVelocities output = {{0.0, 0.0, 0.0, v_cmd[2], v_cmd[1], v_cmd[0]}};
+          franka::CartesianVelocities output = {{0.0, 0.0, 0.0, v_cmd[0], v_cmd[1], v_cmd[2]}};
 
 //          franka::CartesianVelocities output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0,}};
           if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
@@ -2081,10 +2133,11 @@ void MainWindow::FrankaAbscartmotion(double abs_robotpos[3])
 //                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
           franka::CartesianVelocities output = {{v_cmd[0], v_cmd[1], v_cmd[2], 0.0, 0.0, 0.0}};
           if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
-            std::cout << "single motion Finished: ["<<robotmovecount+1<<"/"<<robotmoveloop <<"]" << std::endl;
+            std::cout << "single motion Finished: ["<<robotmovecount+1<<"/486 ]" << std::endl;
             std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
             output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
             Robotmotionsuccess = 1;
+            robotmovecount++;
             return franka::MotionFinished(output);
           }
           return output;
