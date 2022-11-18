@@ -367,7 +367,7 @@ public:
     double       leftlowercorner[3] = {-50.0, -50.0, 75.0}; //table origin is at the table center (0,0,0)
     double       righttopcorner[3] = {50.0, 50.0, 125.0};
     double       incstep = 10.0;
-    bool         CalibrationDataCollet = false;
+    bool         CalibrationDataCollet_Random = false;
     double       cmdCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     int          currentloop = 1;
     int          currentcount = 0;
@@ -383,6 +383,64 @@ public:
     double       currentcooldownloop = 10.0;
     double       tempCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
+    bool         CalibrationDataCollet_Scansequence = false;
+
+
+    //Field Calibration Parameters
+
+        // define robot moving range for calibration
+        // calibration cube is 160*160*100mm for coil table's x, y, z
+        // need to convert robot's abs position to coordinates in coil system frame when recording
+        const double robotrange_x[2] = {-0.08, 0.08}; //unit: m, absolute position for robot in table frame
+        const double robotrange_y[2] = {-0.08, 0.08}; //unit: m, absolute position for robot in table frame
+        const double robotrange_z[2] = {0.05, 0.15}; //unit: m, absolute position for robot in table frame
+
+        double robotinitcorner[3] = {0.08, 0.08, 0.15};//unit: m, absolute position for robot at initial corner
+        double robotendcorner[3] = {-0.08, -0.08, 0.05};//unit: m, absolute position for robot at end corner
+        double robotorigin[3] = {0, 0, 0.05}; //unit: mm, absolute position for robot at center
+
+        int loopcount = 0;
+        int loop = 24;
+        bool robotinitflag = false; //moniter if robot goes to the initial corner: lower bound of each range
+        bool singleloopdone = true;
+        bool Datacollectdoneflag = false;
+        bool robotZupwardFlag = false;
+        bool robotZdownwardFlag = true;
+        bool robotYnegtivewardFlag = true;
+        bool robotYpositivewardFlag = false;
+        bool robotXnegtivewardFlag = true;
+        bool robotXpositivewardFlag = false;
+
+        double robot_x = robotinitcorner[0];
+        double robot_y = robotinitcorner[1];
+        double robot_z = robotinitcorner[2];
+
+        //creeat current pool array
+//        Eigen::MatrixXd CurrentPool(24, 8);
+        double     CurrentPool[24][8] = {{ -10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {   10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     { 0.0, -10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,  10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0, -10.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,  10.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0, -10.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,  10.0, 0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0, -10.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,  10.0, 0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0, -10.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,  10.0, 0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0, -10.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,  10.0, 0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0, -10.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
+                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,  10.0}};
 
     std::array<double, 16> current_EEpose;
 
@@ -395,6 +453,9 @@ public:
     double       predictCoilCurrent[numAct] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 
+    void    FrankaAbscartmotion(double abs_robotpos[3]);
+    void    FrankaAbsOrientmotion(Eigen::Matrix3d abs_robotOrient);
+    void    ReadFrankaPoseStatus(void);
 
 protected:
 

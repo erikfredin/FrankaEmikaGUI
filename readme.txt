@@ -27,8 +27,9 @@
 
 
 **Calibration data collect
-- manually set motion range of robot in mainwindow.h, currently it is [-50,50], [-50,50], [75, 125]
-  origin is set at xy plane center for the table
+- Manually move robot roughly to the init position
+- manually set motion range of robot in mainwindow.h, currently it is [-0.08,0.08], [-0.08,0.08], [0.05, 0.15] //unit: meter
+  origin is set on xy plane center of the table
 - mannually set "currentloop" and "robotmoveloop", robot will move "robotmoveloop" times and 
   loop inside of "currentloop"
 - check "Enable DAQ" to collect data from guassmeter probe

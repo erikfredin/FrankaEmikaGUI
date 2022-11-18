@@ -83,7 +83,7 @@ void MainWindow::callbacks(void)
             updateCurrents_CalibrationOnly(zeroCurrent);
             std::cerr << "Currents Cleared"<<std::endl;
             Robotmotionsuccess = 0;
-            CalibrationDataCollet = false;
+            CalibrationDataCollet_Random = false;
             std::cerr << "robot stopped"<<std::endl;
             // at the end of callbacks, re-evaluate the temperatures.
         }
@@ -116,7 +116,7 @@ void MainWindow::callbacks(void)
 
 
 
-    if(CalibrationDataCollet)
+    if(CalibrationDataCollet_Random)
     {
         if (!robotinitialized) //not initialized
         {
@@ -337,9 +337,7 @@ void MainWindow::callbacks(void)
                         Eigen::Matrix3d EEinFrot(EEinFlange.linear());
                         Eigen::Vector3d EEinFeulerangle = EEinFrot.eulerAngles(0, 1, 2);
 
-
                         Eigen::Map<Eigen::Matrix<double, 7, 1>> initial_tau_measured(initial_state.tau_J.data());
-
 
                         //default unit is meter and rad, so we keep that
                         Robot_tip_posisition[0] = position_d[0];
@@ -408,8 +406,301 @@ void MainWindow::callbacks(void)
 
 
 
+    if (CalibrationDataCollet_Scansequence == true)
+    {
+        /// 9. DATA COLLECTION FOR FIELD CALIBRATION WITH NEURAL NETWORK
+        //
+        // This function collects/records field [Bx,By,Bz] (fetched from gaussmeter/DAQ),
+        // gaussmeter probe position [Px,Py,Pz] (fetched from robot)
+        // and coil currents [I1, I2,...,I8] (measured from S826).
+        // The function also sends commands to S826 with desired currents and robot positions
+        // The currents for 8 coils are generated randomly, for each set of currents, robot moves a full workspace
+        // ---
+        // --
+        // -
+        double I_command[8] = {0,0,0,0,0,0,0,0};
+        int step_x = 0.02; //unit: meter
+        int step_y = 0.02;
+        int step_z = 0.02;
+
+
+        if (robotinitflag == false)
+        {
+            //move robot to initcorner
+            //need to manualy move robot roughly close to the initconner before run below code!
+//            double abs_robotpos[3] = {robot_x, robot_y, robot_z};
+            FrankaAbscartmotion( robotinitcorner);
+
+            qInfo() << "robotP is: "<<robot_x<<robot_y<<robot_z;
+            qInfo() << "robot is initilized!!!";
+            robotinitflag = true;
+        }
+        else //robot is initilized
+        {
+            if (loopcount<loop)
+            {
+                if (singleloopdone == false)
+                {
+                    if (robot_x >= robotrange_x[0] && robot_x <= robotrange_x[1])
+                    {
+                        if (robot_y >= robotrange_y[0]&& robot_y <= robotrange_y[1])
+                        {
+                            if (robot_z >= robotrange_z[0]&& robot_z <= robotrange_z[1])
+                            {
+                                // move robot to desired position
+                                //covert cmd position in table frame to robot frame
+                                Eigen::Vector4d pos_cmd(robot_x, robot_y, robot_z, 1);
+                                Eigen::Vector4d pos_robot = transT2R*pos_cmd;
+                                double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
+                                // run robot
+                                FrankaAbscartmotion( abs_robotpos);
+                                qInfo() << "robotP is: "<<robot_x<<robot_y<<robot_z;
+
+                                ReadFrankaPoseStatus();
+                                if (DAQ.isEnabled())
+                                {
+                                    // Read analog inputs from the DAQ by reading values and passing by ref.
+                                    DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+                                }
+
+                            // record
+        //                        if(LogEnabled){
+                                     MainWindow::Record();
+        //                        }
+        //                        else
+        //                        {
+        //                            qInfo()<<"log is not enabled!";
+        //                        }
+
+                                if (robotZupwardFlag == true)
+                                {
+                                    robot_z = robot_z + step_z;
+                                }
+                                if (robotZdownwardFlag == true)
+                                {
+                                    robot_z = robot_z - step_z;
+                                }
+                            }
+                            else
+                            {
+                                if (robotYpositivewardFlag == true)
+                                {
+                                    robot_y = robot_y + step_y;
+                                }
+                                if (robotYnegtivewardFlag == true)
+                                {
+                                    robot_y = robot_y - step_y;
+                                }
+
+                                if (robot_z < robotrange_z[0])
+                                {
+                                    robot_z = robotrange_z[0];
+                                    robotZupwardFlag = true;
+                                    robotZdownwardFlag = false;
+                                }
+                                if (robot_z > robotrange_z[1])
+                                {
+                                    robot_z = robotrange_z[1];
+                                    robotZupwardFlag = false;
+                                    robotZdownwardFlag = true;
+                                }
+
+                                if(robot_y >= robotrange_y[0]&& robot_y <= robotrange_y[1])
+                                {
+                                    // move robot to desired position
+                                    //covert cmd position in table frame to robot frame
+                                    Eigen::Vector4d pos_cmd(robot_x, robot_y, robot_z, 1);
+                                    Eigen::Vector4d pos_robot = transT2R*pos_cmd;
+                                    double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
+                                    // run robot
+                                    FrankaAbscartmotion( abs_robotpos);
+                                    qInfo() << "robotP is: "<<robot_x<<robot_y<<robot_z;
+    //                                        robot_z = robot_z - step_z;
+
+                                    ReadFrankaPoseStatus();
+                                    if (DAQ.isEnabled())
+                                    {
+                                        // Read analog inputs from the DAQ by reading values and passing by ref.
+                                        DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+                                    }
+
+                                // record
+            //                        if(LogEnabled){
+                                         MainWindow::Record();
+            //                        }
+            //                        else
+            //                        {
+            //                            qInfo()<<"log is not enabled!";
+            //                        }
+
+
+                                    if (robotZupwardFlag == true)
+                                    {
+                                        robot_z = robot_z + step_z;
+                                    }
+                                    if (robotZdownwardFlag == true)
+                                    {
+                                        robot_z = robot_z - step_z;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (robotXpositivewardFlag == true)
+                            {
+                                robot_x = robot_x + step_x;
+                            }
+                            if (robotXnegtivewardFlag == true)
+                            {
+                                robot_x = robot_x - step_x;
+                            }
+                            //robot_x = robot_x - step_x;
+    //                                robot_y = robotinitcorner[1];
+    //                                robot_z = robotinitcorner[2];
+
+                            if (robot_z < robotrange_z[0])
+                            {
+                                robot_z = robotrange_z[0];
+                                robotZupwardFlag = true;
+                                robotZdownwardFlag = false;
+                            }
+                            if (robot_z > robotrange_z[1])
+                            {
+                                robot_z = robotrange_z[1];
+                                robotZupwardFlag = false;
+                                robotZdownwardFlag = true;
+                            }
+
+                            if (robot_y < robotrange_y[0])
+                            {
+                                robot_y = robotrange_y[0];
+                                robotYpositivewardFlag = true;
+                                robotYnegtivewardFlag = false;
+                            }
+                            if (robot_y > robotrange_y[1])
+                            {
+                                robot_y = robotrange_y[1];
+                                robotYpositivewardFlag = false;
+                                robotYnegtivewardFlag = true;
+                            }
+                            if(robot_x >= robotrange_x[0] && robot_x <= robotrange_x[1])
+                            {
+                                // move robot to desired position
+                                //covert cmd position in table frame to robot frame
+                                Eigen::Vector4d pos_cmd(robot_x, robot_y, robot_z, 1);
+                                Eigen::Vector4d pos_robot = transT2R*pos_cmd;
+                                double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
+                                // run robot
+                                FrankaAbscartmotion( abs_robotpos);
+                                qInfo() << "robotP is: "<<robot_x<<robot_y<<robot_z;
+    //                                    robot_z = robot_z - step_z;
+
+                                ReadFrankaPoseStatus();
+                                if (DAQ.isEnabled())
+                                {
+                                    // Read analog inputs from the DAQ by reading values and passing by ref.
+                                    DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+                                }
+
+                            // record
+        //                        if(LogEnabled){
+                                     MainWindow::Record();
+        //                        }
+        //                        else
+        //                        {
+        //                            qInfo()<<"log is not enabled!";
+        //                        }
+
+
+                                if (robotZupwardFlag == true)
+                                {
+                                    robot_z = robot_z + step_z;
+                                }
+                                if (robotZdownwardFlag == true)
+                                {
+                                    robot_z = robot_z - step_z;
+                                }
+                            }
+                        }
+                    }
+                    else // single loop data collection is done!
+                    {
+                        qInfo()<<"Loop " << loopcount <<" is done! Now re-zero robot!!!";
+                        singleloopdone = true;
+
+                        if (robot_z < robotrange_z[0])
+                        {
+                            robot_z = robotrange_z[0];
+                            robotZupwardFlag = true;
+                            robotZdownwardFlag = false;
+                        }
+                        if (robot_z > robotrange_z[1])
+                        {
+                            robot_z = robotrange_z[1];
+                            robotZupwardFlag = false;
+                            robotZdownwardFlag = true;
+                        }
+
+                        if (robot_y < robotrange_y[0])
+                        {
+                            robot_y = robotrange_y[0];
+                            robotYpositivewardFlag = true;
+                            robotYnegtivewardFlag = false;
+                        }
+                        if (robot_y > robotrange_y[1])
+                        {
+                            robot_y = robotrange_y[1];
+                            robotYpositivewardFlag = false;
+                            robotYnegtivewardFlag = true;
+                        }
+                        if (robot_x < robotrange_x[0])
+                        {
+                            robot_x = robotrange_x[0];
+                            robotXpositivewardFlag = true;
+                            robotXnegtivewardFlag = false;
+                        }
+                        if (robot_x > robotrange_x[1])
+                        {
+                            robot_x = robotrange_x[1];
+                            robotXpositivewardFlag = false;
+                            robotXnegtivewardFlag = true;
+                        }
+
+                    }
+                }
+                else if (singleloopdone == true)
+                {
+                    if (loopcount<loop) //avoid update current at the last loop
+                    {
+                        for (int i = 0; i < 8; i++)
+                        {
+                          I_command[i] =  CurrentPool[loopcount][i]; //generate random current in the range of [-maxCurrent, maxcurrent]
+                        }
+                        qInfo() << "Current is: "<<I_command[0]<<", "<<I_command[1]<<", "<<I_command[2]<<", "<<I_command[3]<<", "<<I_command[4]<<", "<<I_command[5]<<", "<<I_command[6]<<", "<<I_command[7];
+                        updateCurrents_CalibrationOnly(I_command);
+                        qInfo() << "loop is " <<loopcount;
+
+                    }
+                    singleloopdone = false;
+                    loopcount++;
+
+                }
+            }
+            else // loop reach max count, data collection finished!
+            {
+                qInfo() << "!!!!!!!!!!!Data loop is finished, send 0 to S826!!!";
+                updateCurrents_CalibrationOnly(zeroCurrent); //send 0 to S826
+                Datacollectdoneflag = true;
+            }
+    }
+
+
+
+
+
  //record
-    if(LogEnabled && (!CalibrationDataCollet))
+    if(LogEnabled && (!CalibrationDataCollet_Random))
          MainWindow::Record();
 
 
