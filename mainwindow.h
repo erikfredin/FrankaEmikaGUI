@@ -78,6 +78,15 @@
 #include "electromagnet_calibration.h"
 #include "scalorPotential.h"
 
+//#include "DelimitedFileIO.h"
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
+
+using namespace std;
 
 // These are defined in the S826api header internally. Left here for reference
 #define AOUT0_PIN   42
@@ -231,15 +240,16 @@ public:
     /// S826 BOARD FOR CONTROL
     S826 s826;
 
-//    std::string name1 = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
-//    ElectromagnetCalibration mymodel(name1);
+    std::string filename = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
+    ElectromagnetCalibration CoilCalibModel(std::string filename);
+//    ElectromagnetCalibration CoilCalibModel;
 
-//ElectromagnetCalibration mymodel(std::string("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml"));
+//    ElectromagnetCalibration mymodel(std::string ("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml"));
 
     /// DAQ FOR FEEDBACK
     daq DAQ;
     double gaussmeterCalibratedConstants[3] = {102.67, 103.25, 104.66}; // mT/V
-    double gaussCalibCons_new[3] = {102.8047, 103.17, 104.27}; // mT/V
+    double gaussCalibCons_new[3] = {102.571, 103.2036, 104.3975}; // mT/V
 
     /// CONTROL BOOLEANS and STATE VALUES
     bool overheatingFlag = false;
@@ -394,14 +404,14 @@ public:
         // need to convert robot's abs position to coordinates in coil system frame when recording
         const double robotrange_x[2] = {-0.08, 0.08}; //unit: m, absolute position for robot in table frame
         const double robotrange_y[2] = {-0.08, 0.08}; //unit: m, absolute position for robot in table frame
-        const double robotrange_z[2] = {0.05, 0.15}; //unit: m, absolute position for robot in table frame
+        const double robotrange_z[2] = {0.03, 0.12}; //unit: m, absolute position for robot in table frame
 
-        double robotinitcorner[3] = {0.08, 0.08, 0.15};//unit: m, absolute position for robot at initial corner
-        double robotendcorner[3] = {-0.08, -0.08, 0.05};//unit: m, absolute position for robot at end corner
-        double robotorigin[3] = {0, 0, 0.05}; //unit: mm, absolute position for robot at center
+        double robotinitcorner[3] = {0.08, 0.08, 0.12};//unit: m, absolute position for robot at initial corner
+        double robotendcorner[3] = {-0.08, -0.08, 0.03};//unit: m, absolute position for robot at end corner
+        double robotorigin[3] = {0, 0, 0.03}; //unit: mm, absolute position for robot at center in table frame
 
         int loopcount = 0;
-        int loop = 24;
+        int loop = 2;
         bool robotinitflag = false; //moniter if robot goes to the initial corner: lower bound of each range
         bool singleloopdone = true;
         bool Datacollectdoneflag = false;
@@ -418,30 +428,32 @@ public:
 
         //creeat current pool array
 //        Eigen::MatrixXd CurrentPool(24, 8);
-        double     CurrentPool[24][8] = {{ -10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {   10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     { 0.0, -10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,  10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0, -10.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,  10.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0, -10.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,  10.0, 0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0, -10.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,  10.0, 0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0, -10.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,  10.0, 0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0, -10.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,  10.0, 0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0, -10.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-                                                     {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,  10.0}};
+      /*  double     CurrentPool[24][8] = {{ -10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                         {   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                         {   10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                         { 0.0, -10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,  10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0, -10.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,  10.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0, -10.0, 0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0, 0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,  10.0, 0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0, -10.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,  10.0, 0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0, -10.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0,  10.0, 0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0, -10.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,  10.0, 0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0, -10.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
+                                         {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,  10.0}};*/
+        double     CurrentPool[2][8] = {{   0.0, 0.0, 0.0,  0.0,  0.0,   0.0,  0.0, 0.0 },
+                                        {   0.0,  0.0, 0.0,  0.0,  0.0,   0.0,  0.0, 0.0}};
 
     std::array<double, 16> current_EEpose;
 
@@ -457,6 +469,10 @@ public:
     void    FrankaAbscartmotion(double abs_robotpos[3]);
     void    FrankaAbsOrientmotion(Eigen::Matrix3d abs_robotOrient);
     void    ReadFrankaPoseStatus(void);
+
+    vector<vector<double>>    readCSVfile(string filename);
+
+
 
 protected:
 
@@ -481,6 +497,7 @@ protected:
     int             NumWritten = 0;
     int             ControlMode;
     QElapsedTimer   currentTime;
+
 
 
 private:
@@ -529,6 +546,8 @@ public slots:
     void        enableController(void);
     void        setFrankaguidingmode(void);
     void        initialProbeOrient(void);
+    void        CalibrateCoiltable(void);
+
 
 private slots:
     void       callbacks(void);

@@ -1,11 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-const auto model = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
+const auto DNNmodel = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
 //std::cout<<"load model!"<<std::endl;
 
-std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
-ElectromagnetCalibration mymodel(initialguess);
+//std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
+//ElectromagnetCalibration mymodel(initialguess);
 //std::cout<<"load calibration file!"<<std::endl;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -79,6 +79,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_Cartesiantest,SIGNAL(clicked()),SLOT(Cartesiantest()));
 
     connect(ui->pushButton_initialprobeorient,SIGNAL(clicked()),SLOT(initialProbeOrient()));
+    connect(ui->pushButton_CalibrateCoiltable,SIGNAL(clicked()),SLOT(CalibrateCoiltable()));
+
 
 
     //check box
@@ -1289,7 +1291,7 @@ void MainWindow::DNNpredict()
 
     input = DNNinputprepare(NN_B1, NN_P1, NN_B2, NN_P2);
 
-    const auto result = model.predict(
+    const auto result = DNNmodel.predict(
     {fdeep::tensor(fdeep::tensor_shape(static_cast<std::size_t>(inputsize)),
            input )});
 
@@ -1437,7 +1439,7 @@ std::vector<float> MainWindow::DNNinputprepare(double NN_B1[3], double NN_P1[3],
         input.push_back(r2_yz[k]);
     }
 
-    std::vector<float> sample = { 2.24063043e+01, -1.48057763e+01, -6.44080494e+00,  6.99414861e-03,
+    std::vector<double> sample = { 2.24063043e+01, -1.48057763e+01, -6.44080494e+00,  6.99414861e-03,
                        -8.01251138e-03,  9.77839592e-02,  1.70210778e+01, -1.44074961e+01,
                        -1.75598573e+01,  2.29818797e-02, -3.41654689e-02,  1.02230576e-01,
                         1.64592241e-01,  1.01774340e-01,  1.71096466e-01,  9.78269326e-02,
@@ -1511,117 +1513,117 @@ void MainWindow::moveRot_P1(void)
     Eigen::Vector4d pos_cmd(NN_P1[0], NN_P1[1], NN_P1[2], 1);
     Eigen::Vector4d pos_robot = transT2R*pos_cmd;
 
-//    double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
+    double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
 
     std::cout<< "command position in robot frame is: "<<pos_robot(0)<<", "<<pos_robot(1)<<", "<<pos_robot(2)<<std::endl;
 
-    //--we use liborl instead libfranka
-    try{
-        const double execution_time = 2.0;
-        orl::Robot robot(fci_ip); // IP-Address or hostname of the robot
-        Pose goal_pose({pos_robot(0),pos_robot(1),pos_robot(2)}, {-0,0,0});
-        auto pose_generator = PoseGenerators::MoveToPose(goal_pose);
-        apply_speed_profile(pose_generator, SpeedProfiles::QuinticPolynomialProfile());
-        robot.move_cartesian(pose_generator, execution_time);
-
-    }catch (const franka::Exception& e) {
-    std::cout << e.what() << std::endl;
-    std::cout << "Running error recovery..." << std::endl;
-    Robotmotionsuccess = 0;
-    franka::Robot robot(fci_ip);
-    robot.automaticErrorRecovery();
-    }
-
-    //move robot in absolute position
-//    franka::Robot robot(fci_ip);
+//    //--we use liborl instead libfranka
 //    try{
-//        setDefaultBehavior(robot);
-//        // Set additional parameters always before the control loop, NEVER in the control loop!
+//        const double execution_time = 2.0;
+//        orl::Robot robot(fci_ip); // IP-Address or hostname of the robot
+//        Pose goal_pose({pos_robot(0),pos_robot(1),pos_robot(2)}, {-0,0,0});
+//        auto pose_generator = PoseGenerators::MoveToPose(goal_pose);
+//        apply_speed_profile(pose_generator, SpeedProfiles::QuinticPolynomialProfile());
+//        robot.move_cartesian(pose_generator, execution_time);
 
-////                            std::array<double, 16> initial_pose;
-//        double time = 0.0;
-
-//        /// ----------------robot control loop---------------------------------
-//        robot.control([=, &time](const franka::RobotState& robot_state,
-//                                 franka::Duration period) -> franka::CartesianVelocities
-////                            robot.control([&time, &initial_pose, &abs_robotpos]( const franka::RobotState& robot_state,
-////                                                                 franka::Duration period) -> franka::CartesianPose
-//        {
-//          time += period.toSec();
-////                              if (time == 0.0) {
-////                                initial_pose = robot_state.O_T_EE_c; //Last commanded end effector pose of motion generation in base frame.
-////                                //robot_state.O_T_EE; Measured end effector pose in base frame.
-////                                //robot_state.O_T_EE_d; Last desired end effector pose of motion generation in base frame.
-////                              }
-////                              std::array<double, 16> new_pose = initial_pose;
-//          double tolerance = 0.001; //1mm
-//          double error[3];
-//          double direction[3];
-//          current_EEpose = robot_state.O_T_EE; //not sure whether should use _d
-
-//          //default unit is meter and rad, so we keep that
-//          Robot_tip_posisition[0] = current_EEpose[12];
-//          Robot_tip_posisition[1] = current_EEpose[13];
-//          Robot_tip_posisition[2] = current_EEpose[14];
-
-////                              qInfo() << "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2];
-////                              qInfo() << "current robot position is: "<<current_pose[12]<<", "<<current_pose[13]<<", "<<current_pose[14];
-//          for(int k=0; k<3; k++)
-//          {
-//              double temp_e = abs_robotpos[k]-current_EEpose[12+k];
-//              if (temp_e>0)
-//                 direction[k] = 1.0;
-//              else
-//                  direction[k] = -1.0;
-
-//              if (abs(temp_e)>=tolerance)
-//                  error[k] = temp_e;
-//              else
-//              {
-//                  error[k] = 0.0;
-//                  direction[k] = 0.0;
-//              }
-//          }
-////                              std::cout<<"pos error is: "<<error[0]<<" "<<error[1]<<" "<<error[2]<<std::endl;
-////                              double detp = 0.00001; //0.1mm
-
-////                              new_pose[12] = current_pose[12]+direction[0]*detp;
-////                              new_pose[13] = current_pose[13]+direction[1]*detp;
-////                              new_pose[14] = current_pose[14]+direction[2]*detp;
-//          double v_x = 0.002;
-//          double v_y = 0.002;
-//          double v_z = 0.002;
-//          double maxv = 0.010;  //10mm/s
-//          double maxDelt_e = 0.05; //50mm
-//          double A = maxv/(maxDelt_e*maxDelt_e);
-//          double v_cmd[3] = {0.0};
-
-//          for (int k=0; k<3; k++)
-//          {
-//              if(abs(error[k])<=maxDelt_e)
-//                   v_cmd[k] = maxv*sin((M_PI/2)*(error[k]/maxDelt_e));
-////                                      v_cmd[k] = A*pow(error[k],2);
-//              else
-//                  v_cmd[k] = maxv*direction[k];
-//          }
-
-////                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
-//          franka::CartesianVelocities output = {{v_cmd[0], v_cmd[1], v_cmd[2], 0.0, 0.0, 0.0}};
-//          if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
-//            std::cout << "Moving to P1 Finished!" << std::endl;
-//            std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
-//            output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-//            Robotmotionsuccess = 1;
-//            return franka::MotionFinished(output);
-//          }
-//          return output;
-//        });
 //    }catch (const franka::Exception& e) {
 //    std::cout << e.what() << std::endl;
 //    std::cout << "Running error recovery..." << std::endl;
 //    Robotmotionsuccess = 0;
+//    franka::Robot robot(fci_ip);
 //    robot.automaticErrorRecovery();
 //    }
+
+    //move robot in absolute position
+    franka::Robot robot(fci_ip);
+    try{
+        setDefaultBehavior(robot);
+        // Set additional parameters always before the control loop, NEVER in the control loop!
+
+//                            std::array<double, 16> initial_pose;
+        double time = 0.0;
+
+        /// ----------------robot control loop---------------------------------
+        robot.control([=, &time](const franka::RobotState& robot_state,
+                                 franka::Duration period) -> franka::CartesianVelocities
+//                            robot.control([&time, &initial_pose, &abs_robotpos]( const franka::RobotState& robot_state,
+//                                                                 franka::Duration period) -> franka::CartesianPose
+        {
+          time += period.toSec();
+//                              if (time == 0.0) {
+//                                initial_pose = robot_state.O_T_EE_c; //Last commanded end effector pose of motion generation in base frame.
+//                                //robot_state.O_T_EE; Measured end effector pose in base frame.
+//                                //robot_state.O_T_EE_d; Last desired end effector pose of motion generation in base frame.
+//                              }
+//                              std::array<double, 16> new_pose = initial_pose;
+          double tolerance = 0.001; //1mm
+          double error[3];
+          double direction[3];
+          current_EEpose = robot_state.O_T_EE; //not sure whether should use _d
+
+          //default unit is meter and rad, so we keep that
+          Robot_tip_posisition[0] = current_EEpose[12];
+          Robot_tip_posisition[1] = current_EEpose[13];
+          Robot_tip_posisition[2] = current_EEpose[14];
+
+//                              qInfo() << "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2];
+//                              qInfo() << "current robot position is: "<<current_pose[12]<<", "<<current_pose[13]<<", "<<current_pose[14];
+          for(int k=0; k<3; k++)
+          {
+              double temp_e = abs_robotpos[k]-current_EEpose[12+k];
+              if (temp_e>0)
+                 direction[k] = 1.0;
+              else
+                  direction[k] = -1.0;
+
+              if (abs(temp_e)>=tolerance)
+                  error[k] = temp_e;
+              else
+              {
+                  error[k] = 0.0;
+                  direction[k] = 0.0;
+              }
+          }
+//                              std::cout<<"pos error is: "<<error[0]<<" "<<error[1]<<" "<<error[2]<<std::endl;
+//                              double detp = 0.00001; //0.1mm
+
+//                              new_pose[12] = current_pose[12]+direction[0]*detp;
+//                              new_pose[13] = current_pose[13]+direction[1]*detp;
+//                              new_pose[14] = current_pose[14]+direction[2]*detp;
+          double v_x = 0.002;
+          double v_y = 0.002;
+          double v_z = 0.002;
+          double maxv = 0.010;  //10mm/s
+          double maxDelt_e = 0.05; //50mm
+          double A = maxv/(maxDelt_e*maxDelt_e);
+          double v_cmd[3] = {0.0};
+
+          for (int k=0; k<3; k++)
+          {
+              if(abs(error[k])<=maxDelt_e)
+                   v_cmd[k] = maxv*sin((M_PI/2)*(error[k]/maxDelt_e));
+//                                      v_cmd[k] = A*pow(error[k],2);
+              else
+                  v_cmd[k] = maxv*direction[k];
+          }
+
+//                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
+          franka::CartesianVelocities output = {{v_cmd[0], v_cmd[1], v_cmd[2], 0.0, 0.0, 0.0}};
+          if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
+            std::cout << "Moving to P1 Finished!" << std::endl;
+            std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
+            output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+            Robotmotionsuccess = 1;
+            return franka::MotionFinished(output);
+          }
+          return output;
+        });
+    }catch (const franka::Exception& e) {
+    std::cout << e.what() << std::endl;
+    std::cout << "Running error recovery..." << std::endl;
+    Robotmotionsuccess = 0;
+    robot.automaticErrorRecovery();
+    }
 }
 
 void MainWindow::moveRot_P2(void)
@@ -1761,15 +1763,15 @@ void MainWindow::runGlobalfield(void)
     std::cout<<std::endl;
     updateCurrents();
 
-    mymodel.useOffset(true);
+  /*  mymodel.useOffset(true);
 
     std::string calibration_1 = "calibrate_file1";
 
     std::vector<MagneticMeasurement> dataList;
 
-//    Eigen::Vector3d Field; /**< The measured Field in Tesla. A 3x1 Vector**/
-//    Eigen::Vector3d Position;/**< The position of the measurement in meters. A 3x1 Vector **/
-//    Eigen::VectorXd AppliedCurrentVector; /**< The applied current vector in Amps. A Nx1 Vector **/
+//    Eigen::Vector3d Field; *< The measured Field in Tesla. A 3x1 Vector*
+//    Eigen::Vector3d Position;*< The position of the measurement in meters. A 3x1 Vector *
+//    Eigen::VectorXd AppliedCurrentVector; *< The applied current vector in Amps. A Nx1 Vector *
 
     Eigen::Vector3d Field = Eigen::Vector3d(1,-3,0.5);
     Eigen::Vector3d Position = Eigen::Vector3d(1,-3,0.5);
@@ -1777,9 +1779,9 @@ void MainWindow::runGlobalfield(void)
 
     struct MagneticMeasurement data
     (
-        Field, /**< The measured Field in Tesla. A 3x1 Vector**/
-        Position,/**< The position of the measurement in meters. A 3x1 Vector **/
-        AppliedCurrentVector /**< The applied current vector in Amps. A Nx1 Vector **/
+        Field, *< The measured Field in Tesla. A 3x1 Vector*
+        Position,*< The position of the measurement in meters. A 3x1 Vector *
+        AppliedCurrentVector *< The applied current vector in Amps. A Nx1 Vector *
     );
 
 
@@ -1792,7 +1794,9 @@ void MainWindow::runGlobalfield(void)
     dataList.push_back(data);
 
     mymodel.calibrate(calibration_1, dataList);
-//    mymodel.writeCalibration("calibratedfile.yaml");
+//    mymodel.writeCalibration("calibratedfile.yaml");*/
+
+
 
         std::cout<<"B_Global_Desired: ";
 }
@@ -2133,7 +2137,7 @@ void MainWindow::FrankaAbscartmotion(double abs_robotpos[3])
 //                              franka::CartesianVelocities output = {{direction[0]*v_x, direction[1]*v_y, direction[2]*v_z, 0.0, 0.0, 0.0}};
           franka::CartesianVelocities output = {{v_cmd[0], v_cmd[1], v_cmd[2], 0.0, 0.0, 0.0}};
           if (abs(error[0])<tolerance && abs(error[1])<tolerance && abs(error[2])<tolerance) {
-            std::cout << "single motion Finished: ["<<robotmovecount+1<<"/486 ]" << std::endl;
+            std::cout << "single motion Finished: ["<<robotmovecount+1<<"/100 ]" << std::endl;
             std::cout << "motion error is "<<error[0]<<" " <<error[1]<<" "<<error[2]<<std::endl;
             output = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
             Robotmotionsuccess = 1;
@@ -2298,4 +2302,84 @@ void MainWindow::ReadFrankaPoseStatus(void)
         Robot_joint[i] = initial_state.q.data()[i];
     }
 }
+
+vector<vector<double>> MainWindow::readCSVfile(string filename)
+{
+     vector<vector<double>> CSVcontent;
+
+    cout<<"File name is "<<filename<<std::endl;
+
+//    vector<string> row;
+    vector<double> row;
+    string line, word;
+    bool headflag = true;
+
+    ifstream file (filename, ios::in);
+    if(file.is_open())
+    {
+        while(getline(file, line))
+        {
+            if(headflag==true) //get rid of table head
+            {
+                headflag = false;
+            }
+            else
+            {
+                row.clear();
+
+                stringstream str(line);
+
+                while(getline(str, word, ','))
+                    row.push_back(stod(word));
+                CSVcontent.push_back(row);
+            }
+        }
+        std::cout<<"data dimension is: "<<CSVcontent.size() <<" x " <<CSVcontent[0].size() <<std::endl;
+    }
+    else
+        cout<<"Could not open the file\n";
+
+    return CSVcontent;
+
+}
+
+void MainWindow::CalibrateCoiltable()
+{
+    string fname = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Data/coilTableCalibrationData.csv";
+    //prepare data as b_field(3x1), posistion(3x1), current(8x1)
+    vector<vector<double>> Fulldata;
+    Fulldata = readCSVfile(fname);
+    std::vector< MagneticMeasurement > meas_vec;
+//    Eigen::Vector3d b_field;
+//    Eigen::Vector3d pos;
+//    Eigen::VectorXd cur;
+
+    for(int k=0; k<Fulldata.size(); k++)
+    {
+        std::vector<double> singleline = Fulldata[k];
+        Eigen::Vector3d b_field;
+        Eigen::Vector3d pos;
+        Eigen::VectorXd cur(8);
+        b_field << singleline[0]*0.001, singleline[1]*0.001, singleline[2]*0.001; //unit: Tesla
+        pos << singleline[3], singleline[4], singleline[5]; //unit: meter
+        cur << singleline[6], singleline[7], singleline[8], singleline[9], singleline[10], singleline[11], singleline[12], singleline[13]; //unit: Ample
+        meas_vec.push_back( MagneticMeasurement( b_field, pos, cur ) );
+    }
+
+    std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
+    ElectromagnetCalibration CoiltableModel(initialguess);
+    std::cout << "Default has: " << CoiltableModel.getNumberOfCoils() << " Coils." << std::endl;
+        for( unsigned int i = 0; i < CoiltableModel.getNumberOfCoils(); i++ )
+            std::cout << "Default has Coil " << i << " has : " << CoiltableModel.getNumberOfSources( i ) << " Sources." << std::endl;
+    CoiltableModel.useOffset(true);
+    // pass meas_vec to cal
+    CoiltableModel.calibrate( "CoiltableModel_Nov_2022", meas_vec, true, true, ElectromagnetCalibration::HEADING_THEN_POSITION, 0.07, 0.6, 1e-10, 10000, 1 );
+//    void calibrate(std::string calibrationName, const std::vector<MagneticMeasurement>& dataList, bool printProgress = true, bool printStats = true, calibration_constraints constraint = HEADING_THEN_POSITION, double minimumSourceToCenterDistance = -1, double maximumSourceToCenterDistance = -1, double converganceTolerance = 1e-12, int maxIterations = 10000, int numberOfConvergedIterations = 1 );
+
+    // write to file...
+    CoiltableModel.writeCalibration( "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/CoiltableModel_Nov_2022.yaml" );
+}
+
+
+
 

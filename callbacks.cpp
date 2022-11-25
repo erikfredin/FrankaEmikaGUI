@@ -79,12 +79,13 @@ void MainWindow::callbacks(void)
         {
             overheatingFlag = true;
             // set all currents to 0 and reset all desired field strengths
-            std::cerr << "System is Overheating!!!"<<std::endl ;
+            std::cerr << "Coil "<< t <<" is Overheating!!!"<<std::endl ;
             updateCurrents_CalibrationOnly(zeroCurrent);
-            std::cerr << "Currents Cleared"<<std::endl;
+            std::cerr << "Currents Cleared!"<<std::endl;
             Robotmotionsuccess = 0;
             CalibrationDataCollet_Random = false;
-            std::cerr << "robot stopped"<<std::endl;
+            CalibrationDataCollet_sequence = false;
+            std::cerr << "robot stopped!"<<std::endl;
             // at the end of callbacks, re-evaluate the temperatures.
         }
     }
@@ -118,6 +119,7 @@ void MainWindow::callbacks(void)
 
     if(CalibrationDataCollet_Random)
     {
+
         if (!robotinitialized) //not initialized
         {
             franka::Robot robot(fci_ip);
@@ -418,10 +420,9 @@ void MainWindow::callbacks(void)
         // ---
         // --
         // -
-        double I_command[8] = {0,0,0,0,0,0,0,0};
-        double step_x = 0.02; //unit: meter
-        double step_y = 0.02;
-        double step_z = 0.02;
+        double step_x = 0.04; //unit: meter
+        double step_y = 0.04;
+        double step_z = 0.03;
 
 
         if (robotinitflag == false)
@@ -462,13 +463,15 @@ void MainWindow::callbacks(void)
                                 Eigen::Vector4d pos_robot = transT2R*pos_cmd;
                                 double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
                                 // run robot
-//                                FrankaAbscartmotion( abs_robotpos);
+                                FrankaAbscartmotion( abs_robotpos);
                                 //read robot status
-//                                ReadFrankaPoseStatus();
+                                ReadFrankaPoseStatus();
                                 if (DAQ.isEnabled())
                                 {
                                     // Read analog inputs from the DAQ by reading values and passing by ref.
                                     DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+                                    std::cout<<"Field measurement is: "<<DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0]<<" "<<DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1]<<" "<<DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2]<<std::endl;
+
                                 }
 
                             // record
@@ -525,13 +528,15 @@ void MainWindow::callbacks(void)
                                     Eigen::Vector4d pos_robot = transT2R*pos_cmd;
                                     double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
                                     // run robot
-//                                    FrankaAbscartmotion( abs_robotpos);
+                                    FrankaAbscartmotion( abs_robotpos);
                                     //read robot status
-//                                    ReadFrankaPoseStatus();
+                                    ReadFrankaPoseStatus();
                                     if (DAQ.isEnabled())
                                     {
                                         // Read analog inputs from the DAQ by reading values and passing by ref.
                                         DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+                                        std::cout<<"Field measurement is: "<<DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0]<<" "<<DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1]<<" "<<DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2]<<std::endl;
+
                                     }
 
                                 // record
@@ -602,13 +607,15 @@ void MainWindow::callbacks(void)
                                 Eigen::Vector4d pos_robot = transT2R*pos_cmd;
                                 double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
                                 // run robot
-//                                FrankaAbscartmotion( abs_robotpos);
+                                FrankaAbscartmotion( abs_robotpos);
                                 //read robot status
-//                                ReadFrankaPoseStatus();
+                                ReadFrankaPoseStatus();
                                 if (DAQ.isEnabled())
                                 {
                                     // Read analog inputs from the DAQ by reading values and passing by ref.
                                     DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+                                    std::cout<<"Field measurement is: "<<DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0]<<" "<<DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1]<<" "<<DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2]<<std::endl;
+
                                 }
 
                             // record
@@ -683,10 +690,10 @@ void MainWindow::callbacks(void)
                     {
                         for (int i = 0; i < 8; i++)
                         {
-                          I_command[i] =  CurrentPool[loopcount][i]; //generate random current in the range of [-maxCurrent, maxcurrent]
+                          cmdCoilCurrent[i] =  CurrentPool[loopcount][i]; //generate random current in the range of [-maxCurrent, maxcurrent]
                         }
-                        qInfo() << "Current is: "<<I_command[0]<<", "<<I_command[1]<<", "<<I_command[2]<<", "<<I_command[3]<<", "<<I_command[4]<<", "<<I_command[5]<<", "<<I_command[6]<<", "<<I_command[7];
-                        updateCurrents_CalibrationOnly(I_command);
+                        qInfo() << "Current is: "<<cmdCoilCurrent[0]<<", "<<cmdCoilCurrent[1]<<", "<<cmdCoilCurrent[2]<<", "<<cmdCoilCurrent[3]<<", "<<cmdCoilCurrent[4]<<", "<<cmdCoilCurrent[5]<<", "<<cmdCoilCurrent[6]<<", "<<cmdCoilCurrent[7];
+                        updateCurrents_CalibrationOnly(cmdCoilCurrent);
                         qInfo() << "loop is " <<loopcount;
 
                     }

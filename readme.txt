@@ -1,5 +1,5 @@
 **Franka end effector offset
-- for guassmeter probe, RobotEE_offset[3] = {0.0, 0.0, 338.2} /unit:mm
+- for guassmeter probe, RobotEE_offset[3] = {0.0, 0.0, 325.4}  /unit:mm old------//338.2} 
 - for registration bar, RobotEE_offset[3] = {0.0, 0.0, 80} /unit:mm
 
 **Robot register data collect:
@@ -27,11 +27,13 @@
 
 
 **Calibration data collect
+------------before run the programe
 - Manually move robot roughly to the init position
-- manually set motion range of robot in mainwindow.h, currently it is [-0.08,0.08], [-0.08,0.08], [0.05, 0.15] //unit: meter
-  origin is set on xy plane center of the table
+- manually set motion range of robot in mainwindow.h, currently it is [-0.08,0.08], [-0.08,0.08], [0.06, 0.15] //unit: meter, origin is set on xy plane center of the table
 - mannually set "currentloop" and "robotmoveloop", robot will move "robotmoveloop" times and 
   loop inside of "currentloop"
+--------------do after start the programe
+- Click "Initial Probe Orient"!!!!!!!!!!
 - Set EE_offset!!!!!!!!!
 - check "Enable DAQ" to collect data from guassmeter probe
 - Set file name
