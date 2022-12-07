@@ -28,8 +28,8 @@
 #include <franka/robot.h>
 
 #include "examples_common.h"
-#include <Core>
-
+#include <Core> //eigen
+#include <QR>
 
 #include <array>
 #include <cmath>
@@ -472,7 +472,14 @@ public:
 
     vector<vector<double>>    readCSVfile(string filename);
 
+    bool ValidationDataCollect_Random = false;
 
+    std::string CoilModel = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/CoiltableModel_Nov_2022_Nconst-2.yaml";
+
+    void    runCoilmodel_field(Eigen::Vector3d B_FullWorkspace, Eigen::Vector3d P_FullWorkspace);
+
+    double  Field_command_validation[3] = {0.0};
+    int     Num_validation=0;
 
 protected:
 
@@ -512,6 +519,7 @@ private:
 
 public slots:
     void        experimental_control(void);
+    void        experimental_control_ml(void);
     void        freedrag(void);
     void        translationaldrag(void);
 //    void SetFileName(std::string & fileNameBase);
@@ -541,13 +549,17 @@ public slots:
     void        initializeFranka(void);
     void        runGlobalfield(void);
 
+    void        runFullWorkspacefield(void);
+
     void        Cartesiantest(void);
 
     void        enableController(void);
     void        setFrankaguidingmode(void);
     void        initialProbeOrient(void);
     void        CalibrateCoiltable(void);
+    void        Fullworkspace_MoveRobot(void);
 
+    void        Validation_datacollect(void);
 
 private slots:
     void       callbacks(void);

@@ -95,12 +95,11 @@ Eigen::Vector3d ElectromagnetCalibration::fieldAtPoint(    const Eigen::VectorXd
     {
         field += coilIT->getGradient(position)*currentVector(coilNum);
     }
+
     if( use_offset )
     {
         field += offset.getGradient(position);
     }
-
-
     return field;
 }
 
@@ -655,7 +654,8 @@ void ElectromagnetCalibration::calibrate(std::string calibrationName, const std:
         minRadIsActive = true;
     else
         minRadIsActive = false;
-    nConst = 2;
+//    nConst = 2; //whether this should be 1?
+    nConst = 3; //whether this should be 1?
 
     posWeight = 1;
 
@@ -721,7 +721,8 @@ void ElectromagnetCalibration::calibrate(std::string calibrationName, const std:
             }
         } else
         {
-            rMinSq = 1.001 * std::pow(minimumSourceToCenterDistance,2);
+//            rMinSq = 1.001 * std::pow(minimumSourceToCenterDistance,2);
+            rMinSq = std::pow(minimumSourceToCenterDistance,2);
         }
 
 
@@ -740,7 +741,9 @@ void ElectromagnetCalibration::calibrate(std::string calibrationName, const std:
                 for( srcNum = 0; srcNum < coilIT->getNumberOfSources(); srcNum ++ )
                 {
                     src = coilIT->getSourceStruct(srcNum);
-                    rMaxSq = std::max(rMaxSq, 100*(src.srcPosition-pCenter).squaredNorm()); // limit it to 30x the farthest initial guess
+//                    rMaxSq = std::max(rMaxSq, 100*(src.srcPosition-pCenter).squaredNorm()); // limit it to 30x the farthest initial guess
+                    rMaxSq = std::max(rMaxSq, 10*(src.srcPosition-pCenter).squaredNorm()); // limit it to 30x the farthest initial guess
+
 
                     if( rMaxSq == 0 )
                         rMaxSq = 1;
@@ -749,7 +752,8 @@ void ElectromagnetCalibration::calibrate(std::string calibrationName, const std:
 
         } else
         {
-            rMaxSq = 0.999 * std::pow(maximumSourceToCenterDistance,2);
+//            rMaxSq = 0.999 * std::pow(maximumSourceToCenterDistance,2);
+            rMaxSq =  std::pow(maximumSourceToCenterDistance,2);
         }
         std::cout<<"Crash not here 1!!!!"<<std::endl;
         assert(("Electromagnet_Calibration::calibrate: The minimum source to center distance is greator than the maximum allowable source to center distance.", rMaxSq >= rMinSq || constraint == UNIT_HEADING_ONLY ));
@@ -1295,7 +1299,7 @@ void ElectromagnetCalibration::packError( Eigen::VectorXd& error, const std::vec
 {
     // update measurement error
     assert(("Error Vector is the Wrong Size", error.rows() == 3*numberOfMeasurements + numberOfConstraints));
-
+//    std::cout<<"crash in packerror not here 1"<<std::endl;
     int measInd;
     std::vector<MagneticMeasurement>::const_iterator measIT;
     for( measIT = dataList.begin(), measInd = 0;
@@ -1303,8 +1307,15 @@ void ElectromagnetCalibration::packError( Eigen::VectorXd& error, const std::vec
          measIT ++, measInd += 3 )
     {
         assert( ("ElectromagnetCalibration::packError:  Measurement Index Out of Bounds", measInd+2 < 3*dataList.size()) );
-        error.segment(measInd,3) = fieldAtPoint(measIT->AppliedCurrentVector,measIT->Position)-measIT->Field;
+        Eigen::Vector3d fieldcal = fieldAtPoint(measIT->AppliedCurrentVector,measIT->Position)-measIT->Field;
+//        std::cout<<"fieldcal: " <<fieldcal<<std::endl;
+//        error.segment(measInd,3) = fieldAtPoint(measIT->AppliedCurrentVector,measIT->Position)-measIT->Field;
+        error[measInd] = fieldcal[0];
+        error[measInd+1] = fieldcal[1];
+        error[measInd+2] = fieldcal[2];
+//        std::cout<<"measInd: " <<measInd<<std::endl;
     }
+//    std::cout<<"crash in packerror not here 2"<<std::endl;
 
     if( nConst > 0 )
     {
@@ -1345,6 +1356,7 @@ void ElectromagnetCalibration::packError( Eigen::VectorXd& error, const std::vec
                 }
             }
         }
+//        std::cout<<"crash in packerror not here 3"<<std::endl;
 
         if( useOffset() )
         {
@@ -1382,6 +1394,7 @@ void ElectromagnetCalibration::packError( Eigen::VectorXd& error, const std::vec
             }
 
         }
+//        std::cout<<"crash in packerror not here 4"<<std::endl;
     }
 }
 

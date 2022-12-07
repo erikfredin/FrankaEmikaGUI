@@ -515,7 +515,7 @@
    <widget class="QPushButton" name="pushButton_registercollect">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>60</x>
       <y>430</y>
       <width>111</width>
       <height>41</height>
@@ -528,7 +528,7 @@
    <widget class="QPushButton" name="pushButton_calibrationcollect">
     <property name="geometry">
      <rect>
-      <x>260</x>
+      <x>190</x>
       <y>370</y>
       <width>141</width>
       <height>41</height>
@@ -554,7 +554,7 @@
    <widget class="QPushButton" name="pushButton_calibrationcollect_off">
     <property name="geometry">
      <rect>
-      <x>260</x>
+      <x>190</x>
       <y>430</y>
       <width>141</width>
       <height>41</height>
@@ -567,8 +567,8 @@
    <widget class="QCheckBox" name="checkBox_enableDAQ">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>370</y>
+      <x>770</x>
+      <y>406</y>
       <width>91</width>
       <height>31</height>
      </rect>
@@ -619,7 +619,7 @@
    <widget class="QPushButton" name="pushButton_initializerobot">
     <property name="geometry">
      <rect>
-      <x>370</x>
+      <x>380</x>
       <y>300</y>
       <width>101</width>
       <height>41</height>
@@ -645,8 +645,8 @@
    <widget class="QCheckBox" name="checkBox_controllerEnable">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>420</y>
+      <x>690</x>
+      <y>400</y>
       <width>71</width>
       <height>41</height>
      </rect>
@@ -671,7 +671,7 @@
    <widget class="QPushButton" name="pushButton_initialprobeorient">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>60</x>
       <y>370</y>
       <width>101</width>
       <height>41</height>
@@ -684,7 +684,7 @@
    <widget class="QPushButton" name="pushButton_calibrationcollect_sequence_on">
     <property name="geometry">
      <rect>
-      <x>410</x>
+      <x>340</x>
       <y>370</y>
       <width>131</width>
       <height>41</height>
@@ -697,7 +697,7 @@
    <widget class="QPushButton" name="pushButton_calibrationcollect_sequence_off">
     <property name="geometry">
      <rect>
-      <x>410</x>
+      <x>340</x>
       <y>430</y>
       <width>131</width>
       <height>41</height>
@@ -713,7 +713,7 @@
       <x>560</x>
       <y>30</y>
       <width>541</width>
-      <height>441</height>
+      <height>351</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -733,7 +733,7 @@
        </rect>
       </property>
       <property name="title">
-       <string>Global field (mT) at (0,0,10)mm</string>
+       <string>Field (mT) at (0,0,10) cm</string>
       </property>
       <widget class="QLineEdit" name="lineEdit_Global_Bx">
        <property name="geometry">
@@ -788,19 +788,6 @@
        <string>Run Global field</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_clearcurrent">
-      <property name="geometry">
-       <rect>
-        <x>380</x>
-        <y>30</y>
-        <width>91</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Clear Currents</string>
-      </property>
-     </widget>
     </widget>
     <widget class="QWidget" name="tab_7">
      <attribute name="title">
@@ -809,14 +796,287 @@
      <widget class="QPushButton" name="pushButton_CalibrateCoiltable">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>20</y>
+        <x>20</x>
+        <y>280</y>
         <width>101</width>
         <height>41</height>
        </rect>
       </property>
       <property name="text">
        <string>Calibrate coil table</string>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_5">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>191</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Control Point (mm)</string>
+      </property>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Px">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Py">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Pz">
+       <property name="geometry">
+        <rect>
+         <x>130</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>100.0</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_6">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>90</y>
+        <width>191</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Desired field Bx By Bz (mT)</string>
+      </property>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Bx">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_By">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Bz">
+       <property name="geometry">
+        <rect>
+         <x>130</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_7">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>90</y>
+        <width>311</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Desired Gradient Gbxx Gbxy Gbxz Gbyy Gbyz (mT/mm)</string>
+      </property>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Gxx">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Gxy">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Gxz">
+       <property name="geometry">
+        <rect>
+         <x>130</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Gyy">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_Fullworkspace_Gyz">
+       <property name="geometry">
+        <rect>
+         <x>250</x>
+         <y>20</y>
+         <width>51</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="Line" name="line_5">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>60</y>
+        <width>411</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+     <widget class="Line" name="line_6">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>170</y>
+        <width>501</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>81</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Manual control</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_6">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>30</y>
+        <width>231</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Workspace: x [-80,80], y [-80,80], z [30,120]</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_Fullworkspace_run">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>143</y>
+        <width>91</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Run</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_Fullworkspace_MoveRobot">
+      <property name="geometry">
+       <rect>
+        <x>121</x>
+        <y>142</y>
+        <width>91</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Move Robot to P</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_validation_datacollect">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>280</y>
+        <width>131</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Validation Datacollect </string>
       </property>
      </widget>
     </widget>
@@ -1100,10 +1360,10 @@
      <widget class="QPushButton" name="pushButton_moveRot2_P2">
       <property name="geometry">
        <rect>
-        <x>170</x>
-        <y>330</y>
+        <x>390</x>
+        <y>160</y>
         <width>101</width>
-        <height>51</height>
+        <height>41</height>
        </rect>
       </property>
       <property name="text">
@@ -1181,10 +1441,10 @@
      <widget class="QPushButton" name="pushButton_moveRot2_P1">
       <property name="geometry">
        <rect>
-        <x>40</x>
-        <y>330</y>
+        <x>280</x>
+        <y>160</y>
         <width>101</width>
-        <height>51</height>
+        <height>41</height>
        </rect>
       </property>
       <property name="text">
@@ -1272,6 +1532,32 @@
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_Control_ml">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>600</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Control_ml</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_clearcurrent">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>400</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clear Currents</string>
     </property>
    </widget>
   </widget>

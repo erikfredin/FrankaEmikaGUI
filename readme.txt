@@ -27,21 +27,32 @@
 
 
 **Calibration data collect
+-we have two modes, one is random, one is scanning full workspace at a grid step
 ------------before run the programe
 - Manually move robot roughly to the init position
 - manually set motion range of robot in mainwindow.h, currently it is [-0.08,0.08], [-0.08,0.08], [0.06, 0.15] //unit: meter, origin is set on xy plane center of the table
-- mannually set "currentloop" and "robotmoveloop", robot will move "robotmoveloop" times and 
-  loop inside of "currentloop"
+- (for random mode) mannually set "currentloop" and "robotmoveloop", robot will move "robotmoveloop" times and loop inside of "currentloop"
+- (for sequence mode)set desired currents at header file, we collect data per coil, so mannually update current each time
 --------------do after start the programe
 - Click "Initial Probe Orient"!!!!!!!!!!
 - Set EE_offset!!!!!!!!!
 - check "Enable DAQ" to collect data from guassmeter probe
 - Set file name
 - click "Calibration data collect ON" and logging will start automatically,
-  coil currents and robot position are randomly assigned each time
+  <coil currents and robot position are randomly assigned each time in random mode>
 - after all loops are passed, calibration shuts down automatically, logging will stops, 
   and the data will be saved to .csv file. 
-- click "Calibration data collect ON" if you want to stop the process early
+- click "Calibration data collect OFF" if you want to stop the process early
+
+
+**validation data collect
+- set maximun data loop in Callback
+- init robot
+- set robot to init pose
+- Set Franka EE_offset on GUI!!!!!!!!!!
+- set filename
+- enable DAQ
+- run "Validation_DataCollect"
 
 
 **DNN predict

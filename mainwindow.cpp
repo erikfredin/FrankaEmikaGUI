@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-const auto DNNmodel = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
+//const auto DNNmodel = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
 //std::cout<<"load model!"<<std::endl;
 
 //std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // PUSH BUTTONS
     connect(ui->pushButton_experimental_control,SIGNAL(clicked()),SLOT(experimental_control()));
+    connect(ui->pushButton_Control_ml,SIGNAL(clicked()),SLOT(experimental_control_ml()));
     connect(ui->pushButton_freedrag,SIGNAL(clicked()),SLOT(freedrag()));
     connect(ui->pushButton_translationaldrag,SIGNAL(clicked()),SLOT(translationaldrag()));
     connect(ui->pushButton_EEoffsetupdate,SIGNAL(clicked()),SLOT(updateRobotEE()));
@@ -81,6 +82,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_initialprobeorient,SIGNAL(clicked()),SLOT(initialProbeOrient()));
     connect(ui->pushButton_CalibrateCoiltable,SIGNAL(clicked()),SLOT(CalibrateCoiltable()));
 
+    connect(ui->pushButton_Fullworkspace_MoveRobot,SIGNAL(clicked()),SLOT(Fullworkspace_MoveRobot()));
+
+    connect(ui->pushButton_Fullworkspace_run,SIGNAL(clicked()),SLOT(runFullWorkspacefield()));
+
+
 
 
     //check box
@@ -92,6 +98,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->checkBox_controllerEnable,SIGNAL(clicked()),SLOT(enableController()));
 
     connect(ui->checkBox_guidingmode,SIGNAL(clicked()),SLOT(setFrankaguidingmode()));
+
+    connect(ui->checkBox_validation_datacollect,SIGNAL(clicked()),SLOT(Validation_datacollect()));
 
 
 //    connect(ui->lineEdit_EE_x,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
@@ -567,13 +575,15 @@ void MainWindow::experimental_control()
         std::cout<<"set default!"<<std::endl;
 
         // First move the robot to a suitable joint configuration
-        std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, 0}};
-//        MotionGenerator motion_generator(0.5, q_goal);
+        //std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, 0}};
+        std::array<double, 7> q_goal = { {-1.3875, -1.5927, 1.6031, -1.8722, 0.0507, 1.7052, -0.5713} };
+
+        MotionGenerator motion_generator(0.5, q_goal);
         std::cout << "WARNING: This example will move the robot! "
                   << "Please make sure to have the user stop button at hand!" << std::endl
                   << "Press Enter to continue..." << std::endl;
 //        std::cin.ignore();
-//        robot.control(motion_generator);
+        robot.control(motion_generator);
         std::cout << "Finished moving to initial joint configuration." << std::endl;
 
         // Set additional parameters always before the control loop, NEVER in the control loop!
@@ -625,6 +635,78 @@ void MainWindow::experimental_control()
             return franka::MotionFinished(output);
           }
           return output;
+        });
+      } catch (const franka::Exception& e) {
+        std::cout << e.what() << std::endl;
+//        return -1;
+      }
+}
+void MainWindow::experimental_control_ml()
+{
+
+
+    try {
+//        const double execution_time = 2.0;
+//        Robot franka(fci_ip); // IP-Address or hostname of the robot
+//        franka.absolute_cart_motion(0.5,0,0.3, execution_time);
+
+
+       franka::Robot robot(fci_ip);
+        std::cout<<"connected!"<<std::endl;
+        setDefaultBehavior(robot);
+        std::cout<<"set default!"<<std::endl;
+
+        // First move the robot to a suitable joint configuration
+        //std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, 0}};
+        std::array<double, 7> q_goal = { {-1.3875, -1.5927, 1.6031, -1.8722, 0.0507, 1.7052, -0.5713} };
+
+        MotionGenerator motion_generator(0.5, q_goal);
+        std::cout << "WARNING: This example will move the robot! "
+                  << "Please make sure to have the user stop button at hand!" << std::endl
+                  << "Press Enter to continue..." << std::endl;
+//        std::cin.ignore();
+        robot.control(motion_generator);
+        std::cout << "Finished moving to initial joint configuration." << std::endl;
+
+        // Set additional parameters always before the control loop, NEVER in the control loop!
+        // Set the joint impedance.
+        robot.setJointImpedance({{3000, 3000, 3000, 2500, 2500, 2000, 2000}});
+
+        // Set the collision behavior.
+        std::array<double, 7> lower_torque_thresholds_nominal{
+                    {25.0, 25.0, 22.0, 20.0, 19.0, 17.0, 14.} };
+                std::array<double, 7> upper_torque_thresholds_nominal{
+                    {35.0, 35.0, 32.0, 30.0, 29.0, 27.0, 24.0} };
+                std::array<double, 7> lower_torque_thresholds_acceleration{
+                    {25.0, 25.0, 22.0, 20.0, 19.0, 17.0, 14.0} };
+                std::array<double, 7> upper_torque_thresholds_acceleration{
+                    {35.0, 35.0, 32.0, 30.0, 29.0, 27.0, 24.0} };
+                std::array<double, 6> lower_force_thresholds_nominal{ {30.0, 30.0, 30.0, 25.0, 25.0, 25.0} };
+                std::array<double, 6> upper_force_thresholds_nominal{ {40.0, 40.0, 40.0, 35.0, 35.0, 35.0} };
+                std::array<double, 6> lower_force_thresholds_acceleration{ {30.0, 30.0, 30.0, 25.0, 25.0, 25.0} };
+                std::array<double, 6> upper_force_thresholds_acceleration{ {40.0, 40.0, 40.0, 35.0, 35.0, 35.0} };
+                robot.setCollisionBehavior(
+                    lower_torque_thresholds_acceleration, upper_torque_thresholds_acceleration,
+                    lower_torque_thresholds_nominal, upper_torque_thresholds_nominal,
+                    lower_force_thresholds_acceleration, upper_force_thresholds_acceleration,
+                    lower_force_thresholds_nominal, upper_force_thresholds_nominal);
+                double time_max = 10.0;
+                double v_max = 0.1;
+                double angle = M_PI / 4.0;
+                double time = 0.0;
+                robot.control([=, &time](const franka::RobotState&,
+                    franka::Duration period) -> franka::CartesianVelocities {
+                        time += period.toSec();
+                        double cycle = std::floor(pow(-1.0, (time - std::fmod(time, time_max)) / time_max));
+                        double v = cycle * v_max / 2.0 * (1.0 - std::cos(2.0 * M_PI / time_max * time));
+                        //double v_x = std::cos(angle) * v;
+                        double v_y = -std::sin(angle) * v;
+                        franka::CartesianVelocities output = { {0.0, v_y, 0.0, 0.0, 0.0, 0.0} };
+                        if (time >= 2 * time_max) {
+                            std::cout << std::endl << "Finished motion, shutting down example" << std::endl;
+                            return franka::MotionFinished(output);
+                        }
+                        return output;
         });
       } catch (const franka::Exception& e) {
         std::cout << e.what() << std::endl;
@@ -779,7 +861,12 @@ void MainWindow::Record(void)
        for (i = 0; i<16; i++)
            LogFileAllData<<current_EEpose[i]<<Delim;
 
-       LogFileAllData<<Robotmotionsuccess;
+       LogFileAllData<<Robotmotionsuccess<<Delim;
+
+       for (i = 0; i<2; i++)
+           LogFileAllData<<Field_command_validation[i]<<Delim;
+
+       LogFileAllData<<Field_command_validation[2];
 
         LogFileAllData<<std::endl;
         NumWritten++;
@@ -868,7 +955,13 @@ bool MainWindow::OpenFiles(std::string &fileNameBase){
             for (i = 0; i<16; i++)
                 LogFileAllData<<"EEpose"<<i<<Delim;
 
-            LogFileAllData<<"Robotmotionsuccess";
+            LogFileAllData<<"Robotmotionsuccess"<<Delim;
+
+
+            for (i = 0; i<2; i++)
+                LogFileAllData<<"Field_command"<<i+1<<Delim;
+
+            LogFileAllData<<"Field_command 3";
 
             LogFileAllData<<std::endl;
 
@@ -1286,6 +1379,9 @@ void MainWindow::DNNpredict()
 {
 //    const auto model = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
 //    std::cout<<"load model!"<<std::endl;
+    const auto DNNmodel = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
+    //std::cout<<"load model!"<<std::endl;
+
     int inputsize = 92;
     std::vector<float> input = {};
 
@@ -2345,7 +2441,9 @@ vector<vector<double>> MainWindow::readCSVfile(string filename)
 
 void MainWindow::CalibrateCoiltable()
 {
-    string fname = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Data/coilTableCalibrationData.csv";
+//    string fname = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Data/coilTableCalibrationData.csv";
+    string fname = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Data/coilTableCalibrationData-noOffset.csv";
+
     //prepare data as b_field(3x1), posistion(3x1), current(8x1)
     vector<vector<double>> Fulldata;
     Fulldata = readCSVfile(fname);
@@ -2366,20 +2464,138 @@ void MainWindow::CalibrateCoiltable()
         meas_vec.push_back( MagneticMeasurement( b_field, pos, cur ) );
     }
 
-    std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
+//    std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
+    std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess_noOffset.yaml";
+
     ElectromagnetCalibration CoiltableModel(initialguess);
     std::cout << "Default has: " << CoiltableModel.getNumberOfCoils() << " Coils." << std::endl;
         for( unsigned int i = 0; i < CoiltableModel.getNumberOfCoils(); i++ )
             std::cout << "Default has Coil " << i << " has : " << CoiltableModel.getNumberOfSources( i ) << " Sources." << std::endl;
-    CoiltableModel.useOffset(true);
+    CoiltableModel.useOffset(false);
     // pass meas_vec to cal
-    CoiltableModel.calibrate( "CoiltableModel_Nov_2022", meas_vec, true, true, ElectromagnetCalibration::HEADING_THEN_POSITION, 0.07, 0.6, 1e-10, 10000, 1 );
+    CoiltableModel.calibrate( "CoiltableModel_Dec_2022_noOffset_nConst1", meas_vec, true, true, ElectromagnetCalibration::HEADING_THEN_POSITION, 0.07, 0.6 );
 //    void calibrate(std::string calibrationName, const std::vector<MagneticMeasurement>& dataList, bool printProgress = true, bool printStats = true, calibration_constraints constraint = HEADING_THEN_POSITION, double minimumSourceToCenterDistance = -1, double maximumSourceToCenterDistance = -1, double converganceTolerance = 1e-12, int maxIterations = 10000, int numberOfConvergedIterations = 1 );
 
     // write to file...
-    CoiltableModel.writeCalibration( "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/CoiltableModel_Nov_2022.yaml" );
+    CoiltableModel.writeCalibration( "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/CoiltableModel_Dec_2022_noOffset_nConst1.yaml" );
+
+
 }
 
 
 
+void MainWindow::runFullWorkspacefield(void)
+{
+//    std::string CoilModel = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/CoiltableModel_Nov_2022_Nconst-2.yaml";
 
+    ElectromagnetCalibration CoiltableModel(CoilModel);
+//    std::cout << "Default has: " << CoiltableModel.getNumberOfCoils() << " Coils." << std::endl;
+    CoiltableModel.useOffset(true);
+
+    Eigen::Vector3d B_FullWorkspace;
+    Eigen::VectorXd G_FullWorkspace(numGrad);
+
+//    double P_FullWorkspace[3] = {0.0};
+    Eigen::Vector3d P_FullWorkspace;
+
+    //mm to meter
+    P_FullWorkspace << ui->lineEdit_Fullworkspace_Px->text().toDouble()/1000.0, ui->lineEdit_Fullworkspace_Py->text().toDouble()/1000.0, ui->lineEdit_Fullworkspace_Pz->text().toDouble()/1000.0;
+
+    //mT to T
+    B_FullWorkspace << ui->lineEdit_Fullworkspace_Bx->text().toDouble()/1000.0, ui->lineEdit_Fullworkspace_By->text().toDouble()/1000.0, ui->lineEdit_Fullworkspace_Bz->text().toDouble()/1000.0;
+
+    //mT to T
+    G_FullWorkspace << ui->lineEdit_Fullworkspace_Gxx->text().toDouble()/1000.0, ui->lineEdit_Fullworkspace_Gxy->text().toDouble()/1000.0, ui->lineEdit_Fullworkspace_Gxz->text().toDouble()/1000.0, ui->lineEdit_Fullworkspace_Gyy->text().toDouble()/1000.0, ui->lineEdit_Fullworkspace_Gyz->text().toDouble()/1000.0;
+
+    Eigen::MatrixXd actuationMatrix = Eigen::MatrixXd::Zero(numField,numAct);
+
+    actuationMatrix = CoiltableModel.fieldCurrentJacobian( P_FullWorkspace );
+    /*
+     * @brief returns the 3xN matrix mapping field at a point to the current in each of the N sources
+     *  @param position is the position in the workspace the field is desired
+     *
+     *  This function does not check to see if the point is actually in the calibrated workspace.
+     */
+    //    Eigen::MatrixXd fieldCurrentJacobian( const Eigen::Vector3d& position = Eigen::Vector3d::Zero() ) const;
+
+    Eigen::MatrixXd pinvAMatrix = actuationMatrix.completeOrthogonalDecomposition().pseudoInverse();
+
+    Eigen::VectorXd demandCurrent;
+
+    demandCurrent = pinvAMatrix*B_FullWorkspace;
+
+    std::cout<<"demand current is" <<demandCurrent<<std::endl<<std::endl;
+
+    double I_command[numAct] = {0.0};
+    for(int k=0; k<numAct; k++)
+        I_command[k] = demandCurrent[k];
+    updateCurrents_CalibrationOnly(I_command);
+
+}
+
+
+
+void MainWindow::Fullworkspace_MoveRobot()
+{
+    double robot_x = 0.0;
+    double robot_y = 0.0;
+    double robot_z = 0.0;
+
+    robot_x = ui->lineEdit_Fullworkspace_Px->text().toDouble()/1000.0; //mm to meter
+    robot_y = ui->lineEdit_Fullworkspace_Py->text().toDouble()/1000.0;
+    robot_z = ui->lineEdit_Fullworkspace_Pz->text().toDouble()/1000.0;
+
+    // move robot to desired position
+    std::cout<< "command position in table frame is: "<<robot_x<<", "<<robot_y<<", "<<robot_z<<std::endl;
+    //covert cmd position in table frame to robot frame
+    Eigen::Vector4d pos_cmd(robot_x, robot_y, robot_z, 1);
+    Eigen::Vector4d pos_robot = transT2R*pos_cmd;
+    double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
+
+    // run robot
+    FrankaAbscartmotion( abs_robotpos);
+
+}
+
+
+
+void MainWindow::runCoilmodel_field(Eigen::Vector3d B_FullWorkspace, Eigen::Vector3d P_FullWorkspace)
+{
+
+    ElectromagnetCalibration CoiltableModel(CoilModel);
+//    std::cout << "Default has: " << CoiltableModel.getNumberOfCoils() << " Coils." << std::endl;
+    CoiltableModel.useOffset(true);
+
+    Eigen::MatrixXd actuationMatrix = Eigen::MatrixXd::Zero(numField,numAct);
+
+    actuationMatrix = CoiltableModel.fieldCurrentJacobian( P_FullWorkspace );
+    /*
+     * @brief returns the 3xN matrix mapping field at a point to the current in each of the N sources
+     *  @param position is the position in the workspace the field is desired
+     *
+     *  This function does not check to see if the point is actually in the calibrated workspace.
+    */
+    //    Eigen::MatrixXd fieldCurrentJacobian( const Eigen::Vector3d& position = Eigen::Vector3d::Zero() ) const;
+
+    Eigen::MatrixXd pinvAMatrix = actuationMatrix.completeOrthogonalDecomposition().pseudoInverse();
+
+    Eigen::VectorXd demandCurrent;
+
+    demandCurrent = pinvAMatrix*B_FullWorkspace;
+
+
+    std::cout<<"command current is" <<demandCurrent<<std::endl<<std::endl;
+
+    double I_command[numAct] = {0.0};
+    for(int k=0; k<numAct; k++)
+        I_command[k] = demandCurrent[k];
+    updateCurrents_CalibrationOnly(I_command);
+
+}
+
+
+void MainWindow::Validation_datacollect(void)
+{
+    ValidationDataCollect_Random = ui->checkBox_validation_datacollect->checkState();
+    std::cout<<"Validation data collect is "<<ValidationDataCollect_Random<<std::endl;
+}

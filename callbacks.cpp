@@ -75,7 +75,7 @@ void MainWindow::callbacks(void)
         measuredCurrents[t] = inputAnalogVoltages[t]*currentSenseAdj[t]; // [A] read from amplifiers
         measuredTemperatures[t] = inputAnalogVoltages[t+8]*temperatureSenseAdj[t]; // [deg C] read from thermocouples
         // Check that the temperature in any core is not above the max value
-        if (measuredTemperatures[t] > maxAllowableTemp)
+      /* if (measuredTemperatures[t] > maxAllowableTemp)
         {
             overheatingFlag = true;
             // set all currents to 0 and reset all desired field strengths
@@ -87,7 +87,7 @@ void MainWindow::callbacks(void)
             CalibrationDataCollet_sequence = false;
             std::cerr << "robot stopped!"<<std::endl;
             // at the end of callbacks, re-evaluate the temperatures.
-        }
+        }*/
     }
 //    std::cout<<"mrd current: "<<measuredCurrents[0]<<" "<<measuredCurrents[1]<<" "<<measuredCurrents[2]<<" "<<measuredCurrents[3]<<" "<<measuredCurrents[4]<<" "<<measuredCurrents[5]<<" "<<measuredCurrents[6]<<" "<<measuredCurrents[7]<<std::endl;
 //    std::cout<<"mrd tempera: "<<measuredTemperatures[0]<<" "<<measuredTemperatures[1]<<" "<<measuredTemperatures[2]<<" "<<measuredTemperatures[3]<<" "<<measuredTemperatures[4]<<" "<<measuredTemperatures[5]<<" "<<measuredTemperatures[6]<<" "<<measuredTemperatures[7]<<std::endl;
@@ -712,6 +712,98 @@ void MainWindow::callbacks(void)
 
 
 
+
+
+    if(ValidationDataCollect_Random )
+    {
+        int maxloop  = 60;
+        if(Num_validation<maxloop)
+        {
+            // get random B field Bx, By, Bz, in the range of [-10,10]
+            double max_B_random = 15.0; //unit: mT
+            // get random P position Px, Py, Pz in the range of [-80,80], [-80,80], [30,120]
+            double B_random[3] = {0.0}; //unit: T
+            double P_random[3] = {0.0};
+            // those code is copied from https://stackoverflow.com/questions/13445688/how-to-generate-a-random-number-in-c
+            // and is used to generate a random number, which is placed here for local use
+            std::random_device dev;
+            std::mt19937 rng(dev());
+            std::uniform_int_distribution<std::mt19937::result_type> dist_B(0,max_B_random*2); // distribution in range [a, b]
+            //
+            for (int i = 0; i < 3; i++)
+            {
+
+                  B_random[i] =  (dist_B(rng)-max_B_random)*0.001; //generate random current in the range of [-maxCurrent, maxcurrent]
+            }
+
+            std::cout<< "command field B is: "<<B_random[0]<<", "<<B_random[1]<<", "<<B_random[2]<<std::endl;
+
+            //unit: meter - cm, this random function only generates integers
+            std::random_device dev1;
+            std::mt19937 rng1(dev1());
+            std::uniform_int_distribution<std::mt19937::result_type> dist_Px(0,robotrange_x[1]*2*100); // distribution in range [a, b]
+            P_random[0] = (dist_Px(rng1)-robotrange_x[1]*100)*0.01;
+
+            std::random_device dev2;
+            std::mt19937 rng2(dev2());
+            std::uniform_int_distribution<std::mt19937::result_type> dist_Py(0,robotrange_y[1]*2*100); // distribution in range [a, b]
+            P_random[1] = (dist_Py(rng2)-robotrange_y[1]*100)*0.01;
+
+            std::random_device dev3;
+            std::mt19937 rng3(dev3());
+            std::uniform_int_distribution<std::mt19937::result_type> dist_Pz(robotrange_z[0]*100, robotrange_z[1]*100); // distribution in range [a, b]
+            P_random[2] = dist_Pz(rng3)*0.01;
+
+            //calculate current using Coil model
+            Eigen::Vector3d B_command;
+            B_command <<B_random[0], B_random[1], B_random[2];
+            Eigen::Vector3d P_command;
+            P_command <<P_random[0], P_random[1], P_random[2];
+
+            // run current
+            runCoilmodel_field(B_command, P_command);
+
+            //move robot to P_command
+            // move robot to desired position
+            std::cout<< "command position in table frame is: "<<P_random[0]<<", "<<P_random[1]<<", "<<P_random[2]<<std::endl;
+            //covert cmd position in table frame to robot frame
+            Eigen::Vector4d pos_cmd(P_random[0], P_random[1], P_random[2], 1);
+            Eigen::Vector4d pos_robot = transT2R*pos_cmd;
+            double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
+
+            // run robot
+//            FrankaAbscartmotion( abs_robotpos);
+            //read robot status
+//            ReadFrankaPoseStatus();
+
+            if (DAQ.isEnabled())
+            {
+                // Read analog inputs from the DAQ by reading values and passing by ref.
+                DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
+                std::cout<<"Field measurement is: "<<DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0]<<" "<<DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1]<<" "<<DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2]<<std::endl;
+
+            }
+            else
+                std::cerr<<"DAQ is not enabled!!!"<<std::endl;
+
+            //update Field_command_validation and P_command for logging
+            for(int k=0; k<3; k++)
+            {
+                Field_command_validation[k] = B_random[k]*1000; //from T to mT
+                robotposcmd[k] = P_random[k];
+            }
+
+        // record
+            MainWindow::Record();
+
+            std::cout<<"random collect num is "<<Num_validation <<std::endl;
+            Num_validation++;
+
+        }
+        else
+            std::cout<<"random collect is done! " <<std::endl;
+
+    }
 
 
  //record
