@@ -86,6 +86,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     connect(ui->pushButton_Fullworkspace_run,SIGNAL(clicked()),SLOT(runFullWorkspacefield()));
 
+    connect(ui->pushButton_Validata_data_collect,SIGNAL(clicked()),SLOT(Validation_datacollect_pushbutton()));
 
 
 
@@ -843,10 +844,10 @@ void MainWindow::Record(void)
 
        for (i = 0; i < numProbePos; i++)
 //               LogFileAllData<<ProbePos[i]<<Delim;
-           LogFileAllData<<Robot_tip_posisition[i]<<Delim;
+           LogFileAllData<<Robot_tip_posisition[i]<<Delim; //probe position in robot frame
 
        for (i = 0; i < numProbePos; i++)
-           LogFileAllData<<robotposcmd[i]<<Delim;
+           LogFileAllData<<robotposcmd[i]<<Delim; //probe position in table frame
 
 
        for (i = 0;i < numAct; i++)
@@ -1031,6 +1032,8 @@ void MainWindow::updateCurrents_CalibrationOnly(double I_command[8])
         {
             outputAnalogVoltages[i] = I_command[i] * currentControlAdj[i]; // Voltage = (Amps) * (Volts/Amp)
             // TODO limit voltages sent to S826
+            //update I_command for logger here
+            cmdCoilCurrent[i] = I_command[i];
         }
     }
     else
@@ -1042,6 +1045,8 @@ void MainWindow::updateCurrents_CalibrationOnly(double I_command[8])
         {
             outputAnalogVoltages[i] = 0.0; // Voltage = (Amps) * (Volts/Amp)
             std::cerr<<"Overheating!....Sending 0A to coil "<<i<<std::endl;
+            //update I_command for logger here
+            cmdCoilCurrent[i] = 0.0;
         }
     }
     // TODO send current setpoints to amplifiers
@@ -2385,7 +2390,7 @@ void MainWindow::ReadFrankaPoseStatus(void)
     Eigen::Matrix3d EEinFrot(EEinFlange.linear());
     Eigen::Vector3d EEinFeulerangle = EEinFrot.eulerAngles(0, 1, 2);
 
-    //default unit is meter and rad, so we keep that
+    //default units are meter and rad, so we keep that
     Robot_tip_posisition[0] = position_d[0];
     Robot_tip_posisition[1] = position_d[1];
     Robot_tip_posisition[2] = position_d[2];
@@ -2442,9 +2447,12 @@ vector<vector<double>> MainWindow::readCSVfile(string filename)
 void MainWindow::CalibrateCoiltable()
 {
 //    string fname = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Data/coilTableCalibrationData.csv";
-    string fname = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Data/coilTableCalibrationData-noOffset.csv";
+//    string fname = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Data/coilTableCalibrationData-noOffset.csv";
+    string fname = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Data/coilTableCalibrationData-onlycoil4.csv";
+
 
     //prepare data as b_field(3x1), posistion(3x1), current(8x1)
+    //prepare data as b_field(3x1), posistion(3x1), current(1x1) - for single coil test
     vector<vector<double>> Fulldata;
     Fulldata = readCSVfile(fname);
     std::vector< MagneticMeasurement > meas_vec;
@@ -2452,32 +2460,47 @@ void MainWindow::CalibrateCoiltable()
 //    Eigen::Vector3d pos;
 //    Eigen::VectorXd cur;
 
+    /*
+     *
+     *  \brief calibrationDataPoint
+     *  \param Field the field value in Tesla
+     *  \param Pos the position of the measurement in meters
+     *  \param CurrentVec the applied current vector in Amps
+     */
+//    MagneticMeasurement( const Eigen::Vector3d& Field, const Eigen::Vector3d& Pos, const Eigen::VectorXd& CurrentVec );
+
     for(int k=0; k<Fulldata.size(); k++)
     {
         std::vector<double> singleline = Fulldata[k];
         Eigen::Vector3d b_field;
         Eigen::Vector3d pos;
-        Eigen::VectorXd cur(8);
+//        Eigen::VectorXd cur(8);
+        Eigen::VectorXd cur(1); //- for single coil test
         b_field << singleline[0]*0.001, singleline[1]*0.001, singleline[2]*0.001; //unit: Tesla
         pos << singleline[3], singleline[4], singleline[5]; //unit: meter
-        cur << singleline[6], singleline[7], singleline[8], singleline[9], singleline[10], singleline[11], singleline[12], singleline[13]; //unit: Ample
-        meas_vec.push_back( MagneticMeasurement( b_field, pos, cur ) );
+//        cur << singleline[6], singleline[7], singleline[8], singleline[9], singleline[10], singleline[11], singleline[12], singleline[13]; //unit: Ample
+        cur << singleline[6];
+        meas_vec.push_back(MagneticMeasurement( b_field, pos, cur ) );
     }
 
 //    std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess.yaml";
-    std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess_noOffset.yaml";
+//    std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess_noOffset.yaml";
+//    std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess_noInterfere.yaml";
+      std::string initialguess = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/InitialGuess_onlyCoil4.yaml";
 
     ElectromagnetCalibration CoiltableModel(initialguess);
+
     std::cout << "Default has: " << CoiltableModel.getNumberOfCoils() << " Coils." << std::endl;
         for( unsigned int i = 0; i < CoiltableModel.getNumberOfCoils(); i++ )
             std::cout << "Default has Coil " << i << " has : " << CoiltableModel.getNumberOfSources( i ) << " Sources." << std::endl;
-    CoiltableModel.useOffset(false);
+//    CoiltableModel.useOffset(false);
     // pass meas_vec to cal
-    CoiltableModel.calibrate( "CoiltableModel_Dec_2022_noOffset_nConst1", meas_vec, true, true, ElectromagnetCalibration::HEADING_THEN_POSITION, 0.07, 0.6 );
+//    CoiltableModel.calibrate( "CoiltableModel_Dec_2022_noOffset", meas_vec, true, true, ElectromagnetCalibration::HEADING_THEN_POSITION, 0.07, 0.6 );
+     CoiltableModel.calibrate( "CoiltableModel_Dec_2022_coil4", meas_vec, true, true, ElectromagnetCalibration::HEADING_THEN_POSITION, 0.01, 1.5 ); //0.01m=1cm;0.6m=60cm
 //    void calibrate(std::string calibrationName, const std::vector<MagneticMeasurement>& dataList, bool printProgress = true, bool printStats = true, calibration_constraints constraint = HEADING_THEN_POSITION, double minimumSourceToCenterDistance = -1, double maximumSourceToCenterDistance = -1, double converganceTolerance = 1e-12, int maxIterations = 10000, int numberOfConvergedIterations = 1 );
 
     // write to file...
-    CoiltableModel.writeCalibration( "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/CoiltableModel_Dec_2022_noOffset_nConst1.yaml" );
+    CoiltableModel.writeCalibration( "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/CoiltableModel_Dec_2022_coil4.yaml" );
 
 
 }
@@ -2487,6 +2510,12 @@ void MainWindow::CalibrateCoiltable()
 void MainWindow::runFullWorkspacefield(void)
 {
 //    std::string CoilModel = "C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/CoiltableModel_Nov_2022_Nconst-2.yaml";
+
+    /**
+     * @brief  loads a new calibration file
+     *  @param a string pointing to the location of the yaml formated calbiration file
+     */
+//    bool loadCalibration(std::string fileName);
 
     ElectromagnetCalibration CoiltableModel(CoilModel);
 //    std::cout << "Default has: " << CoiltableModel.getNumberOfCoils() << " Coils." << std::endl;
@@ -2597,5 +2626,13 @@ void MainWindow::runCoilmodel_field(Eigen::Vector3d B_FullWorkspace, Eigen::Vect
 void MainWindow::Validation_datacollect(void)
 {
     ValidationDataCollect_Random = ui->checkBox_validation_datacollect->checkState();
+    std::cout<<"Validation data collect is "<<ValidationDataCollect_Random<<std::endl;
+}
+
+
+void MainWindow::Validation_datacollect_pushbutton(void)
+{
+    ValidationDataCollect_Random = true;
+    ValidateData_maxloop = ui->lineEdit_Validate_data_num->text().toInt();
     std::cout<<"Validation data collect is "<<ValidationDataCollect_Random<<std::endl;
 }

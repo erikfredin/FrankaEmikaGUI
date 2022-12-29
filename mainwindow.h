@@ -480,6 +480,7 @@ public:
 
     double  Field_command_validation[3] = {0.0};
     int     Num_validation=0;
+    int     ValidateData_maxloop  = 100;
 
 protected:
 
@@ -560,7 +561,7 @@ public slots:
     void        Fullworkspace_MoveRobot(void);
 
     void        Validation_datacollect(void);
-
+    void        Validation_datacollect_pushbutton(void);
 private slots:
     void       callbacks(void);
     void       updateCaption(void);

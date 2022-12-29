@@ -27,7 +27,7 @@
 
 
 **Calibration data collect
--we have two modes, one is random, one is scanning full workspace at a grid step
+-we have two modes, one is random, one is scanning full workspace at a grid step, called sequence
 ------------before run the programe
 - Manually move robot roughly to the init position
 - manually set motion range of robot in mainwindow.h, currently it is [-0.08,0.08], [-0.08,0.08], [0.06, 0.15] //unit: meter, origin is set on xy plane center of the table
@@ -46,13 +46,21 @@
 
 
 **validation data collect
-- set maximun data loop in Callback
+- set maximun data loop in Callback, use cotinuose collect mode, or set maxdataset # in GUI
 - init robot
 - set robot to init pose
 - Set Franka EE_offset on GUI!!!!!!!!!!
 - set filename
 - enable DAQ
-- run "Validation_DataCollect"
+- check "Validation_DataCollect" or click "Collect"
+
+
+
+***Coil model calibrate
+- update dataset file name in MainWindows.cpp -> CalibrateCoiltable()
+- update initial yaml file in MainWindows.cpp -> CalibrateCoiltable()
+- change model file save name in MainWindows.cpp -> CalibrateCoiltable()
+- run program and click Clibratecoiltable button
 
 
 **DNN predict

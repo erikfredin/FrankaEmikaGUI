@@ -1,0 +1,28 @@
+Coil_0:
+  Source_List:
+    - Src_0
+  Src_0:
+    A_Coeff: ~
+    B_Coeff:
+      - 1.725153956374665e-05
+    Source_Position:
+      - -2.307018975517218e-06
+      - -0.131488763254908
+      - -0.1894715826663148
+    Source_Direction:
+      - -1.555336279226524e-05
+      - 1.791563849519843e-05
+      - 0.9999999999279027
+Coil_List:
+  - Coil_0
+System_Name: CoiltableModel_Dec_2022_coil2
+Workspace_Dimensions:
+  -
+    - -0.08
+    - 0.08
+  -
+    - -0.08
+    - 0.08
+  -
+    - 0.03
+    - 0.12

@@ -797,7 +797,7 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>280</y>
+        <y>270</y>
         <width>101</width>
         <height>41</height>
        </rect>
@@ -1069,14 +1069,92 @@
      <widget class="QCheckBox" name="checkBox_validation_datacollect">
       <property name="geometry">
        <rect>
-        <x>150</x>
-        <y>280</y>
+        <x>340</x>
+        <y>270</y>
         <width>131</width>
         <height>31</height>
        </rect>
       </property>
       <property name="text">
        <string>Validation Datacollect </string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_Validata_data_collect">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>280</y>
+        <width>71</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Collect</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_Validate_data_num">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>290</y>
+        <width>51</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>100</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>270</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>dataset #</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_8">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>240</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string> Get coil model offline</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_11">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>240</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Collect validation data</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_12">
+      <property name="geometry">
+       <rect>
+        <x>330</x>
+        <y>240</y>
+        <width>171</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Collect validation data continueosly</string>
       </property>
      </widget>
     </widget>

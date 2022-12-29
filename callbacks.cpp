@@ -716,11 +716,12 @@ void MainWindow::callbacks(void)
 
     if(ValidationDataCollect_Random )
     {
-        int maxloop  = 60;
-        if(Num_validation<maxloop)
+        if(Num_validation<ValidateData_maxloop)
         {
+            std::cout<<std::endl;
+            std::cout<<"random collect num is "<<Num_validation <<std::endl;
             // get random B field Bx, By, Bz, in the range of [-10,10]
-            double max_B_random = 15.0; //unit: mT
+            double max_B_random = 12.0; //unit: mT
             // get random P position Px, Py, Pz in the range of [-80,80], [-80,80], [30,120]
             double B_random[3] = {0.0}; //unit: T
             double P_random[3] = {0.0};
@@ -728,15 +729,15 @@ void MainWindow::callbacks(void)
             // and is used to generate a random number, which is placed here for local use
             std::random_device dev;
             std::mt19937 rng(dev());
-            std::uniform_int_distribution<std::mt19937::result_type> dist_B(0,max_B_random*2); // distribution in range [a, b]
+            std::uniform_int_distribution<std::mt19937::result_type> dist_B(0,max_B_random*2); // distribution in range [a, b], unit: mT
             //
             for (int i = 0; i < 3; i++)
             {
 
-                  B_random[i] =  (dist_B(rng)-max_B_random)*0.001; //generate random current in the range of [-maxCurrent, maxcurrent]
+                  B_random[i] =  (dist_B(rng)-max_B_random)*0.001; //generate random field in the range of [-maxB, maxB], unit: T
             }
 
-            std::cout<< "command field B is: "<<B_random[0]<<", "<<B_random[1]<<", "<<B_random[2]<<std::endl;
+//            std::cout<< "command field B is: "<<B_random[0]*1000.0<<", "<<B_random[1]*1000.0<<", "<<B_random[2]*1000.0 <<"mT"<<std::endl;
 
             //unit: meter - cm, this random function only generates integers
             std::random_device dev1;
@@ -772,10 +773,11 @@ void MainWindow::callbacks(void)
             double abs_robotpos[3] = {pos_robot(0), pos_robot(1), pos_robot(2)};
 
             // run robot
-//            FrankaAbscartmotion( abs_robotpos);
+            FrankaAbscartmotion( abs_robotpos);
             //read robot status
-//            ReadFrankaPoseStatus();
+            ReadFrankaPoseStatus(); //update robot tip position and orientation
 
+            std::cout<< "Field command is: "<<B_random[0]*1000.0<<", "<<B_random[1]*1000.0<<", "<<B_random[2]*1000.0 <<"mT"<<std::endl;
             if (DAQ.isEnabled())
             {
                 // Read analog inputs from the DAQ by reading values and passing by ref.
@@ -789,19 +791,21 @@ void MainWindow::callbacks(void)
             //update Field_command_validation and P_command for logging
             for(int k=0; k<3; k++)
             {
-                Field_command_validation[k] = B_random[k]*1000; //from T to mT
+                Field_command_validation[k] = B_random[k]*1000.0; //from T to mT
                 robotposcmd[k] = P_random[k];
             }
 
         // record
             MainWindow::Record();
 
-            std::cout<<"random collect num is "<<Num_validation <<std::endl;
             Num_validation++;
 
         }
         else
+        {
             std::cout<<"random collect is done! " <<std::endl;
+            ValidationDataCollect_Random = false;
+        }
 
     }
 

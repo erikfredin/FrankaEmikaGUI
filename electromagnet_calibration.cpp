@@ -654,8 +654,8 @@ void ElectromagnetCalibration::calibrate(std::string calibrationName, const std:
         minRadIsActive = true;
     else
         minRadIsActive = false;
-//    nConst = 2; //whether this should be 1?
-    nConst = 3; //whether this should be 1?
+    nConst = 2; //originally is 2 whether this should be 1?
+//    nConst = 3; //whether this should be 1?
 
     posWeight = 1;
 
@@ -755,12 +755,9 @@ void ElectromagnetCalibration::calibrate(std::string calibrationName, const std:
 //            rMaxSq = 0.999 * std::pow(maximumSourceToCenterDistance,2);
             rMaxSq =  std::pow(maximumSourceToCenterDistance,2);
         }
-        std::cout<<"Crash not here 1!!!!"<<std::endl;
         assert(("Electromagnet_Calibration::calibrate: The minimum source to center distance is greator than the maximum allowable source to center distance.", rMaxSq >= rMinSq || constraint == UNIT_HEADING_ONLY ));
-        std::cout<<"Crash not here 2!!!!"<<std::endl;
         // initialize coefficients with linear least squares
         linearLeastSquareCoeffFit(dataList);
-        std::cout<<"Crash not here 3!!!!"<<std::endl;
 
         // preallocate vectors and matricies for solution
         Eigen::MatrixXd J;
@@ -775,8 +772,6 @@ void ElectromagnetCalibration::calibrate(std::string calibrationName, const std:
         E.setZero(0);
 
 
-        std::cout<<"Crash not here 4!!!!"<<std::endl;
-
         // initialize PHI leave all Lambda's Initialized to Zero
         Eigen::VectorXd states(numberOfParameters), states_last(numberOfParameters), delta_States(numberOfParameters), delta_States_last(numberOfParameters), error_this(numberOfMeasurements*3+numberOfConstraints), delta_error(numberOfMeasurements*3+numberOfConstraints);
         Eigen::VectorXd deltaErrExp(numberOfMeasurements*3+numberOfConstraints);
@@ -790,19 +785,14 @@ void ElectromagnetCalibration::calibrate(std::string calibrationName, const std:
         obtainPHI(states);
         states_last = states;
 
-        std::cout<<"Crash not here 5!!!!"<<std::endl;
-
         delta_States.setZero(numberOfParameters);
         delta_States_last.setZero(numberOfParameters);
 
-        std::cout<<"Crash not here 6!!!!"<<std::endl;
 
         packError(error_this, dataList);
-        std::cout<<"Crash not here 7!!!!"<<std::endl;
         delta_error.setZero(error_this.rows(),error_this.cols());
         error_last = error_this;
 
-        std::cout<<"Crash not here 8!!!!"<<std::endl;
 
         rmsError_this = std::sqrt(error_this.squaredNorm()/error_this.rows());
         rmsError_last = rmsError_this;

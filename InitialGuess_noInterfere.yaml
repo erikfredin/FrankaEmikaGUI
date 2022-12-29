@@ -1,0 +1,118 @@
+System_Name: 'Electromagnet System'
+Workspace_Dimensions:
+- [-0.08, 0.08]
+- [-0.08, 0.08]
+- [ 0.03, 0.12]
+Coil_List: [Coil_1, Coil_2, Coil_3, Coil_4, Coil_5, Coil_6, Coil_7, Coil_8]
+Coil_1:
+  Source_List: [Src_1]
+  Src_1:
+    A_Coeff: []
+    B_Coeff:
+    - [1]
+    Source_Position:
+    - [-0.2029]
+    - [-0.2029]
+    - [-0.1895]
+    Source_Direction:
+    - [0.0]
+    - [0.0]
+    - [1.0]
+Coil_2:
+  Source_List: [Src_1]
+  Src_1:
+    A_Coeff: []
+    B_Coeff:
+    - [1]
+    Source_Position:
+    - [0.0]
+    - [-0.1315]
+    - [-0.1895]
+    Source_Direction:
+    - [0.0]
+    - [0.0]
+    - [1.0]
+Coil_3:
+  Source_List: [Src_1]
+  Src_1:
+    A_Coeff: []
+    B_Coeff:
+    - [1]
+    Source_Position:
+    - [0.2029]
+    - [-0.2029]
+    - [-0.1895]
+    Source_Direction:
+    - [0.0]
+    - [0.0]
+    - [1.0]
+Coil_4:
+  Source_List: [Src_1]
+  Src_1:
+    A_Coeff: []
+    B_Coeff:
+    - [1]
+    Source_Position:
+    - [0.1315]
+    - [0.0]
+    - [-0.1895]
+    Source_Direction:
+    - [0.0]
+    - [0.0]
+    - [1.0]
+Coil_5:
+  Source_List: [Src_1]
+  Src_1:
+    A_Coeff: []
+    B_Coeff:
+    - [1]
+    Source_Position:
+    - [-0.1315]
+    - [0.0]
+    - [-0.1895]
+    Source_Direction:
+    - [0.0]
+    - [0.0]
+    - [1.0]
+Coil_6:
+  Source_List: [Src_1]
+  Src_1:
+    A_Coeff: []
+    B_Coeff:
+    - [1]
+    Source_Position:
+    - [0.2029]
+    - [0.2029]
+    - [-0.1895]
+    Source_Direction:
+    - [0.0]
+    - [0.0]
+    - [1.0]
+Coil_7:
+  Source_List: [Src_1]
+  Src_1:
+    A_Coeff: []
+    B_Coeff:
+    - [1]
+    Source_Position:
+    - [0.0]
+    - [0.1315]
+    - [-0.1895]
+    Source_Direction:
+    - [0.0]
+    - [0.0]
+    - [1.0]
+Coil_8:
+  Source_List: [Src_1]
+  Src_1:
+    A_Coeff: []
+    B_Coeff:
+    - [1]
+    Source_Position:
+    - [-0.2029]
+    - [0.2029]
+    - [-0.1895]
+    Source_Direction:
+    - [0.0]
+    - [0.0]
+    - [1.0] 
