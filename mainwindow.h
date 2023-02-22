@@ -86,6 +86,11 @@
 #include <vector>
 #include <sstream>
 
+
+#include <WinSock2.h>
+#include <QUdpSocket>
+#include  <QtEndian>
+
 using namespace std;
 
 // These are defined in the S826api header internally. Left here for reference
@@ -133,6 +138,10 @@ using namespace std;
 #define NEG_AIN15_PIN   35
 #define POS_AIN15_PIN   36
 
+#define BUFLEN (512)				// Max length of UDP messages
+#define SERVER_PORT 65432			// The port on which the server listens for incoming data
+#define US_PORT 23456
+
 //#define _USE_MATH_DEFINES
 //#include <cmath>
 
@@ -160,7 +169,7 @@ public:
 
 
     // set Franka robot controller ip address here
-    std::string fci_ip = "192.168.100.2";
+    std::string fci_ip = "192.168.100.10";
 
 //    bool isRobotConnected = false;
 //    Eigen::Vector3d position_d;
@@ -169,7 +178,7 @@ public:
     Eigen::Vector3d robottip_eulerAngles;
     Eigen::Vector3d robottip_position;
 
-    double Robot_tip_posisition[3] = {0.0, 0.0, 0.0};
+    double Robot_tip_position[3] = {0.0, 0.0, 0.0};
     double Robot_orient[3] = {0.0, 0.0, 0.0};
     double Robot_joint[7] = { 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0};
 
@@ -234,8 +243,8 @@ public:
     GamepadMonitor connectedGamepad; // Gamepad monitor for the connected game controller (Use Xbox)
 
     /// PLOTTING AND CALLBACKS TIMERS
-    const int captionRefreshPeriod = 10; // 20 ms correlates to 50 Hz
-    const int callbackRefreshPeriod = 10; // 20 ms correlates to 50 Hz
+    const int captionRefreshPeriod = 40; // 20 ms correlates to 50 Hz
+    const int callbackRefreshPeriod = 20; // 20 ms correlates to 50 Hz
 
     /// S826 BOARD FOR CONTROL
     S826 s826;
@@ -301,8 +310,8 @@ public:
 //    const double currentControlAdj[numAct] = {0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2}; // [V/A] Max 5V for 25 A Output (OLD ESTIMATES)
     const double currentControlAdj[numAct] = {1.0/6.7501, 1.0/6.6705, 1.0/6.4118, 1.0/6.7818, 1.0/6.7703, 1.0/6.7703, 1.0/6.7107, 1.0/6.8500}; // [V/A] Max Command signal for 24 A Output shown above
 //    const double currentSenseAdj[numAct] = {8.05, 8.05, 8.05, 8.05, 8.05, 8.05, 8.05, 8.05}; // [A/V] (OLD ESTIMATES)
-    const double currentSenseAdj[numAct] = {6.7501, 6.6705, 6.4118, 3.8831, 6.7703, 6.7703, 6.7107, 6.8500}; // [A/V] (OLD ESTIMATES)
-//    const double currentSenseAdj[numAct] = {1.0/0.6338, 1.0/0.6516, 1.0/0.6791, 1.0/0.64, 1.0/0.6422, 1.0/0.6395, 1.0/0.6341, 1.0/0.6392}; // [A/V] (NEW ESTIMATES) (NOTE EM7 is not calibrated)
+//    const double currentSenseAdj[numAct] = {6.7501, 6.6705, 6.4118, 3.8831, 6.7703, 6.7703, 6.7107, 6.8500}; // [A/V] (OLD ESTIMATES)
+    const double currentSenseAdj[numAct] = {1.0/0.6338, 1.0/0.6516, 1.0/0.6791, 1.0/0.64, 1.0/0.6422, 1.0/0.6395, 1.0/0.6341, 1.0/0.6392}; // [A/V] (NEW ESTIMATES) (NOTE EM7 is not calibrated)
     const double temperatureSenseAdj[numAct] = {20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0}; // [deg C/V]
 
  //    const double ATINanoVoltageOffsets[6] = {-1.26987250,	3.78201850,	2.1132725,	2.020594,	-0.4165031,	-0.75069465}; // just magnet experiments
@@ -322,6 +331,7 @@ public:
 //    double B_Global_Desired_Input[8] = {0.0};
     double B_Global_Output[numField+numGrad]  = {0.0}; // [T] theoretical field values based on measured currents
     double measuredCurrents[numAct]     = {0.0}; // [A] read from amplifiers
+    double  measuredCurrents_feed[numAct] = {0.0};
     double measuredTemperatures[numAct] = {0.0}; // [C] thermocouple feedback readings converted to deg C
     double inputAnalogVoltages[16] = {0.0}; // [V] feedback voltage values. Contains both coil current monitor and thermocouples voltages
     double ATINanoForceTorque[6] = {0.0}; //
@@ -350,18 +360,20 @@ public:
 //    QThread *thread = new QThread;
 
     bool            isRobotStreaming = false;
+    bool            currentStreaming = false;
 
     void            robotfreedraginthread(void);
 
     // initial variable for registration between robot and coil table
 //    Eigen::MatrixXd     Ac;
-    const static int        registerdataNum = 9;
+    const static int        registerdataNum = 25;
     double     robotdata[4][registerdataNum]; //size=4*9
     //cooornates of nut center 1,2,3,4,5,6,7,8,0
-    double     tabledata[4][registerdataNum] = {  {-202.94*0.001,   -131.52*0.001,   -202.94*0.001,     0.0,            0.0,              202.94*0.001,     131.52*0.001,     202.94*0.001,     0.0},
-                                                  {-202.94*0.001,    0.0,            202.94*0.001,      -131.52*0.001,  131.52*0.001,     -202.94*0.001,     0.0,             202.94*0.001,     0.0},
-                                                  {0.0,             6.5*0.001,       14.7*0.001,        8.8*0.001,       10.3*0.001,        17.4*0.001,       20.9*0.001,      12.6*0.001,     85.3*0.001},
-                                                  {1.0,             1.0,                1.0,            1.0,            1.0,                1.0,              1.0,             1.0,           1.0}};
+    double     tabledata[4][registerdataNum];
+//    double     tabledata[4][registerdataNum] = {  {-202.94*0.001,   -131.52*0.001,   -202.94*0.001,     0.0,            0.0,              202.94*0.001,     131.52*0.001,     202.94*0.001,     0.0},
+//                                                  {-202.94*0.001,    0.0,            202.94*0.001,      -131.52*0.001,  131.52*0.001,     -202.94*0.001,     0.0,             202.94*0.001,     0.0},
+//                                                  {0.0,             6.5*0.001,       14.7*0.001,        8.8*0.001,       10.3*0.001,        17.4*0.001,       20.9*0.001,      12.6*0.001,     85.3*0.001},
+//                                                  {1.0,             1.0,                1.0,            1.0,            1.0,                1.0,              1.0,             1.0,           1.0}};
 
     Eigen::Matrix4d     transT2R;
 
@@ -452,7 +464,7 @@ public:
                                          {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0, -10.0},
                                          {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
                                          {  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,  10.0}};*/
-        double     CurrentPool[2][8] = {{   0.0, 0.0, 0.0,  0.0,  0.0,   0.0,  0.0, 0.0 },
+        double     CurrentPool[2][8] = {{   -15.0,  0.0, 0.0,  0.0,  0.0,   0.0,  0.0, 0.0 },
                                         {   0.0,  0.0, 0.0,  0.0,  0.0,   0.0,  0.0, 0.0}};
 
     std::array<double, 16> current_EEpose;
@@ -468,7 +480,11 @@ public:
 
     void    FrankaAbscartmotion(double abs_robotpos[3]);
     void    FrankaAbsOrientmotion(Eigen::Matrix3d abs_robotOrient);
+    void    FrankaAbsOrientmotion_stepsolution(Eigen::Matrix3d abs_robotOrient);
+    void    FrankaAbsOrientmotion_test(Eigen::Matrix3d abs_robotOrient);
     void    ReadFrankaPoseStatus(void);
+    void    FrankaRelativecartmotion(double relative_robotpos[3]);
+    std::array<double, 3>  RotMat2EulerAngle(Eigen::Matrix3d RotMat);
 
     vector<vector<double>>    readCSVfile(string filename);
 
@@ -481,6 +497,43 @@ public:
     double  Field_command_validation[3] = {0.0};
     int     Num_validation=0;
     int     ValidateData_maxloop  = 100;
+
+
+    bool UDPflag = false;
+
+    void udpreceive(void);
+    void udpintialize(void);
+
+    struct udp_data{
+        double LeftDesiredPosition[3];
+        struct Stylus{
+            double Gimbal[3];
+            bool GreyButton;
+            bool WhiteButton;
+        }LeftHaptic;
+    }m_Outputs;
+
+    std::array<double, 8>      GenerateRandomCurrent(void);
+    std::array<double, 8>      randCurrent = {0.0};
+
+    bool                    capsuleOutplane = false;
+    bool                    capsuleInplane = false;
+    Eigen::Vector3d         USimage_pos;
+    double                  USrobotVelticalMove = 0.0;
+    bool                    USrobotUpward = true;
+    bool                    USrobotDownward = false;
+    bool                    USrobotLeftward = true;
+    bool                    USrobotRightward = false;
+    Eigen::Matrix4d         transUS2EE;
+    const double UStomm_scale = 20.0/172.4;
+    Eigen::Matrix<double, 6, 6> calculateAdjointVelMatrix(Eigen::Affine3d initial_transform);
+//    Eigen::MatrixXd A(3, 2);
+
+    int             OutPlaneCount = 0;
+    int             InPlaneCount = 0;
+    quint16     senderPort;
+    QString  senderIP;
+
 
 protected:
 
@@ -508,6 +561,8 @@ protected:
 
 
 
+
+
 private:
     Ui::MainWindow *ui;
 
@@ -516,7 +571,8 @@ private:
 
 
 
-
+    QUdpSocket *socket = nullptr;
+    QUdpSocket *socket_send = nullptr;
 
 public slots:
     void        experimental_control(void);
@@ -537,6 +593,7 @@ public slots:
     void        frankathreadcontrol(void);
 //    void        frankathreadquit(void);
     void        robotstreaming(void);
+    void        currentfeedback(void);
     void        pilotthreadon(void);
     void        pilotthreadoff(void);
     void        robotrecovery(void);
@@ -557,11 +614,16 @@ public slots:
     void        enableController(void);
     void        setFrankaguidingmode(void);
     void        initialProbeOrient(void);
+    void        initialProbeOrient_test(void);
     void        CalibrateCoiltable(void);
     void        Fullworkspace_MoveRobot(void);
+    void        FrankaOrientAdjust(void);
 
     void        Validation_datacollect(void);
     void        Validation_datacollect_pushbutton(void);
+    void        UpdateCurrent_fromGUI(void);
+    void        enableUDP(void);
+
 private slots:
     void       callbacks(void);
     void       updateCaption(void);
@@ -574,6 +636,7 @@ private slots:
     void       calibratesetflagoff(void);
     void       calibratesetflag_sequence(void);
     void       calibratesetflagoff_sequence(void);
+    void        processPendingDatagrams();
 
 };
 #endif // MAINWINDOW_H

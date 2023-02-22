@@ -35,13 +35,15 @@ void MainWindow::callbacks(void)
 
 
         //default unit is meter and rad, so we keep that
-        Robot_tip_posisition[0] = position_d[0];
-        Robot_tip_posisition[1] = position_d[1];
-        Robot_tip_posisition[2] = position_d[2];
+        Robot_tip_position[0] = position_d[0];
+        Robot_tip_position[1] = position_d[1];
+        Robot_tip_position[2] = position_d[2];
 
         Robot_orient[0] = eulerangle[0];
         Robot_orient[1] = eulerangle[1];
         Robot_orient[2] = eulerangle[2];
+
+        current_EEpose = initial_state.O_T_EE;
 
         for(int i=0; i<7; i++){
             Robot_joint[i] = initial_state.q.data()[i];
@@ -74,6 +76,10 @@ void MainWindow::callbacks(void)
         // AIN8 - AIN15 THERMOCOUPLE SENSE FROM EM0 - EM7, respectively
         measuredCurrents[t] = inputAnalogVoltages[t]*currentSenseAdj[t]; // [A] read from amplifiers
         measuredTemperatures[t] = inputAnalogVoltages[t+8]*temperatureSenseAdj[t]; // [deg C] read from thermocouples
+        if(currentStreaming)
+        {
+            measuredCurrents_feed[t] = measuredCurrents[t];
+        }
         // Check that the temperature in any core is not above the max value
       /* if (measuredTemperatures[t] > maxAllowableTemp)
         {
@@ -89,6 +95,7 @@ void MainWindow::callbacks(void)
             // at the end of callbacks, re-evaluate the temperatures.
         }*/
     }
+//     std::cout<<"mrd current: "<<measuredCurrents[7]<<" "<<std::endl;
 //    std::cout<<"mrd current: "<<measuredCurrents[0]<<" "<<measuredCurrents[1]<<" "<<measuredCurrents[2]<<" "<<measuredCurrents[3]<<" "<<measuredCurrents[4]<<" "<<measuredCurrents[5]<<" "<<measuredCurrents[6]<<" "<<measuredCurrents[7]<<std::endl;
 //    std::cout<<"mrd tempera: "<<measuredTemperatures[0]<<" "<<measuredTemperatures[1]<<" "<<measuredTemperatures[2]<<" "<<measuredTemperatures[3]<<" "<<measuredTemperatures[4]<<" "<<measuredTemperatures[5]<<" "<<measuredTemperatures[6]<<" "<<measuredTemperatures[7]<<std::endl;
 
@@ -99,8 +106,8 @@ void MainWindow::callbacks(void)
         // Read analog inputs from the DAQ by reading values and passing by ref.
         DAQ.dataAcquisition8(DAQ.analogInputVoltages);
         DAQ.dataAcquisition8(DAQ.analogRawInputVoltages); //record the raw data without any change
-//        std::cout<<std::endl <<"Daq reading is: "<<DAQ.analogRawInputVoltages[0]<<" "<<DAQ.analogRawInputVoltages[1]<<" "<<DAQ.analogRawInputVoltages[2]<<std::endl;
-//        std::cout<<"Field calculation is: "<<DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0]<<" "<<DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1]<<" "<<DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2]<<std::endl;
+        std::cout<<std::endl <<"Daq reading is: "<<DAQ.analogRawInputVoltages[0]<<" "<<DAQ.analogRawInputVoltages[1]<<" "<<DAQ.analogRawInputVoltages[2]<<std::endl;
+        std::cout<<"Field measurement is: "<<DAQ.analogRawInputVoltages[0]*gaussCalibCons_new[0]<<" "<<DAQ.analogRawInputVoltages[1]*gaussCalibCons_new[1]<<" "<<DAQ.analogRawInputVoltages[2]*gaussCalibCons_new[2]<<std::endl;
 
 //        DAQ.dataAcquisition();
         //Get Forces and torques from values
@@ -258,9 +265,9 @@ void MainWindow::callbacks(void)
                               current_EEpose = robot_state.O_T_EE; //not sure whether should use _d
 
                               //default unit is meter and rad, so we keep that
-                              Robot_tip_posisition[0] = current_EEpose[12];
-                              Robot_tip_posisition[1] = current_EEpose[13];
-                              Robot_tip_posisition[2] = current_EEpose[14];
+                              Robot_tip_position[0] = current_EEpose[12];
+                              Robot_tip_position[1] = current_EEpose[13];
+                              Robot_tip_position[2] = current_EEpose[14];
 
 //                              qInfo() << "command position in robot frame is: "<<abs_robotpos[0]<<", "<<abs_robotpos[1]<<", "<<abs_robotpos[2];
 //                              qInfo() << "current robot position is: "<<current_pose[12]<<", "<<current_pose[13]<<", "<<current_pose[14];
@@ -342,9 +349,9 @@ void MainWindow::callbacks(void)
                         Eigen::Map<Eigen::Matrix<double, 7, 1>> initial_tau_measured(initial_state.tau_J.data());
 
                         //default unit is meter and rad, so we keep that
-                        Robot_tip_posisition[0] = position_d[0];
-                        Robot_tip_posisition[1] = position_d[1];
-                        Robot_tip_posisition[2] = position_d[2];
+                        Robot_tip_position[0] = position_d[0];
+                        Robot_tip_position[1] = position_d[1];
+                        Robot_tip_position[2] = position_d[2];
 
                         Robot_orient[0] = eulerangle[0];
                         Robot_orient[1] = eulerangle[1];
@@ -721,21 +728,21 @@ void MainWindow::callbacks(void)
             std::cout<<std::endl;
             std::cout<<"random collect num is "<<Num_validation <<std::endl;
             // get random B field Bx, By, Bz, in the range of [-10,10]
-            double max_B_random = 12.0; //unit: mT
+//            double max_B_random = 12.0; //unit: mT
             // get random P position Px, Py, Pz in the range of [-80,80], [-80,80], [30,120]
-            double B_random[3] = {0.0}; //unit: T
+//            double B_random[3] = {0.0}; //unit: T
             double P_random[3] = {0.0};
             // those code is copied from https://stackoverflow.com/questions/13445688/how-to-generate-a-random-number-in-c
             // and is used to generate a random number, which is placed here for local use
-            std::random_device dev;
-            std::mt19937 rng(dev());
-            std::uniform_int_distribution<std::mt19937::result_type> dist_B(0,max_B_random*2); // distribution in range [a, b], unit: mT
-            //
-            for (int i = 0; i < 3; i++)
-            {
+//            std::random_device dev;
+//            std::mt19937 rng(dev());
+//            std::uniform_int_distribution<std::mt19937::result_type> dist_B(0,max_B_random*2); // distribution in range [a, b], unit: mT
+//            //
+//            for (int i = 0; i < 3; i++)
+//            {
 
-                  B_random[i] =  (dist_B(rng)-max_B_random)*0.001; //generate random field in the range of [-maxB, maxB], unit: T
-            }
+//                  B_random[i] =  (dist_B(rng)-max_B_random)*0.001; //generate random field in the range of [-maxB, maxB], unit: T
+//            }
 
 //            std::cout<< "command field B is: "<<B_random[0]*1000.0<<", "<<B_random[1]*1000.0<<", "<<B_random[2]*1000.0 <<"mT"<<std::endl;
 
@@ -756,13 +763,17 @@ void MainWindow::callbacks(void)
             P_random[2] = dist_Pz(rng3)*0.01;
 
             //calculate current using Coil model
-            Eigen::Vector3d B_command;
-            B_command <<B_random[0], B_random[1], B_random[2];
+//            Eigen::Vector3d B_command;
+//            B_command <<B_random[0], B_random[1], B_random[2];
             Eigen::Vector3d P_command;
             P_command <<P_random[0], P_random[1], P_random[2];
 
             // run current
-            runCoilmodel_field(B_command, P_command);
+//            runCoilmodel_field(B_command, P_command);
+            std::array<double, 8> RandCurrentOut = GenerateRandomCurrent();
+            for(int k=0;k<8;k++)
+                cmdCoilCurrent[k] = RandCurrentOut[k];
+            updateCurrents_CalibrationOnly(cmdCoilCurrent);
 
             //move robot to P_command
             // move robot to desired position
@@ -777,7 +788,7 @@ void MainWindow::callbacks(void)
             //read robot status
             ReadFrankaPoseStatus(); //update robot tip position and orientation
 
-            std::cout<< "Field command is: "<<B_random[0]*1000.0<<", "<<B_random[1]*1000.0<<", "<<B_random[2]*1000.0 <<"mT"<<std::endl;
+//            std::cout<< "Field command is: "<<B_random[0]*1000.0<<", "<<B_random[1]*1000.0<<", "<<B_random[2]*1000.0 <<"mT"<<std::endl;
             if (DAQ.isEnabled())
             {
                 // Read analog inputs from the DAQ by reading values and passing by ref.
@@ -791,7 +802,7 @@ void MainWindow::callbacks(void)
             //update Field_command_validation and P_command for logging
             for(int k=0; k<3; k++)
             {
-                Field_command_validation[k] = B_random[k]*1000.0; //from T to mT
+//                Field_command_validation[k] = B_random[k]*1000.0; //from T to mT
                 robotposcmd[k] = P_random[k];
             }
 
@@ -806,6 +817,164 @@ void MainWindow::callbacks(void)
             std::cout<<"random collect is done! " <<std::endl;
             ValidationDataCollect_Random = false;
         }
+
+    }
+
+
+
+
+    //Receiving UDP package from CTR-- once udp received, active robot follow  control!
+    if(UDPflag == true)
+    {
+//        qDebug() << "udp mode !";
+
+//        QByteArray Data; // Message for send
+//        Data += "SAMP";
+//        socket_send->write(Data);
+//        QByteArray Data;
+//            Data.append("Hello from UDP");
+
+//        socket_send->writeDatagram(Data, QHostAddress("192.168.31.124"), US_PORT);
+
+
+
+        double USmidplane_x = 256; //unit: pixel
+//        double scale = 20/172.4;
+        double USmidplane_x_mm = USmidplane_x*UStomm_scale; //unit: mm
+//        isGradientControlled = false; //set default as false
+        processPendingDatagrams();
+
+//        connect(socket, SIGNAL(readyRead()), this, SLOT(processPendingDatagrams()),Qt::QueuedConnection);
+
+
+
+        if(capsuleOutplane) //move robot up/down to search for the capsule
+        {
+            std::cout<<"capsule out plane motion........"<<std::endl;
+            double maxSearchRange = 4*0.001; //unit:meter
+            double deltaMove = 1*0.001; //unit:meter
+            if (USrobotUpward==true)
+            {
+                if(USrobotVelticalMove<maxSearchRange)
+                {
+                    double Relativemoiton[3] = {0.0, 0.0, deltaMove};
+                    ReadFrankaPoseStatus();
+                    double abs_robotpos[3] = {Robot_tip_position[0]+Relativemoiton[0], Robot_tip_position[1]+Relativemoiton[1], Robot_tip_position[2]+Relativemoiton[2]};
+                    FrankaAbscartmotion(abs_robotpos);
+//                    FrankaRelativecartmotion(Relativemoiton);
+                    std::cerr << "robot moving Upward!!!"<<std::endl;
+                    USrobotVelticalMove = USrobotVelticalMove+deltaMove;
+                }
+                else
+                {
+                    USrobotUpward = false;
+                    USrobotDownward = true;
+                }
+            }
+
+            if (USrobotDownward==true)
+            {
+                if(USrobotVelticalMove>(-maxSearchRange))
+                {
+                    double Relativemoiton[3] = {0.0, 0.0, -deltaMove};
+                    ReadFrankaPoseStatus();
+                    double abs_robotpos[3] = {Robot_tip_position[0]+Relativemoiton[0], Robot_tip_position[1]+Relativemoiton[1], Robot_tip_position[2]+Relativemoiton[2]};
+                    FrankaAbscartmotion(abs_robotpos);
+//                    FrankaRelativecartmotion(Relativemoiton);
+                    std::cerr << "robot moving Downward!!!"<<std::endl;
+                    USrobotVelticalMove = USrobotVelticalMove-deltaMove;
+                }
+                else
+                {
+                    USrobotUpward = true;
+                    USrobotDownward = false;
+                }
+            }
+
+        }
+
+        if(capsuleInplane)
+        {
+            std::cout << "Capsule in plane motion...... "<<std::endl;
+            USrobotVelticalMove = 0.0;
+            USrobotUpward = true;
+            USrobotDownward = false;
+            //control robot to desired inplane position
+            //------------ use absolute control----------------
+            //convert Image frame to Robot frame
+
+            franka::Robot robot(fci_ip);
+            //read franka robot pose
+            franka::RobotState initial_state = robot.readOnce();
+            // EE in base frame, 4x4 matrix: initial_state.O_T_EE.data();
+            Eigen::Matrix4d FK_robot = Eigen::Matrix4d::Map(initial_state.O_T_EE.data());
+
+            std::cout << "Capsule position in image (mm) is: "<<std::endl<<USimage_pos <<std::endl;
+            Eigen::Vector4d USimageCenter(USmidplane_x_mm,USimage_pos(1),0.0, 1.0);
+//            Eigen::Vector4d USimageCenter(USimage_pos(1),USmidplane_x_mm,0.0, 1.0); //swap x and y at US image
+            Eigen::Vector4d USimageCenter_robot = FK_robot*transUS2EE*USimageCenter;
+            std::cout << "Image center position in image (mm) is: "<<std::endl<<USimageCenter <<std::endl;
+
+            Eigen::Vector4d UScapsule_cmd(USimage_pos[0], USimage_pos[1], USimage_pos[2], 1.0);
+//            Eigen::Vector4d UScapsule_cmd(USimage_pos[1], USimage_pos[0], USimage_pos[2], 1.0); //swap x and y at US image
+            Eigen::Vector4d UScapsule_robot = FK_robot*transUS2EE*UScapsule_cmd;
+
+//            std::cout << "Image center position in Robot (mm) is: "<<std::endl<<USimageCenter_robot <<std::endl;
+//            std::cout << "Capsule position in Robot (mm) is: "<<std::endl<<UScapsule_robot <<std::endl;
+
+            //read current robot EE position
+            ReadFrankaPoseStatus();
+//            double deltamotion[3] = {UScapsule_robot(0)-USimageCenter_robot(0), UScapsule_robot(1)-USimageCenter_robot(1),UScapsule_robot(2)-USimageCenter_robot(2)};
+
+            //we use relative EE increasement instead of Image increasement, Y-axis of EE is for the US probe moving left and right
+
+//            Eigen::Vector4d capsule_EE(0.0, USimage_pos(0)-USimageCenter(0),0.0,1.0);
+//            Eigen::Vector4d capsule_Robot = FK_robot*capsule_EE;
+
+//            double abs_robotpos[3] = {capsule_Robot[0], capsule_Robot[1], capsule_Robot[2]};
+//            std::cerr << "robot moving in plane!!! delta in EE::"<<capsule_EE[0]<<", "<<capsule_EE[1]<<", "<<capsule_EE[2] << std::endl;
+
+            //we use relative Global increasement instead of Image increasement, X-axis of Global is for the US probe moving left and right
+
+//            double delta_image[3] = {-(USimage_pos(0)-USimageCenter(0)), -(USimage_pos(1)-USimageCenter(1)),-(USimage_pos(2)-USimageCenter(2))};
+            double delta_image[3] = {-(USimage_pos(0)-USimageCenter(0))*0.001, 0.0, 0.0};
+            double abs_robotpos[3] = {Robot_tip_position[0]+delta_image[0], Robot_tip_position[1]+delta_image[1], Robot_tip_position[2]+delta_image[2]};
+            std::cerr << "robot moving in plane!!! delta in image (m)::"<<delta_image[0]<<", "<<delta_image[1]<<", "<<delta_image[2] << std::endl;
+
+
+            FrankaAbscartmotion(abs_robotpos);
+
+//             std::cout << "Current position in image (pixel) is: "<<USimage_pos <<std::endl;
+//             double delta_x = USimage_pos[0] - USmidplane_x;
+
+            //-------use relative control --------
+           /* franka::Robot robot(fci_ip);
+            //read franka robot pose
+            franka::RobotState initial_state = robot.readOnce();
+            // EE in base frame, 4x4 matrix: initial_state.O_T_EE.data();
+            Eigen::Affine3d initial_transform(Eigen::Matrix4d::Map(initial_state.O_T_EE.data()));
+            Eigen::Matrix<double, 6, 6> AdjointVel = calculateAdjointVelMatrix(initial_transform);
+            // obtain moving direction
+            */
+
+
+        }
+
+
+        QByteArray Data;
+        Data.append("MotionCompleted");
+
+
+
+    //        socket->write(Data);
+
+        socket_send->writeDatagram(Data, QHostAddress("192.168.31.124"), US_PORT);
+//        std::cout<<"ready to send response!"<<std::endl;
+//        socket_send->writeDatagram(Data, QHostAddress(senderIP), senderPort);
+//        std::cout<<"Sent response to IP: "<< senderIP.toStdString() <<" senderPort: "<< senderPort <<std::endl;
+
+//        std::cout<<"Sent response to US computer" <<std::endl;
+
 
     }
 

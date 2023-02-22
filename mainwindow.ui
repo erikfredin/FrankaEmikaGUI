@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="pushButton_experimental_control">
     <property name="geometry">
      <rect>
-      <x>260</x>
+      <x>240</x>
       <y>300</y>
       <width>91</width>
       <height>41</height>
@@ -171,7 +171,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0.00</string>
+     <string>0.0</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_EE_z">
@@ -619,7 +619,7 @@
    <widget class="QPushButton" name="pushButton_initializerobot">
     <property name="geometry">
      <rect>
-      <x>380</x>
+      <x>340</x>
       <y>300</y>
       <width>101</width>
       <height>41</height>
@@ -633,7 +633,7 @@
     <property name="geometry">
      <rect>
       <x>450</x>
-      <y>240</y>
+      <y>300</y>
       <width>91</width>
       <height>41</height>
      </rect>
@@ -717,7 +717,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
@@ -1024,20 +1024,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>Manual control</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_6">
-      <property name="geometry">
-       <rect>
-        <x>210</x>
-        <y>30</y>
-        <width>231</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Workspace: x [-80,80], y [-80,80], z [30,120]</string>
+       <string>  Field control</string>
       </property>
      </widget>
      <widget class="QPushButton" name="pushButton_Fullworkspace_run">
@@ -1056,8 +1043,8 @@
      <widget class="QPushButton" name="pushButton_Fullworkspace_MoveRobot">
       <property name="geometry">
        <rect>
-        <x>121</x>
-        <y>142</y>
+        <x>130</x>
+        <y>140</y>
         <width>91</width>
         <height>31</height>
        </rect>
@@ -1155,6 +1142,19 @@
       </property>
       <property name="text">
        <string>Collect validation data continueosly</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_6">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>20</y>
+        <width>231</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Workspace: x [-80,80], y [-80,80], z [30,120]</string>
       </property>
      </widget>
     </widget>
@@ -1598,6 +1598,340 @@
       </layout>
      </widget>
     </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Current Control</string>
+     </attribute>
+     <widget class="QWidget" name="horizontalLayoutWidget_7">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>508</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_8">
+       <item>
+        <widget class="QLineEdit" name="lineEdit_CurrentCmd_1">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_CurrentCmd_2">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_CurrentCmd_3">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_CurrentCmd_4">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_CurrentCmd_5">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_CurrentCmd_6">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_CurrentCmd_7">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_CurrentCmd_8">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="horizontalLayoutWidget_8">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>511</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <item>
+        <widget class="QLabel" name="label_robot_px_4">
+         <property name="text">
+          <string>Coil_1</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_6">
+         <property name="text">
+          <string>Coil_2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_7">
+         <property name="text">
+          <string>Coil_3</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_8">
+         <property name="text">
+          <string>Coil_4</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_10">
+         <property name="text">
+          <string>Coil_5</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_9">
+         <property name="text">
+          <string>Coil_6</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_11">
+         <property name="text">
+          <string>Coil_7</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_12">
+         <property name="text">
+          <string>Coil_8</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QPushButton" name="pushButton_updateCurrent">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>90</y>
+        <width>121</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Update Coil Currents</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="horizontalLayoutWidget_9">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>501</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <item>
+        <widget class="QLabel" name="label_current1_1">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_current1_2">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_current1_3">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_current1_4">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_current1_5">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_current1_6">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_current1_7">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_current1_8">
+         <property name="text">
+          <string>0.0</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="horizontalLayoutWidget_10">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>170</y>
+        <width>501</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_10">
+       <item>
+        <widget class="QLabel" name="label_robot_px_13">
+         <property name="text">
+          <string>Coil_1</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_14">
+         <property name="text">
+          <string>Coil_2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_15">
+         <property name="text">
+          <string>Coil_3</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_16">
+         <property name="text">
+          <string>Coil_4</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_17">
+         <property name="text">
+          <string>Coil_5</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_18">
+         <property name="text">
+          <string>Coil_6</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_19">
+         <property name="text">
+          <string>Coil_7</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_robot_px_20">
+         <property name="text">
+          <string>Coil_8</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QLabel" name="label_robot_px_22">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>101</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Command current</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_currentfeedback">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>150</y>
+        <width>151</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Feedback current</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Ultrasound</string>
+     </attribute>
+     <widget class="QCheckBox" name="checkBox_udpmode">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>40</y>
+        <width>101</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>UDP message</string>
+      </property>
+     </widget>
+    </widget>
    </widget>
    <widget class="Line" name="line_4">
     <property name="geometry">
@@ -1636,6 +1970,84 @@
     </property>
     <property name="text">
      <string>Clear Currents</string>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_8">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>530</y>
+      <width>191</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Rotx, Roty, Rotz (radian), eg. 0.01</string>
+    </property>
+    <widget class="QLineEdit" name="lineEdit_Robot_rotx">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0.0</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_Robot_roty">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>20</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0.0</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_Robot_rotz">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>20</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0.0</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>500</y>
+      <width>231</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Robot orientation adjust</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_robotOrient_run">
+    <property name="geometry">
+     <rect>
+      <x>580</x>
+      <y>590</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Orient Run</string>
     </property>
    </widget>
   </widget>

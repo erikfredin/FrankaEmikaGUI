@@ -1,4 +1,4 @@
-QT       += core gui gamepad
+QT       += core gui gamepad network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -6,11 +6,13 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = Franka_Emika_GUI
 TEMPLATE = app
 
+win32:DEFINES += _WINSOCKAPI_
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
+
 
 CONFIG += c++11
 #CONFIG += c++17
@@ -121,3 +123,6 @@ DEPENDPATH += C:/OpenCV-4.5.1/opencv/build/include
 LIBS += -L"C:/OpenCV-4.5.1/opencv/build/x64/vc15/bin/" \
     -lopencv_world451 \
     -lopencv_world451d
+
+LIBS += ws2_32.lib
+LIBS += -lws2_32
