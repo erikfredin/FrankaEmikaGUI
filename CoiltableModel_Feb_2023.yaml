@@ -1,0 +1,868 @@
+System_Name: CoiltableModel_Feb_2023
+Coil_List:
+  - Coil_0
+  - Coil_1
+  - Coil_2
+  - Coil_3
+  - Coil_4
+  - Coil_5
+  - Coil_6
+  - Coil_7
+Coil_0:
+  Src_3:
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0.1315
+      - 0
+      - -0.1895
+    B_Coeff:
+      - 7.497752570552742e-07
+  Src_2:
+    Source_Position:
+      - 0.2029
+      - -0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - -5.5196969658377e-07
+    A_Coeff: ~
+  Src_0:
+    B_Coeff:
+      - 1.377441683501844e-05
+    A_Coeff: ~
+    Source_Position:
+      - -0.2029
+      - -0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Source_List:
+    - Src_0
+    - Src_1
+    - Src_2
+    - Src_3
+    - Src_4
+    - Src_5
+    - Src_6
+    - Src_7
+  Src_1:
+    Source_Position:
+      - 0
+      - -0.1315
+      - -0.1895
+    A_Coeff: ~
+    B_Coeff:
+      - -2.213116221684093e-06
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_4:
+    A_Coeff: ~
+    B_Coeff:
+      - -2.428052077433138e-06
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - -0.1315
+      - 0
+      - -0.1895
+  Src_5:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - -3.078643010186088e-06
+    A_Coeff: ~
+    Source_Position:
+      - 0.2029
+      - 0.2029
+      - -0.1895
+  Src_6:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0
+      - 0.1315
+      - -0.1895
+    B_Coeff:
+      - 8.325099212545946e-07
+    A_Coeff: ~
+  Src_7:
+    B_Coeff:
+      - -8.164366616977952e-07
+    A_Coeff: ~
+    Source_Position:
+      - -0.2029
+      - 0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+Coil_1:
+  Src_0:
+    A_Coeff: ~
+    B_Coeff:
+      - -6.759039062785756e-06
+    Source_Position:
+      - -0.2029
+      - -0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Source_List:
+    - Src_0
+    - Src_1
+    - Src_2
+    - Src_3
+    - Src_4
+    - Src_5
+    - Src_6
+    - Src_7
+  Src_1:
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - 3.207943432837446e-05
+    Source_Position:
+      - 0
+      - -0.1315
+      - -0.1895
+  Src_2:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    A_Coeff: ~
+    B_Coeff:
+      - -4.75338422281804e-07
+    Source_Position:
+      - 0.2029
+      - -0.2029
+      - -0.1895
+  Src_3:
+    A_Coeff: ~
+    B_Coeff:
+      - -1.236130694434672e-05
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0.1315
+      - 0
+      - -0.1895
+  Src_4:
+    B_Coeff:
+      - -1.010219056474195e-05
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - -0.1315
+      - 0
+      - -0.1895
+  Src_5:
+    A_Coeff: ~
+    B_Coeff:
+      - 1.041202907713322e-05
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0.2029
+      - 0.2029
+      - -0.1895
+  Src_6:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0
+      - 0.1315
+      - -0.1895
+    B_Coeff:
+      - -4.595967714506637e-07
+    A_Coeff: ~
+  Src_7:
+    B_Coeff:
+      - 7.061834043047459e-06
+    A_Coeff: ~
+    Source_Position:
+      - -0.2029
+      - 0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+Coil_3:
+  Src_5:
+    Source_Position:
+      - 0.2029
+      - 0.2029
+      - -0.1895
+    B_Coeff:
+      - 2.941121330487401e-06
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Source_List:
+    - Src_0
+    - Src_1
+    - Src_2
+    - Src_3
+    - Src_4
+    - Src_5
+    - Src_6
+    - Src_7
+  Src_0:
+    A_Coeff: ~
+    Source_Position:
+      - -0.2029
+      - -0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - 6.75859580041838e-06
+  Src_1:
+    B_Coeff:
+      - -9.641584549203426e-06
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0
+      - -0.1315
+      - -0.1895
+  Src_2:
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - -6.96506947132162e-06
+    Source_Position:
+      - 0.2029
+      - -0.2029
+      - -0.1895
+  Src_3:
+    A_Coeff: ~
+    B_Coeff:
+      - 3.215997254288175e-05
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0.1315
+      - 0
+      - -0.1895
+  Src_4:
+    Source_Position:
+      - -0.1315
+      - 0
+      - -0.1895
+    B_Coeff:
+      - -1.268221579822936e-07
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_6:
+    A_Coeff: ~
+    B_Coeff:
+      - -1.305549874184442e-05
+    Source_Position:
+      - 0
+      - 0.1315
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_7:
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - 1.097198909536997e-05
+    Source_Position:
+      - -0.2029
+      - 0.2029
+      - -0.1895
+Coil_4:
+  Src_7:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - -4.57990983329985e-06
+    A_Coeff: ~
+    Source_Position:
+      - -0.2029
+      - 0.2029
+      - -0.1895
+  Src_0:
+    B_Coeff:
+      - 1.468080808075543e-07
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - -0.2029
+      - -0.2029
+      - -0.1895
+  Source_List:
+    - Src_0
+    - Src_1
+    - Src_2
+    - Src_3
+    - Src_4
+    - Src_5
+    - Src_6
+    - Src_7
+  Src_1:
+    A_Coeff: ~
+    B_Coeff:
+      - -1.104008636533784e-05
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0
+      - -0.1315
+      - -0.1895
+  Src_2:
+    A_Coeff: ~
+    B_Coeff:
+      - 7.171153419507849e-06
+    Source_Position:
+      - 0.2029
+      - -0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_3:
+    B_Coeff:
+      - 6.707299925205979e-08
+    A_Coeff: ~
+    Source_Position:
+      - 0.1315
+      - 0
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_4:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - 3.105932077992598e-05
+    A_Coeff: ~
+    Source_Position:
+      - -0.1315
+      - 0
+      - -0.1895
+  Src_5:
+    A_Coeff: ~
+    B_Coeff:
+      - 8.060723871144199e-06
+    Source_Position:
+      - 0.2029
+      - 0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_6:
+    A_Coeff: ~
+    Source_Position:
+      - 0
+      - 0.1315
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - -1.107155375818602e-05
+Coil_5:
+  Source_List:
+    - Src_0
+    - Src_1
+    - Src_2
+    - Src_3
+    - Src_4
+    - Src_5
+    - Src_6
+    - Src_7
+  Src_0:
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - -3.599618253381283e-06
+    Source_Position:
+      - -0.2029
+      - -0.2029
+      - -0.1895
+  Src_1:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    A_Coeff: ~
+    Source_Position:
+      - 0
+      - -0.1315
+      - -0.1895
+    B_Coeff:
+      - 1.048188079595932e-06
+  Src_2:
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0.2029
+      - -0.2029
+      - -0.1895
+    B_Coeff:
+      - -1.324389489336902e-06
+  Src_3:
+    A_Coeff: ~
+    B_Coeff:
+      - -2.662648992405252e-06
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0.1315
+      - 0
+      - -0.1895
+  Src_4:
+    B_Coeff:
+      - 5.954314560099127e-07
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    A_Coeff: ~
+    Source_Position:
+      - -0.1315
+      - 0
+      - -0.1895
+  Src_5:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0.2029
+      - 0.2029
+      - -0.1895
+    B_Coeff:
+      - 1.481541596096882e-05
+    A_Coeff: ~
+  Src_6:
+    A_Coeff: ~
+    B_Coeff:
+      - -2.294359345113673e-06
+    Source_Position:
+      - 0
+      - 0.1315
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_7:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    A_Coeff: ~
+    B_Coeff:
+      - -1.396991411182111e-07
+    Source_Position:
+      - -0.2029
+      - 0.2029
+      - -0.1895
+Coil_6:
+  Source_List:
+    - Src_0
+    - Src_1
+    - Src_2
+    - Src_3
+    - Src_4
+    - Src_5
+    - Src_6
+    - Src_7
+  Src_0:
+    A_Coeff: ~
+    B_Coeff:
+      - 8.17838636825054e-06
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - -0.2029
+      - -0.2029
+      - -0.1895
+  Src_1:
+    B_Coeff:
+      - -1.755582837255281e-07
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    A_Coeff: ~
+    Source_Position:
+      - 0
+      - -0.1315
+      - -0.1895
+  Src_2:
+    B_Coeff:
+      - 8.753643787948884e-06
+    A_Coeff: ~
+    Source_Position:
+      - 0.2029
+      - -0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_3:
+    B_Coeff:
+      - -1.060125509310052e-05
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0.1315
+      - 0
+      - -0.1895
+  Src_4:
+    B_Coeff:
+      - -1.101045826027713e-05
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    A_Coeff: ~
+    Source_Position:
+      - -0.1315
+      - 0
+      - -0.1895
+  Src_5:
+    A_Coeff: ~
+    Source_Position:
+      - 0.2029
+      - 0.2029
+      - -0.1895
+    B_Coeff:
+      - -6.579125707059789e-06
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_6:
+    B_Coeff:
+      - 3.20671765084228e-05
+    A_Coeff: ~
+    Source_Position:
+      - 0
+      - 0.1315
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_7:
+    B_Coeff:
+      - -2.026202348167107e-07
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - -0.2029
+      - 0.2029
+      - -0.1895
+Coil_7:
+  Source_List:
+    - Src_0
+    - Src_1
+    - Src_2
+    - Src_3
+    - Src_4
+    - Src_5
+    - Src_6
+    - Src_7
+  Src_0:
+    B_Coeff:
+      - -3.182491086131655e-07
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - -0.2029
+      - -0.2029
+      - -0.1895
+  Src_1:
+    Source_Position:
+      - 0
+      - -0.1315
+      - -0.1895
+    A_Coeff: ~
+    B_Coeff:
+      - 7.280605475203608e-07
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_2:
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0.2029
+      - -0.2029
+      - -0.1895
+    B_Coeff:
+      - -2.952170622924878e-06
+  Src_3:
+    A_Coeff: ~
+    B_Coeff:
+      - 8.265364581714455e-07
+    Source_Position:
+      - 0.1315
+      - 0
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_4:
+    A_Coeff: ~
+    Source_Position:
+      - -0.1315
+      - 0
+      - -0.1895
+    B_Coeff:
+      - -2.359032449036196e-06
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_5:
+    B_Coeff:
+      - -4.284974091241224e-07
+    A_Coeff: ~
+    Source_Position:
+      - 0.2029
+      - 0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_6:
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    B_Coeff:
+      - -2.45575274564257e-06
+    Source_Position:
+      - 0
+      - 0.1315
+      - -0.1895
+  Src_7:
+    Source_Position:
+      - -0.2029
+      - 0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    A_Coeff: ~
+    B_Coeff:
+      - 1.396756629688745e-05
+Workspace_Dimensions:
+  -
+    - -0.08
+    - 0.08
+  -
+    - -0.08
+    - 0.08
+  -
+    - 0.03
+    - 0.12
+Coil_2:
+  Src_3:
+    A_Coeff: ~
+    Source_Position:
+      - 0.1315
+      - 0
+      - -0.1895
+    B_Coeff:
+      - -2.36306752725078e-06
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_4:
+    B_Coeff:
+      - 1.156110501293228e-06
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - -0.1315
+      - 0
+      - -0.1895
+  Src_5:
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    A_Coeff: ~
+    B_Coeff:
+      - 4.614835090211965e-08
+    Source_Position:
+      - 0.2029
+      - 0.2029
+      - -0.1895
+  Src_6:
+    Source_Position:
+      - 0
+      - 0.1315
+      - -0.1895
+    B_Coeff:
+      - 5.917937893010861e-07
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_7:
+    A_Coeff: ~
+    B_Coeff:
+      - -2.925557867256141e-06
+    Source_Position:
+      - -0.2029
+      - 0.2029
+      - -0.1895
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+  Src_0:
+    A_Coeff: ~
+    B_Coeff:
+      - -9.039943540968922e-07
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - -0.2029
+      - -0.2029
+      - -0.1895
+  Source_List:
+    - Src_0
+    - Src_1
+    - Src_2
+    - Src_3
+    - Src_4
+    - Src_5
+    - Src_6
+    - Src_7
+  Src_1:
+    A_Coeff: ~
+    B_Coeff:
+      - -2.703671181561548e-06
+    Source_Direction:
+      - 0
+      - 0
+      - 1
+    Source_Position:
+      - 0
+      - -0.1315
+      - -0.1895
+  Src_2:
+    Source_Position:
+      - 0.2029
+      - -0.2029
+      - -0.1895
+    B_Coeff:
+      - 1.416646827447496e-05
+    A_Coeff: ~
+    Source_Direction:
+      - 0
+      - 0
+      - 1
