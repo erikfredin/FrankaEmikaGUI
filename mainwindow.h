@@ -48,6 +48,7 @@
 #include <iomanip>
 #include <time.h>
 #include <queue>
+#include <Eigen/Dense>
 
 
 #include "s826.h"               // The necessary API is included within this include.
@@ -570,9 +571,30 @@ private:
     double  plotPeriod = 4.0; // in seconds. 10 s for slow scrolling, 5 s for faster.
 
 
-
     QUdpSocket *socket = nullptr;
     QUdpSocket *socket_send = nullptr;
+    // Member variables
+    franka::Robot robot;
+
+    // Timer for updating robot state
+    QTimer *stateUpdateTimer;
+
+    // Movement function declarations
+    bool EE_moveInX(const double& x_meters, const double& duration_sec);
+    bool EE_moveInY(const double& y_meters, const double& duration_sec);
+    bool EE_moveInZ(const double& z_meters, const double& duration_sec);
+    bool EE_rotateAboutX(const double& angleX_rad, const double& duration_sec);
+    bool EE_rotateAboutY(const double& angleY_rad, const double& duration_sec);
+    bool EE_rotateAboutZ(const double& angleZ_rad, const double& duration_sec);
+
+    // Helper functions
+    static double cycloidal_motion(const double& startVal, const double& deltaVal, const double& interpVal);
+    bool EE_move_timeInterpolated(
+        const double& duration_sec,
+        const std::function<void(const double&, const std::array<double, 16>&, std::array<double, 16>&)>& interpolateFcn
+    );
+
+
 
 public slots:
     void        experimental_control(void);
@@ -607,6 +629,8 @@ public slots:
     void        initializeFranka(void);
     void        runGlobalfield(void);
 
+
+
     void        runFullWorkspacefield(void);
 
     void        Cartesiantest(void);
@@ -631,6 +655,8 @@ private slots:
     void       updateCurrents_CalibrationOnly(double I_command[8]);
     void       updateCurrents(void);
     void       registerdatacollect(void);
+    void       on_pushButton_moveEE_clicked();
+    void       updateRobotState();
 
     void       calibratesetflag(void);
     void       calibratesetflagoff(void);

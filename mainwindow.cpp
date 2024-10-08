@@ -1,5 +1,14 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <cmath>
+#include <Eigen/Dense>
+#include <iostream>
+#include <franka/robot.h>
+#include <franka/exception.h>
+#include <QTimer>
+
+using namespace orl;
+using namespace std::literals;
 
 //const auto DNNmodel = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
 //std::cout<<"load model!"<<std::endl;
@@ -8,7 +17,7 @@
 //ElectromagnetCalibration mymodel(initialguess);
 //std::cout<<"load calibration file!"<<std::endl;
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), robot(fci_ip)
 {
     ui->setupUi(this);
 
@@ -36,7 +45,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     qInfo() << "S826.init() returned the value: " << errcode;
     qInfo() << " ";
 
+    stateUpdateTimer = new QTimer(this);
+    connect(stateUpdateTimer, &QTimer::timeout, this, &MainWindow::updateRobotState);
+    stateUpdateTimer->start(100); // Update every 100 ms
+
     // PUSH BUTTONS
+    connect(ui->pushButton_moveEE, SIGNAL(clicked()), SLOT(on_pushButton_moveEE_clicked()));
     connect(ui->pushButton_experimental_control,SIGNAL(clicked()),SLOT(experimental_control()));
     connect(ui->pushButton_Control_ml,SIGNAL(clicked()),SLOT(experimental_control_ml()));
     connect(ui->pushButton_freedrag,SIGNAL(clicked()),SLOT(freedrag()));
@@ -91,6 +105,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_updateCurrent,SIGNAL(clicked()),SLOT(UpdateCurrent_fromGUI()));
 
     connect(ui->pushButton_robotOrient_run,SIGNAL(clicked()),SLOT(FrankaOrientAdjust()));
+
+
+
 
 
 
@@ -163,6 +180,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(socket, SIGNAL(readyRead()), this, SLOT(processPendingDatagrams()),Qt::QueuedConnection);
 
     socket_send = new QUdpSocket(this);
+
 
 
 //    host  = new QHostAddress("192.168.1.101");
@@ -521,6 +539,197 @@ void MainWindow::robotfreedraginthread()
 }
 
 
+void MainWindow::on_pushButton_moveEE_clicked()
+{
+    // Retrieve input values
+    double x_distance_cm = ui->lineEdit_x_distance_cm->text().toDouble();
+    double y_distance_cm = ui->lineEdit_y_distance_cm->text().toDouble();
+    double z_distance_cm = ui->lineEdit_z_distance_cm->text().toDouble();
+
+    double rotate_x_deg = ui->lineEdit_rotate_x_deg->text().toDouble();
+    double rotate_y_deg = ui->lineEdit_rotate_y_deg->text().toDouble();
+    double rotate_z_deg = ui->lineEdit_rotate_z_deg->text().toDouble();
+
+    // Convert units
+    double x_meters = x_distance_cm / 100.0;
+    double y_meters = y_distance_cm / 100.0;
+    double z_meters = z_distance_cm / 100.0;
+
+    double angleX_rad = rotate_x_deg * M_PI / 180.0;
+    double angleY_rad = rotate_y_deg * M_PI / 180.0;
+    double angleZ_rad = rotate_z_deg * M_PI / 180.0;
+
+    double duration_sec = 5.0; // You can also make this an input
+
+    // Perform movements
+    try {
+        if (x_meters != 0.0) {
+            EE_moveInX(x_meters, duration_sec);
+        }
+        if (y_meters != 0.0) {
+            EE_moveInY(y_meters, duration_sec);
+        }
+        if (z_meters != 0.0) {
+            EE_moveInZ(z_meters, duration_sec);
+        }
+        if (angleX_rad != 0.0) {
+            EE_rotateAboutX(angleX_rad, duration_sec);
+        }
+        if (angleY_rad != 0.0) {
+            EE_rotateAboutY(angleY_rad, duration_sec);
+        }
+        if (angleZ_rad != 0.0) {
+            EE_rotateAboutZ(angleZ_rad, duration_sec);
+        }
+    } catch (const franka::Exception& e) {
+        std::cerr << e.what() << std::endl;
+        robot.automaticErrorRecovery();
+    }
+}
+
+void MainWindow::updateRobotState()
+{
+    try {
+        franka::RobotState robot_state = robot.readOnce();
+
+        // Get joint positions
+        std::array<double, 7> q = robot_state.q;
+
+
+
+    } catch (const franka::Exception& e) {
+        std::cerr << e.what() << std::endl;
+        robot.automaticErrorRecovery();
+    }
+}
+
+// Cycloidal motion function with zero starting and ending velocity and acceleration
+double MainWindow::cycloidal_motion(const double& startVal, const double& deltaVal, const double& interpVal)
+{
+    return startVal + deltaVal * M_1_PI * (M_PI * interpVal - 0.5 * std::sin(2.0 * M_PI * interpVal));
+}
+
+// Time-interpolated movement function
+bool MainWindow::EE_move_timeInterpolated(
+    const double& duration_sec,
+    const std::function<void(const double&, const std::array<double, 16>&, std::array<double, 16>&)>& interpolateFcn)
+{
+    std::array<double, 16> initPose = robot.readOnce().O_T_EE_c;
+    std::array<double, 16> newPose = initPose;
+    double time = 0.0;
+
+    try {
+        robot.stop();
+        robot.control([&](const franka::RobotState& robot_state, const franka::Duration& period) -> franka::CartesianPose {
+            time += period.toSec();
+            double interpVal = time / duration_sec;
+            if (interpVal > 1.0) interpVal = 1.0;
+            interpolateFcn(interpVal, initPose, newPose);
+            if (time >= duration_sec) {
+                return franka::MotionFinished(newPose);
+            }
+            return newPose;
+        });
+        return true;
+    } catch (const franka::Exception& e) {
+        std::cerr << e.what() << std::endl;
+        robot.automaticErrorRecovery();
+        return false;
+    }
+}
+
+bool MainWindow::EE_moveInX(const double& x_meters, const double& duration_sec)
+{
+    auto interpFunc = [&](const double& interpVal, const std::array<double, 16>& curHTM,
+                          std::array<double, 16>& newHTM) {
+        newHTM = curHTM;
+        newHTM[12] = cycloidal_motion(curHTM[12], x_meters, interpVal);
+    };
+    return EE_move_timeInterpolated(duration_sec, interpFunc);
+}
+
+bool MainWindow::EE_moveInY(const double& y_meters, const double& duration_sec)
+{
+    auto interpFunc = [&](const double& interpVal, const std::array<double, 16>& curHTM,
+                          std::array<double, 16>& newHTM) {
+        newHTM = curHTM;
+        newHTM[13] = cycloidal_motion(curHTM[13], y_meters, interpVal);
+    };
+    return EE_move_timeInterpolated(duration_sec, interpFunc);
+}
+
+bool MainWindow::EE_moveInZ(const double& z_meters, const double& duration_sec)
+{
+    auto interpFunc = [&](const double& interpVal, const std::array<double, 16>& curHTM,
+                          std::array<double, 16>& newHTM) {
+        newHTM = curHTM;
+        newHTM[14] = cycloidal_motion(curHTM[14], z_meters, interpVal);
+    };
+    return EE_move_timeInterpolated(duration_sec, interpFunc);
+}
+
+bool MainWindow::EE_rotateAboutX(const double& angleX_rad, const double& duration_sec)
+{
+    auto interpFunc = [&](const double& interpVal, const std::array<double, 16>& curHTM,
+                          std::array<double, 16>& newHTM) {
+        double rotAngle = cycloidal_motion(0.0, angleX_rad, interpVal);
+        double ctheta = std::cos(rotAngle);
+        double stheta = std::sin(rotAngle);
+
+        Eigen::Matrix3d rotMtx;
+        rotMtx << 1.0, 0.0, 0.0,
+                  0.0, ctheta, -stheta,
+                  0.0, stheta, ctheta;
+
+        Eigen::Map<const Eigen::Matrix4d> curHTMMatrix(curHTM.data());
+        Eigen::Matrix4d newHTMMatrix = curHTMMatrix;
+        newHTMMatrix.block<3, 3>(0, 0) = rotMtx * curHTMMatrix.block<3, 3>(0, 0);
+        Eigen::Map<Eigen::Matrix4d>(newHTM.data()) = newHTMMatrix;
+    };
+    return EE_move_timeInterpolated(duration_sec, interpFunc);
+}
+
+bool MainWindow::EE_rotateAboutY(const double& angleY_rad, const double& duration_sec)
+{
+    auto interpFunc = [&](const double& interpVal, const std::array<double, 16>& curHTM,
+                          std::array<double, 16>& newHTM) {
+        double rotAngle = cycloidal_motion(0.0, angleY_rad, interpVal);
+        double ctheta = std::cos(rotAngle);
+        double stheta = std::sin(rotAngle);
+
+        Eigen::Matrix3d rotMtx;
+        rotMtx << ctheta, 0.0, stheta,
+                  0.0, 1.0, 0.0,
+                  -stheta, 0.0, ctheta;
+
+        Eigen::Map<const Eigen::Matrix4d> curHTMMatrix(curHTM.data());
+        Eigen::Matrix4d newHTMMatrix = curHTMMatrix;
+        newHTMMatrix.block<3, 3>(0, 0) = rotMtx * curHTMMatrix.block<3, 3>(0, 0);
+        Eigen::Map<Eigen::Matrix4d>(newHTM.data()) = newHTMMatrix;
+    };
+    return EE_move_timeInterpolated(duration_sec, interpFunc);
+}
+
+bool MainWindow::EE_rotateAboutZ(const double& angleZ_rad, const double& duration_sec)
+{
+    auto interpFunc = [&](const double& interpVal, const std::array<double, 16>& curHTM,
+                          std::array<double, 16>& newHTM) {
+        double rotAngle = cycloidal_motion(0.0, angleZ_rad, interpVal);
+        double ctheta = std::cos(rotAngle);
+        double stheta = std::sin(rotAngle);
+
+        Eigen::Matrix3d rotMtx;
+        rotMtx << ctheta, -stheta, 0.0,
+                  stheta, ctheta, 0.0,
+                  0.0, 0.0, 1.0;
+
+        Eigen::Map<const Eigen::Matrix4d> curHTMMatrix(curHTM.data());
+        Eigen::Matrix4d newHTMMatrix = curHTMMatrix;
+        newHTMMatrix.block<3, 3>(0, 0) = rotMtx * curHTMMatrix.block<3, 3>(0, 0);
+        Eigen::Map<Eigen::Matrix4d>(newHTM.data()) = newHTMMatrix;
+    };
+    return EE_move_timeInterpolated(duration_sec, interpFunc);
+}
 
 void MainWindow::freedrag()
 {
