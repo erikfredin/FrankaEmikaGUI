@@ -26,6 +26,7 @@ QMAKE_CXXFLAGS += -bigobj
 
 SOURCES += \
     callbacks.cpp \
+    franka_funcs.cpp \
     frankathread.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -40,6 +41,7 @@ SOURCES += \
 
 HEADERS += \
     callbacks.h \
+    franka_funcs.h \
     frankathread.h \
     mainwindow.h \
     examples_common.h \
