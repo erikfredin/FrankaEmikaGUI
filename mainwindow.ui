@@ -594,7 +594,7 @@
     <property name="geometry">
      <rect>
       <x>533</x>
-      <y>10</y>
+      <y>30</y>
       <width>41</width>
       <height>611</height>
      </rect>
@@ -717,7 +717,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>5</number>
     </property>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
@@ -1932,6 +1932,391 @@
       </property>
      </widget>
     </widget>
+    <widget class="QWidget" name="GripperCam">
+     <attribute name="title">
+      <string>Page</string>
+     </attribute>
+     <widget class="QPushButton" name="btn_runFrankaCam">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>290</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>RunFranka</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_printEETran">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>290</y>
+        <width>111</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Print EE Transform</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_orient2gripper">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>290</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Orient to gripper</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="cbx_startOL">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>30</y>
+        <width>141</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Start OL Control</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="sbx_theta1">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>60</y>
+        <width>42</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>-90</number>
+      </property>
+      <property name="maximum">
+       <number>90</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_theta1">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>60</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Theta1</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_theta2">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>90</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Theta2</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="sbx_theta2">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>90</y>
+        <width>42</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_K1">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>130</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>K_1</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_K2">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>160</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>K_2</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="dsbx_K1">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>130</y>
+        <width>62</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="value">
+       <double>0.600000000000000</double>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_K1_Unit">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>130</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>mNm/rad</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="dsbx_K2">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>160</y>
+        <width>62</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="value">
+       <double>0.600000000000000</double>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_K1_Unit_2">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>160</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>mNm/rad</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_K1_Unit_3">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>60</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>degrees</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_K1_Unit_4">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>90</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>degrees</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="sbx_curr_sample">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>50</y>
+        <width>42</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+     </widget>
+     <widget class="Line" name="line_7">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>10</y>
+        <width>41</width>
+        <height>221</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_14">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>20</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Rigid Collection</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_15">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>50</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Current Sample</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pb_rec_endo">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>110</y>
+        <width>121</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Record Endoscope</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pb_rec_top">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>150</y>
+        <width>101</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Record Top View</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_rec_side">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>190</y>
+        <width>101</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Record Side View</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_16">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>80</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Data Size</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_data_size">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>80</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>N/A</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_prevViews">
+      <property name="geometry">
+       <rect>
+        <x>430</x>
+        <y>170</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Prev Views</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="sbx_category">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>240</y>
+        <width>42</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>4</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_17">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>240</y>
+        <width>47</width>
+        <height>13</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Category</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton">
+      <property name="geometry">
+       <rect>
+        <x>384</x>
+        <y>290</y>
+        <width>121</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Show Camera Feed</string>
+      </property>
+     </widget>
+    </widget>
    </widget>
    <widget class="Line" name="line_4">
     <property name="geometry">
@@ -2048,6 +2433,89 @@
     </property>
     <property name="text">
      <string>Orient Run</string>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="box_positioning">
+    <property name="geometry">
+     <rect>
+      <x>820</x>
+      <y>530</y>
+      <width>241</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Position Adjust (x, y, z), (metres)</string>
+    </property>
+    <widget class="QLineEdit" name="line_edit_delta_x">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0.00</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="line_edit_delta_y">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>20</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0.00</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="line_edit_delta_z">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>20</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0.00</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="btn_positionEE">
+    <property name="geometry">
+     <rect>
+      <x>830</x>
+      <y>592</y>
+      <width>75</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Position EE</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_18">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>10</y>
+      <width>421</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Remember to turn Franka on before calling functions using it!!</string>
     </property>
    </widget>
   </widget>

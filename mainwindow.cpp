@@ -1,5 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "franka_funcs.h"
+#include <QDir>
+#include <QFile>
+#include <QTextStream>
+#include <QStringList>
+#include <QVector>
 
 //const auto DNNmodel = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
 //std::cout<<"load model!"<<std::endl;
@@ -8,7 +14,7 @@
 //ElectromagnetCalibration mymodel(initialguess);
 //std::cout<<"load calibration file!"<<std::endl;
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent, int numLinks, double linkLength[], double linkTwist[], double linkOffset[], double jointAngle[], int jointType[], Eigen::Vector3d magnetLocal[], Eigen::Vector3d magnetPosLocal[]) : QMainWindow(parent) , ui(new Ui::MainWindow) , magbot(numLinks, linkLength, linkTwist, linkOffset, jointAngle, jointType, magnetLocal, magnetPosLocal)
 {
     ui->setupUi(this);
 
@@ -59,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->pushButton_robotrecovery,SIGNAL(clicked()),SLOT(robotrecovery()));
 
 
-//    connect(ui->pushButton_setfilename,SIGNAL(clicked()),SLOT(SetFileName(ui->lineEdit_EE_x->text())));
+    //connect(ui->pushButton_setfilename,SIGNAL(clicked()),SLOT(SetFileName(ui->lineEdit_EE_x->text())));
 
     connect(ui->pushButton_setfilename,SIGNAL(clicked()),SLOT(Setfilename()));
     connect(ui->pushButton_logon,SIGNAL(clicked()),SLOT(SetLogEnabled()));
@@ -110,8 +116,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     connect(ui->checkBox_udpmode,SIGNAL(clicked()),SLOT(enableUDP()));
 
+    //connect(camFeed, &QObject::destroyed, this, [this]() {
+    //    this->camFeed = nullptr;
+    //});
 
-//    connect(ui->lineEdit_EE_x,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
+    connect(ui->lineEdit_EE_x,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
 //    connect(ui->lineEdit_EE_y,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
 //    connect(ui->lineEdit_EE_z,SIGNAL(editingFinished()),SLOT( updateRobotEE() ) );
 
@@ -165,6 +174,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     socket_send = new QUdpSocket(this);
 
 
+
 //    host  = new QHostAddress("192.168.1.101");
 //    bcast = new QHostAddress("192.168.31.124");
 
@@ -180,6 +190,36 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 //       Data += "SAMP";
 //    socket_send->write(Data);
 
+    // Open CSV for manal data entry
+    std::string path = rigid_data_path.toStdString();
+    std::ifstream inFile(path.append("\\data.json"));
+    if (inFile.peek() != std::ifstream::traits_type::eof()) {
+        inFile >> j_rigid;  // Read existing content if not empty
+    } else {
+        j_rigid = nlohmann::json::object();  // Start with an empty JSON object
+    }
+    inFile.close();
+    if (!j_rigid.contains("data")) {
+        j_rigid["data"] = nlohmann::json::array();
+    }
+    if (!j_rigid["data"].is_array()) {
+        qInfo() << "data in json file is not array!";
+    }
+    num_samples = j_rigid["data"].size();
+    ui->lbl_data_size->setText(QString::number(num_samples));
+    ui->sbx_curr_sample->setValue(num_samples-1);
+
+    // Initialize camera
+
+
+    /*
+    capCam2.open(1);
+    capCam2.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M','J','P','G'));
+    capCam2.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
+    capCam2.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+    */
+
+
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DESTROYER ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -189,6 +229,11 @@ MainWindow::~MainWindow()
 {
 //    franka::Robot robot(fci_ip);
 //    robot.stop();
+    std::string path = rigid_data_path.toStdString();
+    std::ofstream outFile(path.append("\\data.json"));
+    outFile << std::setw(4) << j_rigid << std::endl;  // Pretty print with indent
+    outFile.close();
+
     delete frankathread;
     std::cout<<"delete Franka thread---"<<std::endl;
     clearcurrent();
@@ -249,6 +294,33 @@ void MainWindow::enableController(void)
         // If checkbox is unchecked, disable controller and reset field values
         connectedGamepad.disableController();
     }
+}
+
+MainWindow::CsvTable MainWindow::loadCsv(const QString& filePath, QChar sep)
+{
+    QFile  file(filePath);
+    CsvTable t;
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        throw std::runtime_error(qPrintable(file.errorString()));
+
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString line = in.readLine();        // one physical line
+        t.rows.append(line.split(sep));      // naive split
+    }
+    return t;
+}
+
+void MainWindow::saveCsv(const CsvTable& t, const QString& filePath, QChar sep)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+        throw std::runtime_error(qPrintable(file.errorString()));
+
+    QTextStream out(&file);
+    for (const QStringList& row : t.rows)
+        out << row.join(sep) << '\n';
 }
 
 
@@ -1122,6 +1194,7 @@ void MainWindow::updateCurrents_CalibrationOnly(double I_command[8])
             cmdCoilCurrent[i] = 0.0;
         }
     }
+
     // TODO send current setpoints to amplifiers
     // Now that the correct currents have been found, write to the s826 board outputs if
     // the board is connected.
@@ -3223,8 +3296,8 @@ void MainWindow::FrankaOrientAdjust(void)
 {
     double Rotangle[3] = {0.0}; //unit: radian
     Rotangle[0] =  ui->lineEdit_Robot_rotx->text().toDouble();
-    Rotangle[1] =  ui->lineEdit_Robot_rotx->text().toDouble();
-    Rotangle[2] =  ui->lineEdit_Robot_rotx->text().toDouble();
+    Rotangle[1] =  ui->lineEdit_Robot_roty->text().toDouble();
+    Rotangle[2] =  ui->lineEdit_Robot_rotz->text().toDouble();
 //    //change unit to radian
 //    for (int k=0; k<3; k++) {
 //        Rotangle[k] = Rotangle[k]*M_PI/180.0;
@@ -3237,6 +3310,33 @@ void MainWindow::FrankaOrientAdjust(void)
 
 
        franka::Robot robot(fci_ip);
+
+       // Use default collisions / control behavior (example; adapt to your needs!)
+       setDefaultBehavior(robot);
+
+       if (Rotangle[0] != 0) {
+           //rot_angle = (M_PI/180)*Rotangle[0];
+           bool success = EE_rotateAboutX(robot, (M_PI/180)*Rotangle[0], 4);
+           if (!success) {
+             std::cerr << "Rotation about X failed!" << std::endl;
+           }
+       }
+       if (Rotangle[1] != 0) {
+           //rot_angle = (M_PI/180)*Rotangle[1];
+           bool success = EE_rotateAboutY(robot, (M_PI/180)*Rotangle[1], 4);
+           if (!success) {
+             std::cerr << "Rotation about Y failed!" << std::endl;
+           }
+       }
+
+       if (Rotangle[2] != 0) {
+           //rot_angle = (M_PI/180)*Rotangle[2];
+           bool success = EE_rotateAboutZ(robot, (M_PI/180)*Rotangle[2], 4);
+           if (!success) {
+             std::cerr << "Rotation about Z failed!" << std::endl;
+           }
+       }
+       /*
 
         // Set additional parameters always before the control loop, NEVER in the control loop!
         // Set the joint impedance.
@@ -3280,6 +3380,7 @@ void MainWindow::FrankaOrientAdjust(void)
           }
           return output;
         });
+        */
       } catch (const franka::Exception& e) {
         std::cout << e.what() << std::endl;
 //        return -1;
@@ -3456,3 +3557,263 @@ Eigen::Matrix<double, 6, 6> MainWindow::calculateAdjointVelMatrix(Eigen::Affine3
     return AdjointVelMatrix;
 
 }*/
+
+
+// ---------------- NEW, Erik's Camera stuff -----------------------------------
+
+
+void MainWindow::on_btn_printEETran_clicked()
+{
+    franka::Robot robot(fci_ip);
+    get_and_print_EE_TMat(robot);
+
+}
+
+
+
+void MainWindow::on_btn_positionEE_clicked()
+{
+    franka::Robot robot(fci_ip);
+
+    double dx = ui->line_edit_delta_x->text().toDouble();
+    double dy = ui->line_edit_delta_y->text().toDouble();
+    double dz = ui->line_edit_delta_z->text().toDouble();
+
+    EE_moveInX(robot, dx, 4);
+    EE_moveInY(robot, dy, 4);
+    EE_moveInZ(robot, dz, 4);
+}
+
+void MainWindow::on_btn_orient2gripper_clicked()
+{
+    //franka::Robot robot(fci_ip);
+    //point_camera_to_gripper(robot);
+}
+
+
+void MainWindow::on_cbx_startOL_stateChanged(int state)
+{
+    capCam1.open(1);
+    capCam1.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M','J','P','G'));
+    capCam1.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
+    capCam1.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+
+    cv::Mat mat;
+    capCam1.read(mat);
+    // Create new group for data json
+    if (state == Qt::Checked){
+        // Read number of folders
+        std::string root_path = gripper_data_path;
+        QDir dir(QString::fromStdString(root_path));
+        dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
+            // Get the list of directories
+        QFileInfoList folderList = dir.entryInfoList();
+        group_idx = folderList.size();
+
+        //std::ifstream inFile(root_path.append("\\flexible_data.json"));
+        //if (inFile.peek() != std::ifstream::traits_type::eof()) {
+        //    inFile >> j;  // Read existing content if not empty
+        //} else {
+        j = nlohmann::json::object();  // Start with an empty JSON object
+        //}
+        //inFile.close();
+
+
+        // Check previous data if it's empty, create one
+        //group_idx = 0;
+        start_time = clock();
+             // 2. value is an array?
+        //group_idx = j["data"].size();     // 3. length of the array
+        std::string grp = "group";
+        // Append current end effector position
+        franka::Robot robot(fci_ip);
+        Eigen::Matrix4d T_EE = get_EE_TMat(robot);
+
+        j["Franka Transform"] = toJsonArray(T_EE);
+        j["Platform Transform"] = T_platform;
+        j["currents"] = nlohmann::json::array();
+        j["time"] = nlohmann::json::array();
+        j["images"] = nlohmann::json::array();
+        j["rod length"] = rod_length;
+        j["Cam2EE Transform"] = cam2EE;
+        j["Cam2EE Correction"] = cam_corr;
+        j["Gripper Correction"] = grip_corr;
+        j["Category"] = ui->sbx_category->text().toInt();
+
+        // Create new folder for group
+        root_path = gripper_data_path;
+        QString path = QString::fromStdString(root_path.append("\\group").append(std::to_string(group_idx)));
+        if (!dir.exists(path)){
+            dir.mkpath(path);
+        }
+        sample_cntr = 0;
+
+        run_OL = true;
+    } else {
+        std::string root_path = gripper_data_path;
+        std::ofstream outFile(root_path.append("\\group").append(std::to_string(group_idx)).append("\\data.json"));
+        outFile << std::setw(4) << j << std::endl;  // Pretty print with indent
+        outFile.close();
+
+        run_OL = false;
+        //capCam1.close();
+    }
+}
+
+void MainWindow::on_pb_rec_endo_clicked()
+{
+   //if (capCam1.isOpened()){
+     //   cv::Mat mat;
+      //  capCam1.read(mat);
+        //QImage image = camFeed->returnCurrentFrame();
+        num_samples = j_rigid["data"].size();
+        int current_sample = ui->sbx_curr_sample->value();
+
+        QString filename;
+
+        franka::Robot robot(fci_ip);
+        Eigen::Matrix4d T_EE = get_EE_TMat(robot);
+        if (current_sample+1 > num_samples){
+            filename = QString("Capture").append(QString::number(num_samples)).append(".jpg");
+            j_rigid["data"].push_back({
+                                    {"Franka Transform", toJsonArray(T_EE)},
+                                    {"Platform Transform", T_platform},
+                                    {"image", filename.toStdString()},
+                                    {"top view", ""},
+                                    {"side view", ""},
+                                    {"rod length", rod_length},
+                                    {"sample_num", num_samples},
+                                    {"Cam2EE Transform", cam2EE},
+                                      {"Cam2EE Correction", cam_corr},
+                                      {"Gripper Correction", grip_corr}
+                                });
+            ui->lbl_data_size->setText(QString::number(num_samples+1));
+            ui->sbx_curr_sample->setValue(num_samples);
+
+        } else {
+            filename = QString("Capture").append(QString::number(current_sample)).append(".jpg");
+            j_rigid["data"][current_sample]["image"] = filename.toStdString();
+            j_rigid["data"][current_sample]["Franka Transform"] = toJsonArray(T_EE);
+        }
+        QString path = rigid_data_path;
+        //cv::imwrite(path.append("\\Images\\").append(filename.toStdString()), mat);
+        //image.save(path.append("\\Images\\").append(filename));
+        //camFeed->saveSnapshot(path.append("\\Images\\").append(filename));
+       // } else {
+        //    qInfo() << "CAMERA 1 IS NOT CONNECTED";
+    //}
+}
+
+void MainWindow::on_pb_rec_top_clicked()
+{
+
+    num_samples = j_rigid["data"].size();
+    int current_sample = ui->sbx_curr_sample->value();
+
+    QString filename;
+
+    if (current_sample+1 > num_samples){
+        filename = QString("Top View").append(QString::number(num_samples)).append(".jpg");
+        j_rigid["data"].push_back({
+                                {"Franka Transform", nlohmann::json::array()},
+                                {"Platform Transform", T_platform},
+                                {"image", ""},
+                                {"top view", filename.toStdString()},
+                                {"side view", ""},
+                                {"rod length", rod_length},
+                                {"sample_num", num_samples},
+                                {"Cam2EE Transform", cam2EE},
+                                      {"Cam2EE Correction", cam_corr},
+                                      {"Gripper Correction", grip_corr}
+                            });
+        ui->lbl_data_size->setText(QString::number(num_samples+1));
+        ui->sbx_curr_sample->setValue(num_samples);
+    } else {
+        filename  = QString("Top View").append(QString::number(current_sample)).append(".jpg");
+        j_rigid["data"][current_sample]["top view"] = filename.toStdString();
+
+    }
+    QString path = rigid_data_path;
+    //camFeed->saveSnapshot2(path.append("\\GT Images Top\\").append(filename));
+}
+
+void MainWindow::on_btn_rec_side_clicked()
+{
+
+    num_samples = j_rigid["data"].size();
+    int current_sample = ui->sbx_curr_sample->value();
+
+    QString filename;
+
+    if (current_sample+1 > num_samples){
+        filename = QString("Side View").append(QString::number(num_samples)).append(".jpg");
+        j_rigid["data"].push_back({
+                                {"Franka Transform", nlohmann::json::array()},
+                                {"Platform Transform", T_platform},
+                                {"image", ""},
+                                {"top view", ""},
+                                {"side view", filename.toStdString()},
+                                {"rod length", rod_length},
+                                {"sample_num", num_samples},
+                                {"Cam2EE Transform", cam2EE},
+                                      {"Cam2EE Correction", cam_corr},
+                                      {"Gripper Correction", grip_corr}
+                            });
+        ui->lbl_data_size->setText(QString::number(num_samples+1));
+        ui->sbx_curr_sample->setValue(num_samples);
+
+    } else {
+        filename = QString("Side View").append(QString::number(current_sample)).append(".jpg");
+        j_rigid["data"][current_sample]["side view"] = filename.toStdString();
+    }
+    QString path = rigid_data_path;
+    //camFeed->saveSnapshot2(path.append("\\GT Images Side").append(filename));
+}
+
+void MainWindow::on_btn_prevViews_clicked()
+{
+    num_samples = j_rigid["data"].size();
+    int current_sample = ui->sbx_curr_sample->value();
+
+    if (current_sample+1 > num_samples){
+        std::string filename_side = j_rigid["data"][num_samples-1]["side view"];
+        std::string filename_top = j_rigid["data"][num_samples-1]["top view"];
+        j_rigid["data"].push_back({
+                                {"Franka Transform", nlohmann::json::array()},
+                                {"Platform Transform", T_platform},
+                                {"image", ""},
+                                {"top view", filename_top},
+                                {"side view", filename_side},
+                                {"rod length", rod_length},
+                                {"sample_num", num_samples},
+                                {"Cam2EE Transform", cam2EE},
+                                      {"Cam2EE Correction", cam_corr},
+                                      {"Gripper Correction", grip_corr}
+                            });
+        ui->lbl_data_size->setText(QString::number(num_samples+1));
+        ui->sbx_curr_sample->setValue(num_samples);
+      } else {
+        j_rigid["data"][current_sample]["side view"] = j_rigid["data"][current_sample-1]["side view"];
+        j_rigid["data"][current_sample]["top view"] = j_rigid["data"][current_sample-1]["top view"];
+    }
+}
+
+
+void MainWindow::on_pushButton_clicked()
+{
+    /*
+    if (!camFeed) {
+        camFeed->show();
+    } else {
+        camFeed->raise();
+        camFeed->activateWindow();
+    }*/
+    //camFeed = new CameraFeed(1, 0, nullptr);
+    //camFeed->show();
+}
+
+
+
+
+
+

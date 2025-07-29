@@ -34,7 +34,7 @@ public:
     bool isStop;
 
 private:
-    std::string     fci_ip = "192.168.100.2";
+    std::string     fci_ip = "192.168.100.10";
 //    bool            isRobotconnect = false;
 };
 

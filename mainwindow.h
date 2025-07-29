@@ -91,6 +91,10 @@
 #include <QUdpSocket>
 #include  <QtEndian>
 
+#include "gripper_cam_move.h"
+#include "camerafeed.h"
+#include "magserialrobot.h"
+
 using namespace std;
 
 // These are defined in the S826api header internally. Left here for reference
@@ -164,7 +168,7 @@ class MainWindow : public QMainWindow
 
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent, int numLinks, double linkLength[], double linkTwist[], double linkOffset[], double jointAngle[], int jointType[], Eigen::Vector3d magnetLocal[], Eigen::Vector3d magnetPosLocal[]);
     ~MainWindow();
 
 
@@ -408,7 +412,6 @@ public:
 
 
 
-
     //Field Calibration Parameters
 
         // define robot moving range for calibration
@@ -535,6 +538,71 @@ public:
     QString  senderIP;
 
 
+   // ------ Eriks Robot Position/Orient variables -----
+    double ang_speed = M_PI / 16; //rad/s
+    double rot_angle = 0;
+
+    bool run_OL = false;
+    nlohmann::json j;
+    int group_idx;
+
+    // Change data below every time setup is put together again
+    double rod_length = 0.1151; //m
+    double T_platform[4][4] = {{0.999348, 0.010229,  0.034625,   0.614601},
+                                {0.0102966, -0.999945, -0.0017735,  0.0221905},
+                                {0.034605, 0.00212886,  -0.999399,   0.259916},
+                                        {0,          0,          0,          1}};
+    double cam2EE[4][4] = {{-0.96723,    -0.25338,     0.0163,     -0.0028243 },
+                        { 0.01787,    -0.00392,     0.99983,     0.01322509},
+                        {-0.25327,     0.96736,     0.00832,     0.03526879},
+                        { 0.,          0.,          0.,          1.        }};
+
+
+    double grip_corr[4][4] = {{ 1.,          0.,          0.,          0. },
+                               { 0.,         0.99904822, -0.04361939,  0. },
+                               { 0.,         0.04361939, 0.99904822,  0.},
+                               { 0.,          0.,          0.,          1.}};
+
+    double cam_corr[4][4] = {{1, 0, 0, 0},
+                             {0, 1, 0, 0},
+                             {0, 0, 1, 0},
+                             {0, 0, 0, 1}};
+
+    double camCalib;
+    double gripCalib;
+
+    int sample_cntr;
+    cv::VideoCapture capCam1;
+    cv::VideoCapture capCam2;
+    QString rigid_data_path = "C:\\Users\\MicroRoboticsLab\\Desktop\\Erik\\SLL\\8-DoF Data\\calib\\";
+    struct CsvTable {
+        QVector<QStringList> rows;       // each QStringList is one CSV row
+    };
+    CsvTable loadCsv(const QString& filePath, QChar sep = ',');
+    void saveCsv(const CsvTable& t, const QString& filePath, QChar sep = ',');
+
+    nlohmann::json j_rigid;
+    int num_samples;
+
+    time_t start_time;
+    time_t current_time;
+    double time_elapsed;
+
+    const Eigen::Matrix<double,8,8> mCurrentToFieldMatrix {
+                  {3.6,   -0.7,  -4.1, -17.2,   17.5,  -3.4,   1.7,   4.0}, // mT/%A
+                  {3.7,   18.1,   3.5,  -1.0,    0.8,  -4.0, -17.0,  -3.6}, // mT/%A
+                 {-0.7,   12.5,  -1.2,  12.2,   12.1,  -1.1,  12.1,  -1.1}, // mT/%A
+                {-15.3,  153.5, -19.1, -79.5,  -93.5, -12.2, 154.8, -23.0}, // mT/m.%A
+                {-38.3,    3.6,  41.2,  -6.3,   -0.8, -37.1,  15.7,  36.4}, // mT/m.%A
+                 {-8.3,   15.3,   9.9, 231.3, -227.4,   7.0, -11.5, -10.9}, // mT/m.%A
+                {-18.7,  -90.1, -14.4, 149.2,  164.0, -20.3, -96.4, -13.9}, // mT/m.%A
+                {-10.8, -247.7,  -9.4,   9.0,  -20.5,   9.7, 230.4,   8.7} // mT/m.%A
+        };
+
+    const Eigen::Matrix<double,8,8> mCoilMatrix = mCurrentToFieldMatrix * 0.001 / 24.0; //T/A and T/m.A
+    MagSerialRobot magbot;
+
+
 protected:
 
     // these are for the new dual force sensing tool with three FBG array.
@@ -566,6 +634,7 @@ protected:
 private:
     Ui::MainWindow *ui;
 
+
     double  lastTime;
     double  plotPeriod = 4.0; // in seconds. 10 s for slow scrolling, 5 s for faster.
 
@@ -573,6 +642,8 @@ private:
 
     QUdpSocket *socket = nullptr;
     QUdpSocket *socket_send = nullptr;
+
+    //CameraFeed *camFeed = nullptr;
 
 public slots:
     void        experimental_control(void);
@@ -638,5 +709,14 @@ private slots:
     void       calibratesetflagoff_sequence(void);
     void        processPendingDatagrams();
 
+    void on_btn_printEETran_clicked();
+    void on_btn_positionEE_clicked();
+    void on_btn_orient2gripper_clicked();
+    void on_cbx_startOL_stateChanged(int arg1);
+    void on_pb_rec_endo_clicked();
+    void on_pb_rec_top_clicked();
+    void on_btn_rec_side_clicked();
+    void on_btn_prevViews_clicked();
+    void on_pushButton_clicked();
 };
 #endif // MAINWINDOW_H

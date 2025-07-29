@@ -26,12 +26,18 @@ QMAKE_CXXFLAGS += -bigobj
 
 SOURCES += \
     callbacks.cpp \
+    camerafeed.cpp \
+    cameraworker.cpp \
     franka_funcs.cpp \
     frankathread.cpp \
+    gripper_cam_move.cpp \
+    magfunctions.cpp \
+    magserialrobot.cpp \
     main.cpp \
     mainwindow.cpp \
     examples_common.cpp \
     daq.cpp \
+    robotfunctions.cpp \
     s826.cpp \
     gamepadmonitor.cpp \
     magneticmathfunctions.cpp \
@@ -41,12 +47,18 @@ SOURCES += \
 
 HEADERS += \
     callbacks.h \
+    camerafeed.h \
+    cameraworker.h \
     franka_funcs.h \
     frankathread.h \
+    gripper_cam_move.h \
+    magfunctions.h \
+    magserialrobot.h \
     mainwindow.h \
     examples_common.h \
     826api.h \
     daq.h \
+    robotfunctions.h \
     robotstatus.h \
     s826.h \
     gamepadmonitor.h \
@@ -56,6 +68,7 @@ HEADERS += \
     scalorPotential.h
 
 FORMS += \
+    camerafeed.ui \
     mainwindow.ui
 
 

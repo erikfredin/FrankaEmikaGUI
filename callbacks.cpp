@@ -1,6 +1,11 @@
 #include "callbacks.h"
 
-
+// Helper function for constructing franka robot object once and only once
+franka::Robot& panda(std::string fci_ip)                    // accessor
+{
+  static franka::Robot robot(fci_ip);   // constructed once
+  return robot;
+}
 
 void MainWindow::callbacks(void)
 {
@@ -8,7 +13,8 @@ void MainWindow::callbacks(void)
 //    qInfo() << connectedGamepad.joystickValues[0];
 //    qDebug() << "Code callback executing...";
 
-    //We connect Franka every turns of callback , could be improved...
+    //We connect Franka every turns of callback , could be improved..
+
 
 
     if (isRobotStreaming){
@@ -1007,6 +1013,85 @@ void MainWindow::callbacks(void)
                 std::cout<<"[ "<< i << "]:  "<<connectedGamepad.joystickValues[i]<<"    "; // Increase nonlinearly to add sensitivity and control
            std::cout<<std::endl;
 
+    }
+
+    if (run_OL) {
+        // Initialize Franka robot just once
+        static franka::Robot robot(fci_ip);
+
+        // ----------------- Run Open-Loop Control -----------------
+        //franka::Robot robot(fci_ip);
+        theta1 = ui->sbx_theta1->text().toInt();
+        theta2 = ui->sbx_theta2->text().toInt();
+        K1 = ui->dsbx_K1->text().toDouble();
+        K2 = ui->dsbx_K2->text().toDouble();
+        //coilCurrents = run_open_loop(magbot, theta1, theta2, K1, K2);
+        qd << (M_PI*theta1)/180, (M_PI*theta2)/180; // Also convert to rad
+
+        cout << "Desired Angles (deg):" << theta1 << "," << theta2 << endl;
+
+        // Determine the internal generalized forces for the desired position
+        magbot.m_set_q(qd);
+
+        // Determine the actuation matrix for the gripper in its present state
+        mMu = magbot.m_calc_actuation_matrix() * mCoilMatrix;
+        cout << "Actuation Mat:" << endl;
+        cout << mMu(0,0) << ", " << mMu(0,1) << ", " << mMu(0,2) << ", " << mMu(0,3) << ", " << mMu(0,4) << ", " << mMu(0,5) << ", " << mMu(0,6) << ", " << mMu(0,7) << ", " << endl;
+        cout << mMu(1,0) << ", " << mMu(1,1) << ", " << mMu(1,2) << ", " << mMu(1,3) << ", " << mMu(1,4) << ", " << mMu(1,5) << ", " << mMu(1,6) << ", " << mMu(1,7) << ", " << endl;
+
+        tauInt = magbot.m_calc_internal_gen_forces();
+        k_joints << K1 / 1000.0, K2 / 1000.0;
+        cout << "tauInt1: " << tauInt(0) << ", tauInt2: " << tauInt(1) << endl;
+        tauK = k_joints.cwiseProduct(qd) + tauInt;
+        cout << "TauK1: " << tauK(0) << ", TauK2: " << tauK(1) << endl;
+        // Calculate the required coil currents to produce the desired generalized forces
+        coilCurrents = mMu.completeOrthogonalDecomposition().solve(tauK);
+
+        // Send the current command to the amplifiers, etc.
+        cout << "Coil Currents:" << endl;
+        for(int i = 0; i < 8; i++)
+        {
+            I_command[i] = coilCurrents(i);
+            cout << I_command[i] << ", ";
+        }
+        cout << endl;
+        updateCurrents_CalibrationOnly(I_command); //send currents to S826
+
+
+        //record_data(robot, j, I_command, group_idx, sample_cntr, capCam1, time_elapsed);
+
+
+        // ------------------ Record the data -----------------------------------
+        current_time = clock();
+        time_elapsed = double(current_time - start_time);
+        // Create savename and add
+        static std::string imgstr = "image";
+        imgstr.append(std::to_string(sample_cntr));
+        imgstr.append(".png");
+        j["images"].push_back(imgstr);
+
+        // Save current image
+        static QString path = QString::fromStdString(gripper_data_path);
+        path.append("\\group").append(QString::number(group_idx)).append("\\").append(QString::fromStdString(imgstr));
+        //cout << path.toStdString() << endl;
+
+        capCam1.read(mat);
+        cv::imwrite(path.toStdString(), mat);
+        //camFeed->saveSnapshot(path);
+
+        // Append coil currents
+        nlohmann::json coilarray = nlohmann::json::array();
+        for(int i = 0; i < 8; i++){
+            coilarray.push_back(I_command[i]);
+        }
+        j["currents"].push_back(coilarray);
+        j["time"].push_back(time_elapsed);
+
+        // Reset imgstr
+        imgstr = "image";
+        path = QString::fromStdString(gripper_data_path);
+
+        sample_cntr++;
     }
 
 

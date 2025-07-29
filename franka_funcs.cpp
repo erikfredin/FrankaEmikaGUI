@@ -100,3 +100,22 @@ bool EE_rotateAboutZ(franka::Robot& robot, const double& angleZ_rad, const doubl
     };
     return EE_move_timeInterpolated(robot, duration_sec, interpFunc);
 }
+
+// [x y z] elements in meters from base
+std::array<double, 16> getEndEffectorHTM_COLMAJOR(franka::Robot& robot){return robot.readOnce().O_T_EE_c;} // Also O_T_EE_c
+// meters from base
+std::array<double, 3> getEndEffectorXYZ(franka::Robot& robot){
+    std::array<double, 16> htm = getEndEffectorHTM_COLMAJOR(robot);
+    return {htm[12], htm[13], htm[14]}; // [x, y, z]
+}
+// rotation relative to the robot base
+std::array<double, 9> getEndEffectorRotMtx_COLMAJOR(franka::Robot& robot){
+    std::array<double, 16> htm = getEndEffectorHTM_COLMAJOR(robot);
+    return {
+        htm[0], htm[1], htm[2], // Rot[:, 0]
+        htm[4], htm[5], htm[6], // Rot[:, 1]
+        htm[8], htm[9], htm[10] // Rot[:, 2]
+    };
+}
+// rad, starting from base joint angle and ending at EE joint angle
+std::array<double, 7> getJointAngles(franka::Robot& robot) {return robot.readOnce().q;}
