@@ -6,6 +6,8 @@
 #include <QTextStream>
 #include <QStringList>
 #include <QVector>
+#include "gamepadpoller.h"
+#include <QtConcurrent/QtConcurrent>
 
 //const auto DNNmodel = fdeep::load_model("C:/Users/MicroRoboticsLab/Documents/Franka_Emika_Console/Franka_Emika_GUI/fdeep_model.json"); //no normalization layer model
 //std::cout<<"load model!"<<std::endl;
@@ -209,16 +211,7 @@ MainWindow::MainWindow(QWidget *parent, int numLinks, double linkLength[], doubl
     ui->lbl_data_size->setText(QString::number(num_samples));
     ui->sbx_curr_sample->setValue(num_samples-1);
 
-    // Initialize camera
-
-
-    /*
-    capCam2.open(1);
-    capCam2.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M','J','P','G'));
-    capCam2.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
-    capCam2.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
-    */
-
+    camFeed = new CameraFeed(1, 0, nullptr);
 
 }
 
@@ -3662,46 +3655,42 @@ void MainWindow::on_cbx_startOL_stateChanged(int state)
 
 void MainWindow::on_pb_rec_endo_clicked()
 {
-   //if (capCam1.isOpened()){
-     //   cv::Mat mat;
-      //  capCam1.read(mat);
-        //QImage image = camFeed->returnCurrentFrame();
-        num_samples = j_rigid["data"].size();
-        int current_sample = ui->sbx_curr_sample->value();
 
-        QString filename;
+    //QImage image = camFeed->returnCurrentFrame();
+    num_samples = j_rigid["data"].size();
+    int current_sample = ui->sbx_curr_sample->value();
 
-        franka::Robot robot(fci_ip);
-        Eigen::Matrix4d T_EE = get_EE_TMat(robot);
-        if (current_sample+1 > num_samples){
-            filename = QString("Capture").append(QString::number(num_samples)).append(".jpg");
-            j_rigid["data"].push_back({
-                                    {"Franka Transform", toJsonArray(T_EE)},
-                                    {"Platform Transform", T_platform},
-                                    {"image", filename.toStdString()},
-                                    {"top view", ""},
-                                    {"side view", ""},
-                                    {"rod length", rod_length},
-                                    {"sample_num", num_samples},
-                                    {"Cam2EE Transform", cam2EE},
-                                      {"Cam2EE Correction", cam_corr},
-                                      {"Gripper Correction", grip_corr}
-                                });
-            ui->lbl_data_size->setText(QString::number(num_samples+1));
-            ui->sbx_curr_sample->setValue(num_samples);
+    QString filename;
 
-        } else {
-            filename = QString("Capture").append(QString::number(current_sample)).append(".jpg");
-            j_rigid["data"][current_sample]["image"] = filename.toStdString();
-            j_rigid["data"][current_sample]["Franka Transform"] = toJsonArray(T_EE);
-        }
-        QString path = rigid_data_path;
-        //cv::imwrite(path.append("\\Images\\").append(filename.toStdString()), mat);
-        //image.save(path.append("\\Images\\").append(filename));
-        //camFeed->saveSnapshot(path.append("\\Images\\").append(filename));
-       // } else {
-        //    qInfo() << "CAMERA 1 IS NOT CONNECTED";
-    //}
+    franka::Robot robot(fci_ip);
+    Eigen::Matrix4d T_EE = get_EE_TMat(robot);
+    if (current_sample+1 > num_samples){
+        filename = QString("Capture").append(QString::number(num_samples)).append(".jpg");
+        j_rigid["data"].push_back({
+                                {"Franka Transform", toJsonArray(T_EE)},
+                                {"Platform Transform", T_platform},
+                                {"image", filename.toStdString()},
+                                {"top view", ""},
+                                {"side view", ""},
+                                {"rod length", rod_length},
+                                {"sample_num", num_samples},
+                                {"Cam2EE Transform", cam2EE},
+                                  {"Cam2EE Correction", cam_corr},
+                                  {"Gripper Correction", grip_corr}
+                            });
+        ui->lbl_data_size->setText(QString::number(num_samples+1));
+        ui->sbx_curr_sample->setValue(num_samples);
+
+    } else {
+        filename = QString("Capture").append(QString::number(current_sample)).append(".jpg");
+        j_rigid["data"][current_sample]["image"] = filename.toStdString();
+        j_rigid["data"][current_sample]["Franka Transform"] = toJsonArray(T_EE);
+    }
+    QString path = rigid_data_path;
+    //cv::imwrite(path.append("\\Images\\").append(filename.toStdString()), mat);
+    //image.save(path.append("\\Images\\").append(filename));
+    camFeed->saveSnapshot(path.append("\\Images\\").append(filename));
+
 }
 
 void MainWindow::on_pb_rec_top_clicked()
@@ -3734,8 +3723,10 @@ void MainWindow::on_pb_rec_top_clicked()
 
     }
     QString path = rigid_data_path;
-    //camFeed->saveSnapshot2(path.append("\\GT Images Top\\").append(filename));
+    //cv::imwrite(path.append("\\GT Images Top\\").append(filename.toStdString()), mat);
+    camFeed->saveSnapshot2(path.append("\\GT Images Top\\").append(filename));
 }
+
 
 void MainWindow::on_btn_rec_side_clicked()
 {
@@ -3767,7 +3758,7 @@ void MainWindow::on_btn_rec_side_clicked()
         j_rigid["data"][current_sample]["side view"] = filename.toStdString();
     }
     QString path = rigid_data_path;
-    //camFeed->saveSnapshot2(path.append("\\GT Images Side").append(filename));
+    camFeed->saveSnapshot2(path.append("\\GT Images Side\\").append(filename));
 }
 
 void MainWindow::on_btn_prevViews_clicked()
@@ -3809,8 +3800,43 @@ void MainWindow::on_pushButton_clicked()
         camFeed->activateWindow();
     }*/
     //camFeed = new CameraFeed(1, 0, nullptr);
-    //camFeed->show();
+    camFeed->show();
 }
+
+
+
+void MainWindow::on_cbx_rm_cam_cntr_stateChanged(int state)
+{
+    if (state==Qt::Checked){
+        if (connectedGamepad.enabled) {
+            franka::Robot robot(fci_ip);
+            // Start polling thread (uses your connectedGamepad)
+          poller = new GamepadPoller(&connectedGamepad, g_cmd, 0.8, 0.05, 0.4, 8, this);
+          poller->start();
+
+          // Start the Franka incremental motion generator in a worker thread
+          QtConcurrent::run([&](){
+          franka_teleopEE(robot, g_cmd, g_finish);   // <- use the function I gave earlier
+        });
+        }
+        else {
+            qInfo() << "Please enable gampad before use";
+        }
+    } else {
+        g_finish.store(true, std::memory_order_relaxed);  // lets control loop MotionFinish
+          if (poller) {
+            poller->stop();
+            poller->wait();
+            poller->deleteLater();
+            poller = nullptr;
+          }
+    }
+
+}
+
+
+
+
 
 
 

@@ -2316,6 +2316,19 @@
        <string>Show Camera Feed</string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="cbx_rm_cam_cntr">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>240</y>
+        <width>131</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Remote Cam Control</string>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="Line" name="line_4">

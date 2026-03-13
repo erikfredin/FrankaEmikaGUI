@@ -990,7 +990,7 @@ void MainWindow::callbacks(void)
          MainWindow::Record();
 
 
-    if (connectedGamepad.enabled) // Update Direct Local B-field
+    if (connectedGamepad.enabled && !runCamControl) // Update Direct Local B-field
         {
             //// 1. DIRECT LOCAL B-FIELD CONTROL:
             //
@@ -1092,6 +1092,50 @@ void MainWindow::callbacks(void)
         path = QString::fromStdString(gripper_data_path);
 
         sample_cntr++;
+    }
+
+    if (runCamControl) {
+        if (connectedGamepad.enabled) {
+            //qInfo() << "Entering Camera Control";
+            // Initialize Franka robot just once
+            static franka::Robot robot(fci_ip);
+            static std::array<double, 16> endHTM;
+            std::call_once(flag, [](){last_cmd_time = clock();});
+
+            current_time = clock();
+
+            if (double(current_time - last_cmd_time)/1000 > time_limit){
+                // Only move franka again if enough time has passed
+
+                if (connectedGamepad.joystickValues[0] < -0.8) {
+                    cout << "MOVING LEFT" << endl;
+                    makeHTM(dist_max, 0.0, 0.0, 0.0, 0.0, 0.0, endHTM);
+                    franka_moveRelativeInEE(robot, endHTM, time_interpl);
+                    last_cmd_time = clock();
+                } else if (connectedGamepad.joystickValues[0] > 0.8) {
+                    cout << "MOVING RIGHT" << endl;
+                    makeHTM(-dist_max, 0.0, 0.0, 0.0, 0.0, 0.0, endHTM);
+                    franka_moveRelativeInEE(robot, endHTM, time_interpl);
+                    last_cmd_time = clock();
+                } else if (connectedGamepad.joystickValues[1] >0.8) {
+                    cout << "MOVING DOWN" << endl;
+                    makeHTM(0.0, 0.0, dist_max, 0.0, 0.0, 0.0, endHTM);
+                    franka_moveRelativeInEE(robot, endHTM, time_interpl);
+                    last_cmd_time = clock();
+                } else if (connectedGamepad.joystickValues[1] < -0.8) {
+                    cout << "MOVING UP" << endl;
+                    makeHTM(0.0, 0.0, -dist_max, 0.0, 0.0, 0.0, endHTM);
+                    franka_moveRelativeInEE(robot, endHTM, time_interpl);
+                    last_cmd_time = clock();
+                }
+            }
+
+
+
+        } else {
+            qInfo() << "Camera Control failed, please connect gamepad!";
+            runCamControl = false;
+        }
     }
 
 

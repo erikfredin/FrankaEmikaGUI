@@ -94,6 +94,7 @@
 #include "gripper_cam_move.h"
 #include "camerafeed.h"
 #include "magserialrobot.h"
+#include "gamepadpoller.h"
 
 using namespace std;
 
@@ -548,20 +549,20 @@ public:
 
     // Change data below every time setup is put together again
     double rod_length = 0.1151; //m
-    double T_platform[4][4] = {{0.999348, 0.010229,  0.034625,   0.614601},
-                                {0.0102966, -0.999945, -0.0017735,  0.0221905},
-                                {0.034605, 0.00212886,  -0.999399,   0.259916},
-                                        {0,          0,          0,          1}};
+    double T_platform[4][4] = {  {0.999882, -0.0153081, 0.00133643,   0.619237},
+                                 {-0.0152651,  -0.999498, -0.0277777, 0.00943953},
+                                 {0.00176099,  0.0277541,  -0.999613,   0.252968},
+                                        {  0,          0,          0,          1}};
     double cam2EE[4][4] = {{-0.96723,    -0.25338,     0.0163,     -0.0028243 },
                         { 0.01787,    -0.00392,     0.99983,     0.01322509},
                         {-0.25327,     0.96736,     0.00832,     0.03526879},
                         { 0.,          0.,          0.,          1.        }};
 
 
-    double grip_corr[4][4] = {{ 1.,          0.,          0.,          0. },
-                               { 0.,         0.99904822, -0.04361939,  0. },
-                               { 0.,         0.04361939, 0.99904822,  0.},
-                               { 0.,          0.,          0.,          1.}};
+    double grip_corr[4][4] = {{ 1.,          0.,          0.,          0.},
+                                {0,          0.99904822, -0.04361939,  0.001},
+                                { 0.,          0.04361939,  0.99904822,  0.002},
+                                { 0,          0,          0,          1}};
 
     double cam_corr[4][4] = {{1, 0, 0, 0},
                              {0, 1, 0, 0},
@@ -574,7 +575,7 @@ public:
     int sample_cntr;
     cv::VideoCapture capCam1;
     cv::VideoCapture capCam2;
-    QString rigid_data_path = "C:\\Users\\MicroRoboticsLab\\Desktop\\Erik\\SLL\\8-DoF Data\\calib\\";
+    QString rigid_data_path = "C:\\Users\\MicroRoboticsLab\\Desktop\\Erik\\SLL\\8-DoF Data\\Test Data New"; // calib
     struct CsvTable {
         QVector<QStringList> rows;       // each QStringList is one CSV row
     };
@@ -601,6 +602,11 @@ public:
 
     const Eigen::Matrix<double,8,8> mCoilMatrix = mCurrentToFieldMatrix * 0.001 / 24.0; //T/A and T/m.A
     MagSerialRobot magbot;
+
+    bool runCamControl = false;
+    std::atomic<TwistCmd> g_cmd{};
+    std::atomic<bool>     g_finish{false};
+    GamepadPoller*        poller{nullptr};
 
 
 protected:
@@ -643,7 +649,7 @@ private:
     QUdpSocket *socket = nullptr;
     QUdpSocket *socket_send = nullptr;
 
-    //CameraFeed *camFeed = nullptr;
+    CameraFeed *camFeed = nullptr;
 
 public slots:
     void        experimental_control(void);
@@ -718,5 +724,6 @@ private slots:
     void on_btn_rec_side_clicked();
     void on_btn_prevViews_clicked();
     void on_pushButton_clicked();
+    void on_cbx_rm_cam_cntr_stateChanged(int state);
 };
 #endif // MAINWINDOW_H

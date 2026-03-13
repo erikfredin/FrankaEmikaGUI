@@ -30,6 +30,7 @@ SOURCES += \
     cameraworker.cpp \
     franka_funcs.cpp \
     frankathread.cpp \
+    gamepadpoller.cpp \
     gripper_cam_move.cpp \
     magfunctions.cpp \
     magserialrobot.cpp \
@@ -51,6 +52,7 @@ HEADERS += \
     cameraworker.h \
     franka_funcs.h \
     frankathread.h \
+    gamepadpoller.h \
     gripper_cam_move.h \
     magfunctions.h \
     magserialrobot.h \
